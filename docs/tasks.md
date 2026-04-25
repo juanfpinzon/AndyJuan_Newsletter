@@ -36,89 +36,89 @@ verifies each task before marking it complete.
 
 Sequential. All Phase 1+ work depends on Phase 0 completing.
 
-#### Task 0.1: Repo scaffolding + package skeleton
+#### Task 0.1: Repo scaffolding + package skeleton [x]
 **Description:** Create the project skeleton: `pyproject.toml` with all v0.1 deps, `.env.example`, `.gitignore`, `README.md`, `CLAUDE.md`, byte-for-byte-identical `AGENTS.md`, and empty `src/` package with all subdirectory `__init__.py` files. Also create `tests/conftest.py` and an empty `tests/fixtures/` tree.
 **Acceptance:**
-- [ ] `pip install -e ".[dev]"` succeeds on a clean Python 3.11+ venv
-- [ ] `python -c "import src; from src import portfolio, lookthrough, exposure, pnl, fetcher, entity_match, analyzer, renderer, sender, storage, pipeline, utils"` exits 0
-- [ ] `diff CLAUDE.md AGENTS.md` produces no output
+- [x] `pip install -e ".[dev]"` succeeds on a clean Python 3.11+ venv
+- [x] `python -c "import src; from src import portfolio, lookthrough, exposure, pnl, fetcher, entity_match, analyzer, renderer, sender, storage, pipeline, utils"` exits 0
+- [x] `diff CLAUDE.md AGENTS.md` produces no output
 **Verify:** `pip install -e ".[dev]" && python -c "import src" && diff CLAUDE.md AGENTS.md && pytest tests/ -v`
 **Dependencies:** None
 **Files:** `pyproject.toml`, `.env.example`, `.gitignore`, `README.md`, `CLAUDE.md`, `AGENTS.md`, `src/__init__.py`, all `src/*/__init__.py`, `tests/conftest.py`
 **Scope:** M
 
-#### Task 0.2: Logging utility (`src/utils/log.py`)
+#### Task 0.2: Logging utility (`src/utils/log.py`) [x]
 **Description:** Configure structlog to emit JSONL to `data/logs/andyjuan.jsonl` and stdout in dev. Expose `get_logger(name=None)` that returns a configured `BoundLogger`.
 **Acceptance:**
-- [ ] `from src.utils.log import get_logger; log = get_logger()` works
-- [ ] `log.info("test_event", foo="bar")` writes a JSONL line with `event`, `foo`, `timestamp`, `level`
-- [ ] Log file path is configurable via env var `LOG_FILE`
+- [x] `from src.utils.log import get_logger; log = get_logger()` works
+- [x] `log.info("test_event", foo="bar")` writes a JSONL line with `event`, `foo`, `timestamp`, `level`
+- [x] Log file path is configurable via env var `LOG_FILE`
 **Verify:** `pytest tests/test_log.py -v`
 **Dependencies:** Task 0.1
 **Files:** `src/utils/log.py`, `tests/test_log.py`
 **Scope:** S
 
-#### Task 0.3: HTTP utility (`src/utils/http.py`)
+#### Task 0.3: HTTP utility (`src/utils/http.py`) [x]
 **Description:** Provide a shared `httpx.AsyncClient` factory with HTTP/2, timeouts, and retry on 5xx + 429 (3 attempts, exponential backoff).
 **Acceptance:**
-- [ ] `from src.utils.http import get_async_client` returns a configured `httpx.AsyncClient`
-- [ ] Retries 3 times on 503; gives up cleanly on 4xx (except 429)
-- [ ] Tested with respx mocking
+- [x] `from src.utils.http import get_async_client` returns a configured `httpx.AsyncClient`
+- [x] Retries 3 times on 503; gives up cleanly on 4xx (except 429)
+- [x] Tested with respx mocking
 **Verify:** `pytest tests/test_http.py -v`
 **Dependencies:** Task 0.1
 **Files:** `src/utils/http.py`, `tests/test_http.py`
 **Scope:** S
 
-#### Task 0.4: LLM utility (`src/utils/llm.py`) — OpenRouter wrapper
+#### Task 0.4: LLM utility (`src/utils/llm.py`) — OpenRouter wrapper [x]
 **Description:** Wrap the `openai` SDK pointed at OpenRouter's base URL. Expose `call_openrouter(prompt, model, max_tokens, fallback_model=None) -> LLMResponse`. Track tokens + cost in USD per call. Fall back to `fallback_model` on first-call failure.
 **Acceptance:**
-- [ ] `LLMResponse` dataclass exposes `content`, `model`, `tokens_in`, `tokens_out`, `cost_usd`
-- [ ] Falls back to `fallback_model` when primary raises
-- [ ] Per-call data is also written to the SQLite `llm_calls` table (created in Task 0.6)
-- [ ] Tested with mocked openai client
+- [x] `LLMResponse` dataclass exposes `content`, `model`, `tokens_in`, `tokens_out`, `cost_usd`
+- [x] Falls back to `fallback_model` when primary raises
+- [x] Per-call data is also written to the SQLite `llm_calls` table (created in Task 0.6)
+- [x] Tested with mocked openai client
 **Verify:** `pytest tests/test_llm.py -v`
 **Dependencies:** Task 0.1, 0.6 (for `llm_calls` table)
 **Files:** `src/utils/llm.py`, `tests/test_llm.py`
 **Scope:** M
 
-#### Task 0.5: Config loader (`src/config.py`)
+#### Task 0.5: Config loader (`src/config.py`) [x]
 **Description:** Load `config/settings.yaml`, allow env-var overrides per key. Return a frozen `Settings` dataclass typed against the keys we use.
 **Acceptance:**
-- [ ] `from src.config import load_settings; s = load_settings()` returns a frozen dataclass
-- [ ] env var override works (e.g., `LLM_SCORING_MODEL=foo` overrides yaml value)
-- [ ] Missing required keys raise a clear `ConfigError`
+- [x] `from src.config import load_settings; s = load_settings()` returns a frozen dataclass
+- [x] env var override works (e.g., `LLM_SCORING_MODEL=foo` overrides yaml value)
+- [x] Missing required keys raise a clear `ConfigError`
 **Verify:** `pytest tests/test_config.py -v`
 **Dependencies:** Task 0.1, 1.2 (settings.yaml exists)
 **Files:** `src/config.py`, `tests/test_config.py`
 **Scope:** S
 
-#### Task 0.6: SQLite storage scaffolding (`src/storage/`)
+#### Task 0.6: SQLite storage scaffolding (`src/storage/`) [x]
 **Description:** Define schemas for `runs`, `articles_seen`, `exposure_snapshots`, `llm_calls`. Provide `init_db(path) -> Database` that creates tables idempotently.
 **Acceptance:**
-- [ ] `from src.storage.db import init_db; db = init_db(":memory:")` creates all 4 tables
-- [ ] Tables are idempotent (calling `init_db` twice doesn't error or duplicate)
-- [ ] Tested
+- [x] `from src.storage.db import init_db; db = init_db(":memory:")` creates all 4 tables
+- [x] Tables are idempotent (calling `init_db` twice doesn't error or duplicate)
+- [x] Tested
 **Verify:** `pytest tests/test_db.py -v`
 **Dependencies:** Task 0.1
 **Files:** `src/storage/db.py`, `src/storage/schemas.py`, `tests/test_db.py`
 **Scope:** S
 
-#### Task 0.7: GitHub Actions workflow + CI skeleton
+#### Task 0.7: GitHub Actions workflow + CI skeleton [x]
 **Description:** Create `.github/workflows/daily-radar.yml` with `workflow_dispatch` + `repository_dispatch` triggers (job body is stub for now). Create `.github/workflows/ci.yml` that runs `ruff check` + `pytest` on PRs.
 **Acceptance:**
-- [ ] CI workflow runs on PR open/sync against main
-- [ ] daily-radar workflow accepts `mode` and `dry_run` inputs (defaults: daily, false)
-- [ ] Both workflows are syntactically valid (verify locally with `actionlint` or by pushing a draft PR)
+- [x] CI workflow runs on PR open/sync against main
+- [x] daily-radar workflow accepts `mode` and `dry_run` inputs (defaults: daily, false)
+- [x] Both workflows are syntactically valid (verify locally with `actionlint` or by pushing a draft PR)
 **Verify:** Push a draft PR; CI runs and passes; manually trigger daily-radar with `dry_run=true` (job currently stubs out)
 **Dependencies:** Task 0.1
 **Files:** `.github/workflows/daily-radar.yml`, `.github/workflows/ci.yml`
 **Scope:** S
 
-### Checkpoint: Phase 0 complete
-- [ ] All Phase 0 tasks pass their verification commands
-- [ ] `pytest tests/ -v` shows passing tests for all utility modules
-- [ ] CI workflow on a draft PR passes
-- [ ] Reviewer signs off before Phase 1
+### Checkpoint: Phase 0 complete [x]
+- [x] All Phase 0 tasks pass their verification commands
+- [x] `pytest tests/ -v` shows passing tests for all utility modules
+- [x] CI workflow on a draft PR passes
+- [x] Reviewer signs off before Phase 1
 
 ---
 
