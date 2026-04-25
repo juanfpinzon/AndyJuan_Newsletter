@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "andyjuan-personal-portfolio-radar"
+version = "0.1.0"
+description = "Personalized portfolio-aware market news radar."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "AndyJuan Engineering" },
+]
+dependencies = [
+  "agentmail",
+  "beautifulsoup4",
+  "feedparser",
+  "httpx[http2]",
+  "jinja2",
+  "lxml",
+  "openai",
+  "premailer",
+  "python-dotenv",
+  "pyyaml",
+  "rapidfuzz",
+  "sqlite-utils",
+  "structlog",
+  "yfinance",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio",
+  "respx",
+  "ruff",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]

@@ -1,0 +1,42 @@
+name: Daily Radar
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Radar mode to run
+        required: true
+        default: daily
+        type: choice
+        options:
+          - daily
+          - deep
+      dry_run:
+        description: Run without sending email
+        required: true
+        default: false
+        type: boolean
+  repository_dispatch:
+    types:
+      - run-daily-radar
+
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show workflow_dispatch inputs
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "mode=${{ inputs.mode }}"
+          echo "dry_run=${{ inputs.dry_run }}"
+
+      - name: Show repository_dispatch payload
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo 'payload=${{ toJson(github.event.client_payload) }}'
+
+      - name: Stub pipeline step
+        run: echo "Daily radar pipeline stub"
