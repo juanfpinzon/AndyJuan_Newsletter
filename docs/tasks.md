@@ -198,8 +198,8 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.1: `Holding` model + adapter base interface
 **Description:** Define `Holding(ticker, isin, weight)` dataclass and `BaseAdapter` abstract class with `async fetch(etf_id) -> list[Holding]`.
 **Acceptance:**
-- [ ] `BaseAdapter` is abstract; raises `NotImplementedError` if subclass forgets `fetch`
-- [ ] `Holding` is frozen, Decimal weight
+- [x] `BaseAdapter` is abstract; raises `NotImplementedError` if subclass forgets `fetch`
+- [x] `Holding` is frozen, Decimal weight
 **Verify:** `pytest tests/test_lookthrough_base.py -v`
 **Dependencies:** Phase 0 done
 **Files:** `src/lookthrough/models.py`, `src/lookthrough/adapters/base.py`, `tests/test_lookthrough_base.py`
@@ -208,9 +208,9 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.2: iShares adapter
 **Description:** Build an iShares fund-page adapter that fetches top-10 holdings (typically via their JSON API or downloadable CSV). Use respx for tests.
 **Acceptance:**
-- [ ] Returns top-10 `Holding` objects for IUIT (iShares S&P 500 Information Technology) and EGLN (iShares Physical Silver) test cases
-- [ ] Handles HTTP errors → raises `LookthroughFailure(issuer="ishares", etf_id=...)`
-- [ ] Tested with canned fixture
+- [x] Returns top-10 `Holding` objects for IUIT (iShares S&P 500 Information Technology) and EGLN (iShares Physical Silver) test cases
+- [x] Handles HTTP errors → raises `LookthroughFailure(issuer="ishares", etf_id=...)`
+- [x] Tested with canned fixture
 **Verify:** `pytest tests/test_lookthrough_ishares.py -v`
 **Dependencies:** Task 2a.1
 **Files:** `src/lookthrough/adapters/ishares.py`, `tests/test_lookthrough_ishares.py`, `tests/fixtures/etf_holdings/ishares/*.json`
@@ -219,9 +219,9 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.3: VanEck + SSgA + Global X adapters (CSV-based)
 **Description:** These three issuers commonly ship CSV holdings. Build adapters with shared CSV-parsing helper if it cuts code.
 **Acceptance:**
-- [ ] Each of the 3 adapters returns top-10 for at least one ETF in our portfolio (DFEN, GDX, SPYY, SIL)
-- [ ] Each adapter handles HTTP errors with `LookthroughFailure(issuer=...)`
-- [ ] Tested with canned CSV fixtures
+- [x] Each of the 3 adapters returns top-10 for at least one ETF in our portfolio (DFEN, GDX, SPYY, SIL)
+- [x] Each adapter handles HTTP errors with `LookthroughFailure(issuer=...)`
+- [x] Tested with canned CSV fixtures
 **Verify:** `pytest tests/test_lookthrough_vaneck.py tests/test_lookthrough_ssga.py tests/test_lookthrough_globalx.py -v`
 **Dependencies:** Task 2a.1
 **Files:** `src/lookthrough/adapters/{vaneck,ssga,globalx}.py`, 3 corresponding test files, 3 fixture CSVs
@@ -230,10 +230,10 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.4: Lyxor (Amundi) adapter — degraded mode acceptable
 **Description:** Lyxor (Amundi) pages are known to be hard to crawl. Attempt a clean adapter; if it proves uncrawlable, document the failure mode and let the resolver fall back to `etf_holdings.yaml`. The adapter must still raise a typed exception so the resolver knows to fall back.
 **Acceptance:**
-- [ ] Adapter exists and follows `BaseAdapter` interface
-- [ ] If unable to scrape, raises `LookthroughFailure(issuer="lyxor")` cleanly
-- [ ] If scraping works for BNKE, returns top-10
-- [ ] Decision documented in `docs/adr/0001-lyxor-lookthrough.md`
+- [x] Adapter exists and follows `BaseAdapter` interface
+- [x] If unable to scrape, raises `LookthroughFailure(issuer="lyxor")` cleanly
+- [x] If scraping works for BNKE, returns top-10
+- [x] Decision documented in `docs/adr/0001-lyxor-lookthrough.md`
 **Verify:** `pytest tests/test_lookthrough_lyxor.py -v`
 **Dependencies:** Task 2a.1
 **Files:** `src/lookthrough/adapters/lyxor.py`, `tests/test_lookthrough_lyxor.py`, `docs/adr/0001-lyxor-lookthrough.md`
@@ -242,10 +242,10 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.5: Lookthrough resolver (orchestrator with yaml fallback)
 **Description:** `resolve_lookthrough(portfolio) -> dict[etf_ticker, list[Holding]]` — for each ETF, try the issuer's adapter; if it raises `LookthroughFailure`, fall back to `config/etf_holdings.yaml` and log `lookthrough_fallback_used` with issuer name.
 **Acceptance:**
-- [ ] Returns successful scrape data when adapter succeeds
-- [ ] Falls back to yaml on `LookthroughFailure`
-- [ ] Logs `lookthrough_fallback_used` event with `issuer` field
-- [ ] If both scraper and yaml are unavailable, raises `LookthroughExhausted`
+- [x] Returns successful scrape data when adapter succeeds
+- [x] Falls back to yaml on `LookthroughFailure`
+- [x] Logs `lookthrough_fallback_used` event with `issuer` field
+- [x] If both scraper and yaml are unavailable, raises `LookthroughExhausted`
 **Verify:** `pytest tests/test_lookthrough_resolver.py -v`
 **Dependencies:** Task 2a.2, 2a.3, 2a.4, Task 1.4 (etf_holdings.yaml)
 **Files:** `src/lookthrough/resolver.py`, `tests/test_lookthrough_resolver.py`
@@ -254,9 +254,9 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.6: Refresh ETF holdings script (`scripts/refresh_etf_holdings.py`)
 **Description:** Run all adapters once, cache successful results in SQLite (`exposure_snapshots` or new `etf_holdings_cache` table), print per-issuer success/failure summary.
 **Acceptance:**
-- [ ] Runs all 5 adapters, prints summary table
-- [ ] Caches successful results into SQLite with timestamp
-- [ ] Returns nonzero exit code if all 5 issuers fail (sanity guardrail)
+- [x] Runs all 5 adapters, prints summary table
+- [x] Caches successful results into SQLite with timestamp
+- [x] Returns nonzero exit code if all 5 issuers fail (sanity guardrail)
 **Verify:** `python scripts/refresh_etf_holdings.py` runs and prints summary
 **Dependencies:** Task 2a.5
 **Files:** `scripts/refresh_etf_holdings.py`
@@ -265,9 +265,9 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.7: `ExposureEntry` model + composite exposure resolver
 **Description:** Define `ExposureEntry(entity, composite_weight, paths)`. Implement `compute_exposure(positions, lookthrough_data) -> dict[entity, ExposureEntry]`. Each `path` records `{source: 'direct' | 'etf:<ticker>', weight}` so the renderer can show the full attribution.
 **Acceptance:**
-- [ ] For NVDA test scenario (10% direct + 30% of an ETF that's 10% of book), composite weight matches hand-calc
-- [ ] Result is reproducible (same input → same output)
-- [ ] **100% test coverage on `src/exposure/`**
+- [x] For NVDA test scenario (10% direct + 30% of an ETF that's 10% of book), composite weight matches hand-calc
+- [x] Result is reproducible (same input → same output)
+- [x] **100% test coverage on `src/exposure/`**
 **Verify:** `pytest tests/test_exposure.py -v --cov=src/exposure --cov-report=term-missing` shows 100%
 **Dependencies:** Task 2a.5, Task 1.1
 **Files:** `src/exposure/models.py`, `src/exposure/resolver.py`, `tests/test_exposure.py`
@@ -276,18 +276,18 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2a.8: Debug exposure script (`scripts/debug_exposure.py`)
 **Description:** Pretty-print the composite exposure map: entity, composite weight, paths. Support `--costs` flag to print the LLM cost summary from the SQLite `llm_calls` table.
 **Acceptance:**
-- [ ] Default mode prints exposure map sorted by composite weight desc
-- [ ] `--costs` flag prints recent run costs in USD and EUR (via FX from yfinance)
+- [x] Default mode prints exposure map sorted by composite weight desc
+- [x] `--costs` flag prints recent run costs in USD and EUR (via FX from yfinance)
 **Verify:** `python scripts/debug_exposure.py` prints something readable
 **Dependencies:** Task 2a.7
 **Files:** `scripts/debug_exposure.py`
 **Scope:** S
 
 ### Checkpoint: Phase 2a complete
-- [ ] All adapters either work or fall back cleanly
-- [ ] Coverage on `src/exposure/` = 100%
-- [ ] `python scripts/debug_exposure.py` shows a sane map
-- [ ] Reviewer signs off before Phase 3
+- [x] All adapters either work or fall back cleanly
+- [x] Coverage on `src/exposure/` = 100%
+- [x] `python scripts/debug_exposure.py` shows a sane map
+- [x] Reviewer signs off before Phase 3
 
 ---
 
@@ -296,10 +296,10 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2b.1: yfinance pricing client (`src/pricing/yfinance_client.py`)
 **Description:** Wrap yfinance: `fetch_prices(tickers, base_currency='EUR') -> dict[ticker, PriceSnapshot]`. Handle weekend/holiday fallback to last trading day. Convert all prices to EUR via FX (e.g., `EURUSD=X`).
 **Acceptance:**
-- [ ] Returns `PriceSnapshot(ticker, last, previous_close, currency_native, last_eur, change_pct)`
-- [ ] Weekend run uses Friday close as "today"
-- [ ] FX conversion is single-pass (don't fetch USD price then EUR FX twice for the same call batch)
-- [ ] Tested with canned yfinance JSON fixtures
+- [x] Returns `PriceSnapshot(ticker, last, previous_close, currency_native, last_eur, change_pct)`
+- [x] Weekend run uses Friday close as "today"
+- [x] FX conversion is single-pass (don't fetch USD price then EUR FX twice for the same call batch)
+- [x] Tested with canned yfinance JSON fixtures
 **Verify:** `pytest tests/test_pricing.py -v`
 **Dependencies:** Task 0.3
 **Files:** `src/pricing/yfinance_client.py`, `src/pricing/__init__.py`, `tests/test_pricing.py`, `tests/fixtures/yfinance/*.json`
@@ -308,18 +308,18 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2b.2: P&L calculator (`src/pnl/`)
 **Description:** Define `PnLSnapshot` and `DailyDelta` dataclasses. Implement `compute_pnl(positions, prices) -> dict[ticker, PnLSnapshot]` and `compute_total(snapshots) -> TotalPnL`.
 **Acceptance:**
-- [ ] P&L per position matches Snowball screenshot within €0.01
-- [ ] Total P&L matches Snowball total profit (~€69.66 in screenshot)
-- [ ] **100% test coverage on `src/pnl/`**
+- [x] P&L per position matches Snowball screenshot within €0.01
+- [x] Total P&L matches Snowball total profit (~€69.66 in screenshot)
+- [x] **100% test coverage on `src/pnl/`**
 **Verify:** `pytest tests/test_pnl.py -v --cov=src/pnl --cov-report=term-missing` shows 100%
 **Dependencies:** Task 2b.1, Task 1.1
 **Files:** `src/pnl/models.py`, `src/pnl/calculator.py`, `tests/test_pnl.py`
 **Scope:** M
 
 ### Checkpoint: Phase 2b complete
-- [ ] yfinance live spike returns prices for sample tickers
-- [ ] P&L numbers tie to Snowball screenshot
-- [ ] Coverage 100% on `src/pnl/`
+- [x] yfinance live spike returns prices for sample tickers
+- [x] P&L numbers tie to Snowball screenshot
+- [x] Coverage 100% on `src/pnl/`
 
 ---
 
@@ -328,10 +328,10 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2c.1: NewsData.io client (`src/fetcher/newsdata.py`)
 **Description:** Wrap NewsData.io API: paginated fetch over a 24-hour window, dedup against `articles_seen` SQLite table, retry on 429 with backoff, return structured `Article(title, body, url, source, published_at, raw_tags)`.
 **Acceptance:**
-- [ ] `fetch_news(entity_query, hours=24) -> list[Article]` returns deduped articles
-- [ ] Persists seen URLs into `articles_seen` for future dedup
-- [ ] Retries once on 429 (NewsData free tier rate-limits aggressively)
-- [ ] Tested with respx mocking
+- [x] `fetch_news(entity_query, hours=24) -> list[Article]` returns deduped articles
+- [x] Persists seen URLs into `articles_seen` for future dedup
+- [x] Retries once on 429 (NewsData free tier rate-limits aggressively)
+- [x] Tested with respx mocking
 **Verify:** `pytest tests/test_fetcher_newsdata.py -v`
 **Dependencies:** Task 0.3, 0.6
 **Files:** `src/fetcher/newsdata.py`, `tests/test_fetcher_newsdata.py`, `tests/fixtures/news/newsdata/*.json`
@@ -340,9 +340,9 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2c.2: Macro RSS reader (`src/fetcher/macro_rss.py`)
 **Description:** Read RSS feeds from `config/macro_feeds.yaml` using feedparser. ETag-aware so we don't re-fetch unchanged feeds within a day.
 **Acceptance:**
-- [ ] `fetch_macro() -> list[Article]` returns last-24h items from configured feeds
-- [ ] ETag/Last-Modified honored (validate via fixture)
-- [ ] Tested
+- [x] `fetch_macro() -> list[Article]` returns last-24h items from configured feeds
+- [x] ETag/Last-Modified honored (validate via fixture)
+- [x] Tested
 **Verify:** `pytest tests/test_fetcher_macro_rss.py -v`
 **Dependencies:** Task 0.3, Task 1.2
 **Files:** `src/fetcher/macro_rss.py`, `tests/test_fetcher_macro_rss.py`, `tests/fixtures/news/rss/*.xml`
@@ -351,20 +351,20 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 #### Task 2c.3: Entity matcher (`src/entity_match/matcher.py`) — rapidfuzz
 **Description:** Given an article (title + body) and the entity universe (from portfolio + lookthrough), return `list[EntityMatch(entity, score, method)]` for entities mentioned. Use rapidfuzz for fuzzy ticker + company-name matching.
 **Acceptance:**
-- [ ] On a 30-article hand-labeled fixture, ≥80% of articles correctly match to the right primary entity
-- [ ] Both ticker patterns ("$NVDA", "NVDA") and company names ("Nvidia", "NVIDIA Corporation") match
-- [ ] Score threshold tunable via settings
+- [x] On a 30-article hand-labeled fixture, ≥80% of articles correctly match to the right primary entity
+- [x] Both ticker patterns ("$NVDA", "NVDA") and company names ("Nvidia", "NVIDIA Corporation") match
+- [x] Score threshold tunable via settings
 **Verify:** `pytest tests/test_entity_match.py -v`
 **Dependencies:** Task 0.1, 1.1, 1.2
 **Files:** `src/entity_match/matcher.py`, `tests/test_entity_match.py`, `tests/fixtures/news/labeled_30.json`
 **Scope:** M
 
 ### Checkpoint: Phase 2 complete (2a + 2b + 2c)
-- [ ] Live NewsData.io spike returns articles for at least one of our tickers
-- [ ] Entity matcher hits ≥80% on labeled fixture
-- [ ] yfinance P&L matches Snowball
-- [ ] All exposure-map math verified at 100% coverage
-- [ ] Reviewer signs off before Phase 3
+- [x] Live NewsData.io spike returns articles for at least one of our tickers
+- [x] Entity matcher hits ≥80% on labeled fixture
+- [x] yfinance P&L matches Snowball
+- [x] All exposure-map math verified at 100% coverage
+- [x] Reviewer signs off before Phase 3
 
 ---
 
