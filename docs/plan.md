@@ -33,7 +33,7 @@ back on any of them before we move to Phase 3 task breakdown.
 | D3 | **Cost tracking in USD** (OpenRouter bills in USD) | Convert to EUR at display time only, using the same yfinance FX call already in flight for portfolio P&L. |
 | D4 | **Theme tiebreaker for multi-theme news** | Each entity has a `primary_theme` in `themes.yaml`. Articles render once under their primary theme; an "Affects" badge surfaces secondary-theme exposures inline. No dedup, just attribution. |
 | D5 | **Test LLM fixtures captured from a one-time spike** | Phase 3 starts with a manual "spike day" where we run the real ranker / flash / synthesis / fact-checker against a small fixed input, save outputs to `tests/fixtures/llm/`, and use them as canned responses for all subsequent CI runs. |
-| D6 | **`config/portfolio.yaml` initial population is manual** | Bootstrap by hand-typing from the Snowball screenshot (10 positions). The CSV importer is then validated by re-running it against a Snowball export and asserting the result matches the manual file. |
+| D6 | **`config/portfolio.yaml` initial population is seeded from Snowball, then validated from transactions** | Bootstrap from the Snowball snapshot (10 positions). The CSV importer is then validated by re-running it against Snowball's transaction export and asserting the merged result preserves the seeded file's enrichment. |
 | D7 | **CI runs `pytest` only on PR; no live API calls** | Live spikes happen locally before merge. CI uses fixtures + mocks only. |
 
 ---
@@ -129,12 +129,13 @@ back on any of them before we move to Phase 3 task breakdown.
 - `src/portfolio/models.py` — `Position` dataclass (frozen, Decimal fields)
 - `src/portfolio/loader.py` — `load_portfolio(path) -> list[Position]`
 - `scripts/import_snowball.py` — CSV → yaml merge with:
+  - Supports both holdings snapshots and Snowball transaction exports
   - Preserve enrichment on existing tickers
   - Scaffold new tickers with `asset_type: stock` defaulted
   - `--dry-run` flag for diff preview
   - Loud failure on schema drift / currency mismatch
   - Non-destructive on removed tickers (warn only)
-- `config/portfolio.yaml` — initial 10-position file from Snowball screenshot
+- `config/portfolio.yaml` — initial 10-position file from the Snowball snapshot
 - `config/etf_holdings.yaml` — manual fallback top-10 for each of 8 ETFs
   (one-time setup; ~80 entries total)
 - `config/themes.yaml` — themes (Defense, AI/Semis, Precious Metals, EU
@@ -144,12 +145,15 @@ back on any of them before we move to Phase 3 task breakdown.
 - `config/settings.yaml` — initial thresholds, model assignments, cadence
 - `tests/fixtures/portfolio.yaml` — small reference portfolio
 - `tests/fixtures/snowball-export.csv` — sample Snowball CSV for importer test
+- `tests/fixtures/snowball-transactions.csv` — redacted Snowball transaction export for importer aggregation tests
 - `tests/test_portfolio.py` — loader unit tests
 - `tests/test_import_snowball.py` — importer tests (preserve enrichment,
-  scaffold new, dry-run, schema-drift error, currency-mismatch error)
+  scaffold new, dry-run, transaction aggregation, schema-drift error,
+  currency-mismatch error)
 
 **Verification checkpoint:**
 - [ ] `python scripts/import_snowball.py tests/fixtures/snowball-export.csv --dry-run` shows expected diff
+- [ ] `python scripts/import_snowball.py tests/fixtures/snowball-transactions.csv --dry-run` shows expected diff
 - [ ] `pytest tests/test_portfolio.py tests/test_import_snowball.py -v` passes
 - [ ] `config/portfolio.yaml` loads cleanly (no schema errors)
 

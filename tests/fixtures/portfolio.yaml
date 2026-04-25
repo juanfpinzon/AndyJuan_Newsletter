@@ -1,0 +1,16 @@
+version: 1
+positions:
+  - ticker: NVDA
+    isin: US67066G1040
+    asset_type: stock
+    issuer: NVIDIA Corporation
+    shares: "2.5000"
+    cost_basis_eur: "156.265041"
+    currency: USD
+  - ticker: QDVE
+    isin: IE00B3WJKG14
+    asset_type: etf
+    issuer: iShares
+    shares: "1.2500"
+    cost_basis_eur: "35.183007"
+    currency: EUR

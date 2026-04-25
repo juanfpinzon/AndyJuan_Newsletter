@@ -27,7 +27,7 @@ verifies each task before marking it complete.
 - **D3** Cost tracking in USD (OpenRouter bills in USD)
 - **D4** Theme tiebreaker: `primary_theme` per entity in `themes.yaml`; "Affects" badges surface secondary themes inline
 - **D5** LLM test fixtures captured via one-time spike day (Phase 3)
-- **D6** Initial `portfolio.yaml` is hand-typed; importer validated by re-importing a real Snowball CSV
+- **D6** Initial `portfolio.yaml` is seeded from the Snowball snapshot; importer is validated against a real Snowball transaction export
 - **D7** CI runs pytest only; no live API calls
 
 ---
@@ -148,8 +148,8 @@ Sequential within phase; gates Phase 2.
 **Files:** `config/settings.yaml`, `config/recipients.yaml`, `config/themes.yaml`, `config/macro_feeds.yaml`
 **Scope:** S
 
-#### Task 1.3: Initial `config/portfolio.yaml` from Snowball screenshot
-**Description:** Hand-type the 10 positions from the Snowball screenshot: BNKE, DFEN, EGLN (Silver), GDX, GOOGL, NVDA, PPFD (or actual silver ETC), IUIT, SIL, SPYY. Include ticker, ISIN (lookup as needed), asset_type, issuer, shares, cost_basis_eur, currency.
+#### Task 1.3: Initial `config/portfolio.yaml` from Snowball snapshot
+**Description:** Seed the 10 positions from the Snowball snapshot: BNKE, DFEN, EGLN (Gold), GDX, GOOGL, NVDA, PPFD (Silver), QDVE, SILV, SPYY. Include ticker, ISIN (lookup as needed), asset_type, issuer, shares, cost_basis_eur, currency.
 **Acceptance:**
 - [ ] `load_portfolio()` on this file returns exactly 10 positions
 - [ ] Sum of `shares × cost_basis_per_share` matches Snowball total cost basis (€2,693.16) within €0.01
@@ -163,7 +163,7 @@ Sequential within phase; gates Phase 2.
 **Description:** For each of the 8 ETFs in `portfolio.yaml`, hand-build a `top_10` list of `{ticker, isin, weight}` entries from the issuer's latest fact sheet. This is the fallback used when the scraper for that issuer fails.
 **Acceptance:**
 - [ ] Each of 8 ETFs has exactly 10 holdings entries
-- [ ] Weights for each ETF sum to a value > 30% (sanity check; top-10 of broad ETFs is typically 30–80%)
+- [ ] Weights for each ETF sum to a sane concentration level; narrow ETFs should generally exceed 30%, broad-index ETFs may be lower if documented in a `note`
 - [ ] All ticker fields are non-empty
 **Verify:** `python -c "import yaml; d = yaml.safe_load(open('config/etf_holdings.yaml')); assert all(len(d[k]['top_10']) == 10 for k in d), [k for k in d if len(d[k]['top_10']) != 10]"` exits 0
 **Dependencies:** Task 1.3
@@ -171,21 +171,22 @@ Sequential within phase; gates Phase 2.
 **Scope:** M
 
 #### Task 1.5: Snowball CSV importer (`scripts/import_snowball.py`)
-**Description:** Read a Snowball CSV export, merge into `config/portfolio.yaml`. Preserve enrichment on existing tickers; scaffold new tickers with `asset_type: stock` defaulted; warn (don't auto-remove) on tickers missing from the CSV; fail loudly on column-header schema drift or currency mismatch. Support `--dry-run` for diff preview.
+**Description:** Read either a Snowball holdings snapshot CSV or Snowball's transaction export, merge into `config/portfolio.yaml`, and aggregate transactions into current holdings when needed. Preserve enrichment on existing tickers; scaffold new tickers with `asset_type: stock` defaulted; warn (don't auto-remove) on tickers missing from the CSV; fail loudly on column-header schema drift or currency mismatch in holdings snapshots. Support `--dry-run` for diff preview.
 **Acceptance:**
 - [ ] `python scripts/import_snowball.py tests/fixtures/snowball-export.csv --dry-run` shows diff without writing
+- [ ] `python scripts/import_snowball.py tests/fixtures/snowball-transactions.csv --dry-run` aggregates transactions into current holdings without writing
 - [ ] Existing tickers preserve `asset_type`, `issuer`, `isin`, `theme`, etc.
 - [ ] New tickers are scaffolded with `asset_type: stock` and a logged warning
 - [ ] Missing column headers raise a clear `SnowballSchemaError`
 **Verify:** `pytest tests/test_import_snowball.py -v`
 **Dependencies:** Task 1.1, 1.3
-**Files:** `scripts/import_snowball.py`, `tests/test_import_snowball.py`, `tests/fixtures/snowball-export.csv`
+**Files:** `scripts/import_snowball.py`, `tests/test_import_snowball.py`, `tests/fixtures/snowball-export.csv`, `tests/fixtures/snowball-transactions.csv`
 **Scope:** M
 
 ### Checkpoint: Phase 1 complete
 - [ ] All config files load cleanly
 - [ ] Portfolio loader passes all tests
-- [ ] Importer round-trips a real Snowball CSV without losing enrichment fields
+- [ ] Importer round-trips a real Snowball transaction export without losing enrichment fields
 - [ ] Reviewer signs off before Phase 2
 
 ---

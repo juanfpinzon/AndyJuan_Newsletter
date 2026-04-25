@@ -1,0 +1,85 @@
+themes:
+  Defense:
+    description: Defense contractors, aerospace, and security technology.
+  AI/Semis:
+    description: Semiconductor leaders and AI infrastructure beneficiaries.
+  Precious Metals:
+    description: Physical metals and miners tied to gold and silver.
+  EU Banks:
+    description: Eurozone and European banking exposure.
+  US Megacaps:
+    description: Large-cap U.S. platform and index-heavy equity exposure.
+  Macro/FX:
+    description: Central banks, rates, and foreign-exchange context.
+
+entities:
+  BNKE:
+    primary_theme: EU Banks
+    aliases:
+      - Amundi Euro Stoxx Banks UCITS ETF Acc
+  DFEN:
+    primary_theme: Defense
+    aliases:
+      - DFNS
+      - VanEck Defense UCITS ETF
+  EGLN:
+    primary_theme: Precious Metals
+    aliases:
+      - SGLN
+      - iShares Physical Gold ETC
+  GDX:
+    primary_theme: Precious Metals
+    aliases:
+      - VanEck Gold Miners UCITS ETF
+  GOOGL:
+    primary_theme: US Megacaps
+    secondary_themes:
+      - AI/Semis
+    aliases:
+      - Alphabet Inc.
+      - Google
+  NVDA:
+    primary_theme: AI/Semis
+    secondary_themes:
+      - US Megacaps
+    aliases:
+      - NVIDIA Corporation
+      - Nvidia
+  PPFD:
+    primary_theme: Precious Metals
+    aliases:
+      - SSLN
+      - iShares Physical Silver ETC
+  QDVE:
+    primary_theme: AI/Semis
+    aliases:
+      - IUIT
+      - iShares S&P 500 Information Technology Sector UCITS ETF
+  SILV:
+    primary_theme: Precious Metals
+    aliases:
+      - SIL
+      - Global X Silver Miners UCITS ETF
+  SPYY:
+    primary_theme: US Megacaps
+    secondary_themes:
+      - Macro/FX
+    aliases:
+      - SPDR MSCI All Country World UCITS ETF
+  ECB:
+    primary_theme: Macro/FX
+    aliases:
+      - European Central Bank
+  FED:
+    primary_theme: Macro/FX
+    aliases:
+      - Federal Reserve
+      - FOMC
+  EURUSD:
+    primary_theme: Macro/FX
+    aliases:
+      - EUR/USD
+  DXY:
+    primary_theme: Macro/FX
+    aliases:
+      - U.S. Dollar Index

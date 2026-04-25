@@ -1,0 +1,82 @@
+version: 1
+positions:
+  - ticker: BNKE
+    isin: LU1829219390
+    asset_type: etf
+    issuer: Amundi ETF
+    name: Amundi Euro Stoxx Banks UCITS ETF Acc
+    shares: "1.1023"
+    cost_basis_eur: "301.551302"
+    currency: EUR
+  - ticker: DFEN
+    isin: IE000YYE6WK5
+    asset_type: etf
+    issuer: VanEck
+    name: VanEck Defense UCITS ETF
+    shares: "6.4643"
+    cost_basis_eur: "54.140433"
+    currency: EUR
+  - ticker: EGLN
+    isin: IE00B4ND3602
+    asset_type: etf
+    issuer: iShares
+    name: iShares Physical Gold ETC
+    shares: "0.9627"
+    cost_basis_eur: "81.790797"
+    currency: EUR
+  - ticker: GDX
+    isin: IE00BQQP9F84
+    asset_type: etf
+    issuer: VanEck
+    name: VanEck Gold Miners UCITS ETF
+    shares: "2.2003"
+    cost_basis_eur: "104.522111"
+    currency: USD
+  - ticker: GOOGL
+    isin: US02079K3059
+    asset_type: stock
+    issuer: Alphabet Inc.
+    name: Alphabet Inc. Class A
+    shares: "0.5547"
+    cost_basis_eur: "269.713359"
+    currency: USD
+  - ticker: NVDA
+    isin: US67066G1040
+    asset_type: stock
+    issuer: NVIDIA Corporation
+    name: NVIDIA Corporation
+    shares: "2.4932"
+    cost_basis_eur: "156.265041"
+    currency: USD
+  - ticker: PPFD
+    isin: IE00B4NCWG09
+    asset_type: etf
+    issuer: iShares
+    name: iShares Physical Silver ETC
+    shares: "0.5759"
+    cost_basis_eur: "63.795798"
+    currency: EUR
+  - ticker: QDVE
+    isin: IE00B3WJKG14
+    asset_type: etf
+    issuer: iShares
+    name: iShares S&P 500 Information Technology Sector UCITS ETF
+    shares: "9.9477"
+    cost_basis_eur: "35.183007"
+    currency: EUR
+  - ticker: SILV
+    isin: IE000UL6CLP7
+    asset_type: etf
+    issuer: Global X
+    name: Global X Silver Miners UCITS ETF
+    shares: "4.8716"
+    cost_basis_eur: "47.212415"
+    currency: USD
+  - ticker: SPYY
+    isin: IE00B44Z5B48
+    asset_type: etf
+    issuer: State Street
+    name: SPDR MSCI All Country World UCITS ETF
+    shares: "2.1875"
+    cost_basis_eur: "249.654857"
+    currency: USD
