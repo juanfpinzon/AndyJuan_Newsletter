@@ -1,0 +1,8 @@
+llm_scoring_model: anthropic/claude-haiku-4.5
+llm_synthesis_model: anthropic/claude-sonnet-4-6
+llm_fact_check_model: anthropic/claude-haiku-4.5
+llm_fallback_model: anthropic/claude-haiku-4.5
+database_path: data/andyjuan.db
+log_file: data/logs/andyjuan.jsonl
+news_item_limit: 15
+exposure_threshold_percent: 5.0
