@@ -1,0 +1,46 @@
+[
+  {
+    "title": "Alphabet ad rebound steadies megacap sentiment",
+    "primary_entity": "GOOGL",
+    "matched_entities": [
+      "GOOGL"
+    ],
+    "composite_weight": "0.045",
+    "llm_score": 85,
+    "included_by": "rank",
+    "rationale": "Highest portfolio exposure at 4.5% (direct holding). Positive sentiment on advertising trends supports megacap tech allocation."
+  },
+  {
+    "title": "Nvidia software partners extend AI momentum",
+    "primary_entity": "NVDA",
+    "matched_entities": [
+      "NVDA"
+    ],
+    "composite_weight": "0.04",
+    "llm_score": 82,
+    "included_by": "rank",
+    "rationale": "Strong portfolio exposure at 4.0% (direct holding). AI momentum and accelerated computing demand reinforces core tech thesis."
+  },
+  {
+    "title": "Apple suppliers await the next product cycle",
+    "primary_entity": "AAPL",
+    "matched_entities": [
+      "AAPL"
+    ],
+    "composite_weight": "0.03",
+    "llm_score": 72,
+    "included_by": "rank",
+    "rationale": "Portfolio exposure at 3.0% via QDVE ETF. Supply chain clarity relevant for component-dependent tech holdings."
+  },
+  {
+    "title": "Gold ETF inflows stabilize after volatile week",
+    "primary_entity": "EGLN",
+    "matched_entities": [
+      "EGLN"
+    ],
+    "composite_weight": "0.02",
+    "llm_score": 58,
+    "included_by": "rank",
+    "rationale": "Portfolio exposure at 2.0% via EGLN ETF. Gold ETF stabilization has modest relevance to diversified portfolio allocation."
+  }
+]

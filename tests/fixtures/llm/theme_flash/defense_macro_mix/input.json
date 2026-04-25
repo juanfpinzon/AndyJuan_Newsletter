@@ -1,0 +1,15 @@
+{
+  "theme": "Defense",
+  "articles": [
+    {
+      "title": "Defense names hold gains as spending outlook firms",
+      "primary_entity": "DFEN",
+      "composite_weight": "0.08"
+    },
+    {
+      "title": "European leaders discuss procurement capacity again",
+      "primary_entity": "BA",
+      "composite_weight": "0.03"
+    }
+  ]
+}

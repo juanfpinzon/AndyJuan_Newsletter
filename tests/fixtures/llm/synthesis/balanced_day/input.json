@@ -1,0 +1,36 @@
+{
+  "theme_flashes": [
+    {
+      "theme": "AI/Semis",
+      "text": "AI and semiconductor exposure stayed in focus after fresh demand and spending headlines.",
+      "sentence_count": 1
+    },
+    {
+      "theme": "EU Banks",
+      "text": "Bank shares stayed firm as the rates path was repriced.",
+      "sentence_count": 1
+    }
+  ],
+  "ranked_articles": [
+    {
+      "title": "Nvidia suppliers rally on AI server demand",
+      "primary_entity": "NVDA",
+      "composite_weight": "0.13"
+    },
+    {
+      "title": "European banks extend gains on rates repricing",
+      "primary_entity": "BNKE",
+      "composite_weight": "0.06"
+    }
+  ],
+  "exposure_map": {
+    "NVDA": {
+      "composite_weight": "0.13",
+      "paths": [{"source": "direct", "weight": "0.10"}]
+    },
+    "BNKE": {
+      "composite_weight": "0.06",
+      "paths": [{"source": "etf:BNKE", "weight": "0.06"}]
+    }
+  }
+}

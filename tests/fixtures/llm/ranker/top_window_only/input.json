@@ -1,0 +1,58 @@
+{
+  "articles": [
+    {
+      "title": "Alphabet ad rebound steadies megacap sentiment",
+      "body": "Advertising trends improved more quickly than expected.",
+      "url": "https://example.com/googl-ads",
+      "source": "Reuters",
+      "published_at": "2026-04-25T07:00:00Z",
+      "raw_tags": ["GOOGL"],
+      "matched_entities": ["GOOGL"]
+    },
+    {
+      "title": "Nvidia software partners extend AI momentum",
+      "body": "Partner commentary reinforced demand for accelerated computing.",
+      "url": "https://example.com/nvda-partners",
+      "source": "Bloomberg",
+      "published_at": "2026-04-25T07:30:00Z",
+      "raw_tags": ["NVDA"],
+      "matched_entities": ["NVDA"]
+    },
+    {
+      "title": "Gold ETF inflows stabilize after volatile week",
+      "body": "Bullion funds saw steadier demand into the close.",
+      "url": "https://example.com/egln-flows",
+      "source": "FT",
+      "published_at": "2026-04-25T08:00:00Z",
+      "raw_tags": ["EGLN"],
+      "matched_entities": ["EGLN"]
+    },
+    {
+      "title": "Apple suppliers await the next product cycle",
+      "body": "Component makers are looking for a cleaner launch window.",
+      "url": "https://example.com/aapl-suppliers",
+      "source": "CNBC",
+      "published_at": "2026-04-25T08:15:00Z",
+      "raw_tags": ["AAPL"],
+      "matched_entities": ["AAPL"]
+    }
+  ],
+  "exposure_map": {
+    "GOOGL": {
+      "composite_weight": "0.045",
+      "paths": [{"source": "direct", "weight": "0.045"}]
+    },
+    "NVDA": {
+      "composite_weight": "0.04",
+      "paths": [{"source": "direct", "weight": "0.04"}]
+    },
+    "EGLN": {
+      "composite_weight": "0.02",
+      "paths": [{"source": "etf:EGLN", "weight": "0.02"}]
+    },
+    "AAPL": {
+      "composite_weight": "0.03",
+      "paths": [{"source": "etf:QDVE", "weight": "0.03"}]
+    }
+  }
+}

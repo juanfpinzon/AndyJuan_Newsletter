@@ -1,0 +1,10 @@
+```json
+{
+  "ok": true,
+  "flagged_claims": []
+}
+```
+
+The AI take accurately reflects the rendered content:
+- "AI/Semis remained the strongest thread" is supported by "Nvidia suppliers rally on AI server demand"
+- "EU Banks added a separate rates-sensitive driver" is supported by "European banks extend gains on rates repricing" (rates repricing = rates-sensitive driver)

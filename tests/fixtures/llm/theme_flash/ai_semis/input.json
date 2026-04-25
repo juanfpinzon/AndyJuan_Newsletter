@@ -1,0 +1,15 @@
+{
+  "theme": "AI/Semis",
+  "articles": [
+    {
+      "title": "Nvidia suppliers rally on AI server demand",
+      "primary_entity": "NVDA",
+      "composite_weight": "0.13"
+    },
+    {
+      "title": "Alphabet spending outlook lifts cloud names",
+      "primary_entity": "GOOGL",
+      "composite_weight": "0.11"
+    }
+  ]
+}

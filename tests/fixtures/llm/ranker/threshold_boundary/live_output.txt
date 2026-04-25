@@ -1,0 +1,19 @@
+```json
+[
+  {
+    "article_id": "2",
+    "score": 95,
+    "rationale": "Portfolio exposure 6.0% (≥5.0% threshold); rates repricing directly impacts bank valuations"
+  },
+  {
+    "article_id": "0",
+    "score": 72,
+    "rationale": "Portfolio exposure 4.0%; firm AI server demand supports NVDA fundamentals"
+  },
+  {
+    "article_id": "1",
+    "score": 45,
+    "rationale": "Portfolio exposure 2.0%; gold miner cost pressures relevant but lower impact"
+  }
+]
+```

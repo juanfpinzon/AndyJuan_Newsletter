@@ -1,0 +1,22 @@
+[
+  {
+    "article_id": "0",
+    "score": 95,
+    "rationale": "Megacap ad data matters immediately for direct exposure."
+  },
+  {
+    "article_id": "1",
+    "score": 89,
+    "rationale": "The headline reinforces the biggest AI-linked position."
+  },
+  {
+    "article_id": "2",
+    "score": 60,
+    "rationale": "Flows are useful context, but the book impact is smaller."
+  },
+  {
+    "article_id": "3",
+    "score": 55,
+    "rationale": "Supplier commentary is relevant, though not dominant."
+  }
+]

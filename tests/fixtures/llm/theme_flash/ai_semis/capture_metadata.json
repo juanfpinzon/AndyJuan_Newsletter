@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-04-25T23:01:19.088926+00:00",
+  "model": "anthropic/claude-4.6-sonnet-20260217",
+  "tokens_in": 252,
+  "tokens_out": 59,
+  "cost_usd": 0.001641
+}

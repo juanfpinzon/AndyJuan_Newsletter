@@ -1,0 +1,50 @@
+{
+  "theme_flashes": [
+    {
+      "theme": "AI/Semis",
+      "text": "AI leadership stayed intact across semis and cloud names.",
+      "sentence_count": 1
+    },
+    {
+      "theme": "Precious Metals",
+      "text": "Bullion and miners diverged again as costs stayed in view.",
+      "sentence_count": 1
+    },
+    {
+      "theme": "EU Banks",
+      "text": "Rates-sensitive lenders kept reacting to the macro path.",
+      "sentence_count": 1
+    }
+  ],
+  "ranked_articles": [
+    {
+      "title": "Nvidia software partners extend AI momentum",
+      "primary_entity": "NVDA",
+      "composite_weight": "0.13"
+    },
+    {
+      "title": "Gold miners slip despite firmer bullion",
+      "primary_entity": "GDX",
+      "composite_weight": "0.07"
+    },
+    {
+      "title": "European banks extend gains on rates repricing",
+      "primary_entity": "BNKE",
+      "composite_weight": "0.06"
+    }
+  ],
+  "exposure_map": {
+    "NVDA": {
+      "composite_weight": "0.13",
+      "paths": [{"source": "direct", "weight": "0.10"}]
+    },
+    "GDX": {
+      "composite_weight": "0.07",
+      "paths": [{"source": "etf:GDX", "weight": "0.07"}]
+    },
+    "BNKE": {
+      "composite_weight": "0.06",
+      "paths": [{"source": "etf:BNKE", "weight": "0.06"}]
+    }
+  }
+}

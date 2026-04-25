@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-04-25T23:01:48.116099+00:00",
+  "model": "anthropic/claude-4.5-haiku-20251001",
+  "tokens_in": 178,
+  "tokens_out": 99,
+  "cost_usd": 0.000673
+}
