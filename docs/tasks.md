@@ -372,68 +372,68 @@ Sequential within phase. Phases 2b and 2c can run in parallel with 2a if impleme
 
 Phase 3 begins with a "spike day" to capture LLM fixtures (per D5).
 
-#### Task 3.0: LLM spike day — capture fixtures
+#### Task 3.0: LLM spike day — capture fixtures [x]
 **Description:** With a working Phase 2 pipeline (real NewsData fetch → real exposure map), run real OpenRouter calls for each prompt (ranker, theme flash, synthesis, fact-checker) against a fixed input. Save outputs to `tests/fixtures/llm/`. Document spend in the PR.
 **Acceptance:**
-- [ ] 4 fixture sets saved: `tests/fixtures/llm/{ranker,theme_flash,synthesis,fact_checker}/`
-- [ ] Each fixture set includes the input + output for at least 2 representative scenarios
-- [ ] Total spike spend documented
+- [x] 4 fixture sets saved: `tests/fixtures/llm/{ranker,theme_flash,synthesis,fact_checker}/`
+- [x] Each fixture set includes the input + output for at least 2 representative scenarios
+- [x] Total spike spend documented
 **Verify:** `ls tests/fixtures/llm/` shows 4 directories with content
 **Dependencies:** Phase 2 complete
 **Files:** `tests/fixtures/llm/**/*` (data files only)
 **Scope:** S (research, not code)
 
-#### Task 3.1: Ranker prompt + module (`prompts/news_ranker.md`, `src/analyzer/ranker.py`)
+#### Task 3.1: Ranker prompt + module (`prompts/news_ranker.md`, `src/analyzer/ranker.py`) [x]
 **Description:** Prompt takes candidate articles + exposure map JSON. Output: ranked list (top-15 OR ≥5% composite, whichever is more). Use Haiku for cost.
 **Acceptance:**
-- [ ] Prompt is in `prompts/news_ranker.md`, parameterized with jinja
-- [ ] `rank_news(articles, exposure_map) -> list[RankedArticle]` produces structured output
-- [ ] Output respects threshold rule on canned fixture input
-- [ ] Tested with fixtures (no live calls)
+- [x] Prompt is in `prompts/news_ranker.md`, parameterized with jinja
+- [x] `rank_news(articles, exposure_map) -> list[RankedArticle]` produces structured output
+- [x] Output respects threshold rule on canned fixture input
+- [x] Tested with fixtures (no live calls)
 **Verify:** `pytest tests/test_ranker.py -v`
 **Dependencies:** Task 0.4, Task 3.0
 **Files:** `prompts/news_ranker.md`, `src/analyzer/ranker.py`, `tests/test_ranker.py`
 **Scope:** M
 
-#### Task 3.2: Theme flash prompt + module
+#### Task 3.2: Theme flash prompt + module [x]
 **Description:** For each theme group in the rendered email, generate 1–2 sentences. Sonnet model.
 **Acceptance:**
-- [ ] Output is consistently 1–2 sentences (validate by sentence count regex on fixture output)
-- [ ] No novel facts (manual eyeball + fact-checker pass in Task 3.4)
-- [ ] Tested with fixtures
+- [x] Output is consistently 1–2 sentences (validate by sentence count regex on fixture output)
+- [x] No novel facts (manual eyeball + fact-checker pass in Task 3.4)
+- [x] Tested with fixtures
 **Verify:** `pytest tests/test_theme_flash.py -v`
 **Dependencies:** Task 0.4, Task 3.0
 **Files:** `prompts/theme_flash.md`, `src/analyzer/theme_flash.py`, `tests/test_theme_flash.py`
 **Scope:** S
 
-#### Task 3.3: Synthesis prompt + module
+#### Task 3.3: Synthesis prompt + module [x]
 **Description:** Bottom-of-email synthesis: 2–3 paragraphs cross-referencing themes + a final paragraph of suggestions ("Watch X earnings", "EUR/USD move tilts USD ETFs +1.2%"). Sonnet model.
 **Acceptance:**
-- [ ] Output respects "no novel facts" rule (validated by Task 3.4 fact-checker on fixture output)
-- [ ] Final paragraph contains at least one "Watch" or "Note" suggestion
-- [ ] Tested
+- [x] Output respects "no novel facts" rule (validated by Task 3.4 fact-checker on fixture output)
+- [x] Final paragraph contains at least one "Watch" or "Note" suggestion
+- [x] Tested
 **Verify:** `pytest tests/test_synthesis.py -v`
 **Dependencies:** Task 0.4, Task 3.0
 **Files:** `prompts/ai_synthesis.md`, `src/analyzer/synthesis.py`, `tests/test_synthesis.py`
 **Scope:** M
 
-#### Task 3.4: Fact-checker prompt + module (fail-closed)
+#### Task 3.4: Fact-checker prompt + module (fail-closed) [x]
 **Description:** Post-render Haiku pass. Input: rendered email content + AI Take blocks. Output: `{ok: bool, flagged_claims: list[str]}`. On `ok=false`, the AI Take is omitted from final email and a warning is logged.
 **Acceptance:**
-- [ ] Blocks AI Take when input contains "NVDA acquired AMD" planted into a Sonnet output (test scenario)
-- [ ] Passes when AI Take only synthesizes from facts in the rendered content
-- [ ] Warning log includes flagged claims with verbatim text
-- [ ] **≥90% test coverage on `src/analyzer/fact_checker.py`**
+- [x] Blocks AI Take when input contains "NVDA acquired AMD" planted into a Sonnet output (test scenario)
+- [x] Passes when AI Take only synthesizes from facts in the rendered content
+- [x] Warning log includes flagged claims with verbatim text
+- [x] **≥90% test coverage on `src/analyzer/fact_checker.py`**
 **Verify:** `pytest tests/test_fact_checker.py -v --cov=src/analyzer/fact_checker --cov-report=term-missing` shows ≥90%
 **Dependencies:** Task 0.4, Task 3.0
 **Files:** `prompts/fact_checker.md`, `src/analyzer/fact_checker.py`, `tests/test_fact_checker.py`
 **Scope:** M
 
-### Checkpoint: Phase 3 complete
-- [ ] All 4 LLM fixtures captured and tests pass
-- [ ] Fact-checker blocks the planted "NVDA acquired AMD" novel fact
-- [ ] Spike-day spend documented
-- [ ] Reviewer signs off before Phase 4
+### Checkpoint: Phase 3 complete [x]
+- [x] All 4 LLM fixtures captured and tests pass
+- [x] Fact-checker blocks the planted "NVDA acquired AMD" novel fact
+- [x] Spike-day spend documented
+- [x] Reviewer signs off before Phase 4
 
 ---
 
