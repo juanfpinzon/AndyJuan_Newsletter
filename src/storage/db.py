@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 
 from sqlite_utils import Database
@@ -50,6 +52,54 @@ def record_llm_call(
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
     )
+
+
+def cache_etf_holdings(
+    db_path: str | Path,
+    *,
+    ticker: str,
+    source_etf_id: str,
+    issuer: str,
+    holdings: list[dict[str, str | None]],
+) -> None:
+    """Persist a successful ETF holdings fetch."""
+
+    database = init_db(db_path)
+    database["etf_holdings_cache"].insert(
+        {
+            "ticker": ticker,
+            "source_etf_id": source_etf_id,
+            "issuer": issuer,
+            "holdings_json": json.dumps(holdings),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+
+
+def summarize_llm_costs(
+    db_path: str | Path,
+    *,
+    limit: int = 20,
+) -> dict[str, Decimal]:
+    """Summarize recent LLM costs."""
+
+    database = init_db(db_path)
+    rows = list(
+        database.conn.execute(
+            """
+            select cost_usd
+            from llm_calls
+            order by created_at desc
+            limit ?
+            """,
+            (limit,),
+        )
+    )
+    total_usd = sum((Decimal(str(row[0] or 0)) for row in rows), start=Decimal("0"))
+    return {
+        "calls": Decimal(len(rows)),
+        "total_usd": total_usd,
+    }
 
 
 def _open_database(path: str | Path) -> Database:

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Macro Fixture</title>
+    <item>
+      <title>ECB signals patience on rate path</title>
+      <link>https://example.com/ecb-rates</link>
+      <description>Officials said more data is needed before the next move.</description>
+      <pubDate>Sat, 25 Apr 2026 06:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Older macro item should be filtered</title>
+      <link>https://example.com/old-macro</link>
+      <description>This item is older than the 24 hour window.</description>
+      <pubDate>Thu, 23 Apr 2026 06:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

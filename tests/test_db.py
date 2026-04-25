@@ -9,6 +9,7 @@ def test_init_db_creates_all_expected_tables() -> None:
     assert {
         "runs",
         "articles_seen",
+        "etf_holdings_cache",
         "exposure_snapshots",
         "llm_calls",
     }.issubset(set(db.table_names()))
@@ -24,12 +25,14 @@ def test_init_db_is_idempotent(tmp_path: Path) -> None:
         row[0]
         for row in db.conn.execute(
             "select name from sqlite_master where type = 'table' and name in "
-            "('runs', 'articles_seen', 'exposure_snapshots', 'llm_calls')"
+            "('runs', 'articles_seen', 'etf_holdings_cache', "
+            "'exposure_snapshots', 'llm_calls')"
         )
     ]
 
     assert sorted(created_tables) == [
         "articles_seen",
+        "etf_holdings_cache",
         "exposure_snapshots",
         "llm_calls",
         "runs",

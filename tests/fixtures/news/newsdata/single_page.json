@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "article_id": "article-1",
+      "title": "Nvidia demand lifts AI server spending",
+      "description": "Customers kept ordering Blackwell hardware.",
+      "link": "https://example.com/nvidia-demand",
+      "source_id": "reuters",
+      "source_name": "Reuters",
+      "pubDate": "2026-04-25 07:00:00",
+      "keywords": ["NVDA", "AI"]
+    }
+  ]
+}

@@ -32,6 +32,7 @@ dependencies = [
 dev = [
   "pytest>=8.0",
   "pytest-asyncio",
+  "pytest-cov",
   "respx",
   "ruff",
 ]
