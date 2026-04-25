@@ -18,6 +18,7 @@ def write_settings(path: Path) -> None:
                 "log_file: data/logs/test.jsonl",
                 "news_item_limit: 15",
                 "exposure_threshold_percent: 5.0",
+                "entity_match_threshold: 85.0",
             ]
         )
         + "\n",
@@ -57,6 +58,7 @@ def test_load_settings_coerces_environment_numeric_overrides(
     write_settings(settings_path)
     monkeypatch.setenv("NEWS_ITEM_LIMIT", "99")
     monkeypatch.setenv("EXPOSURE_THRESHOLD_PERCENT", "6.5")
+    monkeypatch.setenv("ENTITY_MATCH_THRESHOLD", "91.5")
 
     settings = load_settings(settings_path)
 
@@ -64,6 +66,8 @@ def test_load_settings_coerces_environment_numeric_overrides(
     assert settings.news_item_limit == 99
     assert isinstance(settings.exposure_threshold_percent, float)
     assert settings.exposure_threshold_percent == 6.5
+    assert isinstance(settings.entity_match_threshold, float)
+    assert settings.entity_match_threshold == 91.5
 
 
 def test_load_settings_raises_for_missing_required_keys(tmp_path: Path) -> None:
@@ -78,3 +82,4 @@ def test_load_settings_defaults_to_repository_config() -> None:
     settings = load_settings()
 
     assert settings.database_path == "data/andyjuan.db"
+    assert settings.entity_match_threshold == 85.0

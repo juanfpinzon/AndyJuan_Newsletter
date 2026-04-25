@@ -1,0 +1,272 @@
+[
+  {
+    "title": "$NVDA extends rally after AI server orders surge",
+    "body": "Traders said NVDA remained a core AI infrastructure winner.",
+    "url": "https://example.com/labeled-01",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:00:00Z",
+    "raw_tags": ["NVDA"],
+    "expected_entity": "NVDA"
+  },
+  {
+    "title": "NVIDIA Corporation boosts Blackwell shipments",
+    "body": "Nvidia said hyperscaler demand stayed strong.",
+    "url": "https://example.com/labeled-02",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:05:00Z",
+    "raw_tags": ["Nvidia"],
+    "expected_entity": "NVDA"
+  },
+  {
+    "title": "Google leans on cloud growth as ad market improves",
+    "body": "Alphabet Inc. shares rose after the update.",
+    "url": "https://example.com/labeled-03",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:10:00Z",
+    "raw_tags": ["Google"],
+    "expected_entity": "GOOGL"
+  },
+  {
+    "title": "Alphabet Inc. invests more in AI compute",
+    "body": "Google executives outlined larger capex plans.",
+    "url": "https://example.com/labeled-04",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:15:00Z",
+    "raw_tags": ["Alphabet"],
+    "expected_entity": "GOOGL"
+  },
+  {
+    "title": "Federal Reserve minutes keep focus on inflation",
+    "body": "The Fed left investors debating the next policy step.",
+    "url": "https://example.com/labeled-05",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:20:00Z",
+    "raw_tags": ["Fed"],
+    "expected_entity": "FED"
+  },
+  {
+    "title": "FOMC speakers strike a cautious tone on cuts",
+    "body": "Investors adjusted Treasury and dollar bets.",
+    "url": "https://example.com/labeled-06",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:25:00Z",
+    "raw_tags": ["FOMC"],
+    "expected_entity": "FED"
+  },
+  {
+    "title": "European Central Bank officials resist early easing bets",
+    "body": "The ECB said wage data still matters.",
+    "url": "https://example.com/labeled-07",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:30:00Z",
+    "raw_tags": ["ECB"],
+    "expected_entity": "ECB"
+  },
+  {
+    "title": "ECB commentary knocks bond yields lower",
+    "body": "Macro desks tracked fresh European Central Bank remarks.",
+    "url": "https://example.com/labeled-08",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:35:00Z",
+    "raw_tags": ["ECB"],
+    "expected_entity": "ECB"
+  },
+  {
+    "title": "EUR/USD steadies as traders await inflation data",
+    "body": "The EURUSD pair held near recent highs in Europe.",
+    "url": "https://example.com/labeled-09",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:40:00Z",
+    "raw_tags": ["EURUSD"],
+    "expected_entity": "EURUSD"
+  },
+  {
+    "title": "Dollar index slips while DXY support breaks",
+    "body": "The U.S. Dollar Index weakened against major peers.",
+    "url": "https://example.com/labeled-10",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:45:00Z",
+    "raw_tags": ["DXY"],
+    "expected_entity": "DXY"
+  },
+  {
+    "title": "VanEck Gold Miners UCITS ETF draws fresh inflows",
+    "body": "GDX benefited from stronger bullion sentiment.",
+    "url": "https://example.com/labeled-11",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:50:00Z",
+    "raw_tags": ["GDX"],
+    "expected_entity": "GDX"
+  },
+  {
+    "title": "Gold miners rebound as GDX clears resistance",
+    "body": "Analysts cited leverage to a better gold price.",
+    "url": "https://example.com/labeled-12",
+    "source": "Fixture",
+    "published_at": "2026-04-25T08:55:00Z",
+    "raw_tags": ["GDX"],
+    "expected_entity": "GDX"
+  },
+  {
+    "title": "iShares Physical Gold ETC tracks safe-haven demand",
+    "body": "EGLN added momentum as investors hedged risk.",
+    "url": "https://example.com/labeled-13",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:00:00Z",
+    "raw_tags": ["EGLN"],
+    "expected_entity": "EGLN"
+  },
+  {
+    "title": "SGLN volumes rise with stronger bullion prices",
+    "body": "The physical gold product saw heavier turnover.",
+    "url": "https://example.com/labeled-14",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:05:00Z",
+    "raw_tags": ["SGLN"],
+    "expected_entity": "EGLN"
+  },
+  {
+    "title": "iShares Physical Silver ETC gains as metal rallies",
+    "body": "PPFD outperformed broader commodity benchmarks.",
+    "url": "https://example.com/labeled-15",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:10:00Z",
+    "raw_tags": ["PPFD"],
+    "expected_entity": "PPFD"
+  },
+  {
+    "title": "SSLN catches up after silver breaks out",
+    "body": "The product tracked a stronger physical silver market.",
+    "url": "https://example.com/labeled-16",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:15:00Z",
+    "raw_tags": ["SSLN"],
+    "expected_entity": "PPFD"
+  },
+  {
+    "title": "Global X Silver Miners UCITS ETF jumps with miners",
+    "body": "SILV responded to renewed interest in silver equities.",
+    "url": "https://example.com/labeled-17",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:20:00Z",
+    "raw_tags": ["SILV"],
+    "expected_entity": "SILV"
+  },
+  {
+    "title": "SIL rallies as silver miners recover",
+    "body": "Investors rotated into leveraged precious-metals plays.",
+    "url": "https://example.com/labeled-18",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:25:00Z",
+    "raw_tags": ["SIL"],
+    "expected_entity": "SILV"
+  },
+  {
+    "title": "SPDR MSCI All Country World UCITS ETF adds assets",
+    "body": "SPYY remained a broad global equity proxy.",
+    "url": "https://example.com/labeled-19",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:30:00Z",
+    "raw_tags": ["SPYY"],
+    "expected_entity": "SPYY"
+  },
+  {
+    "title": "SPYY steadies as global stocks digest earnings",
+    "body": "The diversified ETF tracked world equities closely.",
+    "url": "https://example.com/labeled-20",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:35:00Z",
+    "raw_tags": ["SPYY"],
+    "expected_entity": "SPYY"
+  },
+  {
+    "title": "iShares S&P 500 Information Technology Sector UCITS ETF sees inflows",
+    "body": "QDVE remained popular among AI and software bulls.",
+    "url": "https://example.com/labeled-21",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:40:00Z",
+    "raw_tags": ["QDVE"],
+    "expected_entity": "QDVE"
+  },
+  {
+    "title": "IUIT climbs as tech sector leadership broadens",
+    "body": "The sector ETF benefited from chipmaker strength.",
+    "url": "https://example.com/labeled-22",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:45:00Z",
+    "raw_tags": ["IUIT"],
+    "expected_entity": "QDVE"
+  },
+  {
+    "title": "VanEck Defense UCITS ETF rises on security spending bets",
+    "body": "DFEN moved higher with aerospace suppliers.",
+    "url": "https://example.com/labeled-23",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:50:00Z",
+    "raw_tags": ["DFEN"],
+    "expected_entity": "DFEN"
+  },
+  {
+    "title": "DFNS outperforms after defense contractors rally",
+    "body": "European investors used the ETF for sector exposure.",
+    "url": "https://example.com/labeled-24",
+    "source": "Fixture",
+    "published_at": "2026-04-25T09:55:00Z",
+    "raw_tags": ["DFNS"],
+    "expected_entity": "DFEN"
+  },
+  {
+    "title": "Amundi Euro Stoxx Banks UCITS ETF edges higher",
+    "body": "BNKE tracked stronger sentiment toward lenders.",
+    "url": "https://example.com/labeled-25",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:00:00Z",
+    "raw_tags": ["BNKE"],
+    "expected_entity": "BNKE"
+  },
+  {
+    "title": "BNKE advances as euro-area bank earnings improve",
+    "body": "The fund reflected a stronger EU Banks backdrop.",
+    "url": "https://example.com/labeled-26",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:05:00Z",
+    "raw_tags": ["BNKE"],
+    "expected_entity": "BNKE"
+  },
+  {
+    "title": "Reuters says Nvidia and Alphabet still lead AI capex cycle",
+    "body": "NVIDIA Corporation and Google both stayed in focus, but the headline centered on Nvidia.",
+    "url": "https://example.com/labeled-27",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:10:00Z",
+    "raw_tags": ["Nvidia", "Google"],
+    "expected_entity": "NVDA"
+  },
+  {
+    "title": "Google launches new ad tools while Nvidia waits for next catalyst",
+    "body": "Alphabet Inc. drove the story and Google Cloud was the main topic.",
+    "url": "https://example.com/labeled-28",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:15:00Z",
+    "raw_tags": ["Google", "Nvidia"],
+    "expected_entity": "GOOGL"
+  },
+  {
+    "title": "Federal Reserve and ECB diverge on timing for cuts",
+    "body": "The article spent more time on the Fed than the European Central Bank.",
+    "url": "https://example.com/labeled-29",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:20:00Z",
+    "raw_tags": ["Fed", "ECB"],
+    "expected_entity": "FED"
+  },
+  {
+    "title": "European Central Bank tone weighs on EUR/USD",
+    "body": "The ECB headlines dominated while EURUSD reacted secondarily.",
+    "url": "https://example.com/labeled-30",
+    "source": "Fixture",
+    "published_at": "2026-04-25T10:25:00Z",
+    "raw_tags": ["ECB", "EURUSD"],
+    "expected_entity": "ECB"
+  }
+]

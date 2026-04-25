@@ -1,0 +1,14 @@
+{
+  "topHoldings": [
+    {"ticker": "NVDA", "isin": "US67066G1040", "weight": "23.01"},
+    {"ticker": "AAPL", "isin": "US0378331005", "weight": "18.53"},
+    {"ticker": "MSFT", "isin": "US5949181045", "weight": "15.36"},
+    {"ticker": "AVGO", "isin": "US11135F1012", "weight": "8.20"},
+    {"ticker": "MU", "isin": "US5951121038", "weight": "2.12"},
+    {"ticker": "PLTR", "isin": "US69608A1088", "weight": "1.87"},
+    {"ticker": "AMD", "isin": "US0079031078", "weight": "1.85"},
+    {"ticker": "CSCO", "isin": "US17275R1023", "weight": "1.71"},
+    {"ticker": "AMAT", "isin": "US0382221051", "weight": "1.52"},
+    {"ticker": "LRCX", "isin": "US5128071082", "weight": "1.49"}
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "status": "success",
+  "nextPage": "page-2",
+  "results": [
+    {
+      "article_id": "article-1",
+      "title": "Nvidia demand lifts AI server spending",
+      "description": "Customers kept ordering Blackwell hardware.",
+      "link": "https://example.com/nvidia-demand",
+      "source_id": "reuters",
+      "source_name": "Reuters",
+      "pubDate": "2026-04-25 07:00:00",
+      "keywords": ["NVDA", "AI"]
+    },
+    {
+      "article_id": "article-seen",
+      "title": "Already processed article",
+      "description": "This should be ignored.",
+      "link": "https://example.com/already-seen",
+      "source_id": "reuters",
+      "source_name": "Reuters",
+      "pubDate": "2026-04-25 06:30:00",
+      "keywords": ["seen"]
+    }
+  ]
+}

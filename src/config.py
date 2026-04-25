@@ -24,6 +24,7 @@ class Settings:
     log_file: str
     news_item_limit: int
     exposure_threshold_percent: float
+    entity_match_threshold: float
 
 
 DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"

@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "article_id": "article-1-duplicate",
+      "title": "Nvidia demand lifts AI server spending",
+      "description": "Duplicate on page two.",
+      "link": "https://example.com/nvidia-demand",
+      "source_id": "reuters",
+      "source_name": "Reuters",
+      "pubDate": "2026-04-25 07:00:00",
+      "keywords": ["NVDA", "AI"]
+    },
+    {
+      "article_id": "article-2",
+      "title": "Alphabet ad rebound supports cloud push",
+      "description": "Google's parent beat revenue expectations.",
+      "link": "https://example.com/alphabet-ad-rebound",
+      "source_id": "bloomberg",
+      "source_name": "Bloomberg",
+      "pubDate": "2026-04-25 05:30:00",
+      "keywords": ["GOOGL", "Alphabet"]
+    }
+  ]
+}

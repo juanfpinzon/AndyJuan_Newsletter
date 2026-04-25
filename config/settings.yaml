@@ -6,6 +6,7 @@ database_path: data/andyjuan.db
 log_file: data/logs/andyjuan.jsonl
 news_item_limit: 15
 exposure_threshold_percent: 5.0
+entity_match_threshold: 85.0
 theme_item_cap: 5
 daily_send_time_cet: "07:30"
 deep_brief_send_time_cet: "08:00"

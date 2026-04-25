@@ -45,6 +45,17 @@ TABLE_SCHEMAS: dict[str, TableSchema] = {
         },
         pk="id",
     ),
+    "etf_holdings_cache": TableSchema(
+        columns={
+            "id": int,
+            "ticker": str,
+            "source_etf_id": str,
+            "issuer": str,
+            "holdings_json": str,
+            "fetched_at": str,
+        },
+        pk="id",
+    ),
     "llm_calls": TableSchema(
         columns={
             "id": int,
