@@ -1,0 +1,35 @@
+[
+  {
+    "title": "European banks extend gains on rates repricing",
+    "primary_entity": "BNKE",
+    "matched_entities": [
+      "BNKE"
+    ],
+    "composite_weight": "0.06",
+    "llm_score": 95,
+    "included_by": "rank",
+    "rationale": "Portfolio exposure 6.0% (\u22655.0% threshold); rates repricing directly impacts bank valuations"
+  },
+  {
+    "title": "Nvidia suppliers rally on AI server demand",
+    "primary_entity": "NVDA",
+    "matched_entities": [
+      "NVDA"
+    ],
+    "composite_weight": "0.04",
+    "llm_score": 72,
+    "included_by": "rank",
+    "rationale": "Portfolio exposure 4.0%; firm AI server demand supports NVDA fundamentals"
+  },
+  {
+    "title": "Gold miners slip despite firmer bullion",
+    "primary_entity": "GDX",
+    "matched_entities": [
+      "GDX"
+    ],
+    "composite_weight": "0.02",
+    "llm_score": 45,
+    "included_by": "rank",
+    "rationale": "Portfolio exposure 2.0%; gold miner cost pressures relevant but lower impact"
+  }
+]

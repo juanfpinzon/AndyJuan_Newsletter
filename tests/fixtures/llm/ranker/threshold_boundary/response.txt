@@ -1,0 +1,17 @@
+[
+  {
+    "article_id": "0",
+    "score": 92,
+    "rationale": "Direct AI exposure keeps this headline most material."
+  },
+  {
+    "article_id": "1",
+    "score": 78,
+    "rationale": "Gold miners matter, but the portfolio weight is smaller."
+  },
+  {
+    "article_id": "2",
+    "score": 40,
+    "rationale": "Banks matter mainly because the ETF is concentrated."
+  }
+]

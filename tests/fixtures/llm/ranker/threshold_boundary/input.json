@@ -1,0 +1,45 @@
+{
+  "articles": [
+    {
+      "title": "Nvidia suppliers rally on AI server demand",
+      "body": "Analysts said Nvidia demand remained firm.",
+      "url": "https://example.com/nvda-demand",
+      "source": "Reuters",
+      "published_at": "2026-04-25T08:00:00Z",
+      "raw_tags": ["NVDA"],
+      "matched_entities": ["NVDA"]
+    },
+    {
+      "title": "Gold miners slip despite firmer bullion",
+      "body": "Gold miners underperformed as costs stayed in focus.",
+      "url": "https://example.com/gdx-costs",
+      "source": "Bloomberg",
+      "published_at": "2026-04-25T08:30:00Z",
+      "raw_tags": ["GDX"],
+      "matched_entities": ["GDX"]
+    },
+    {
+      "title": "European banks extend gains on rates repricing",
+      "body": "Bank shares rose as traders priced a slower easing path.",
+      "url": "https://example.com/bnke-rates",
+      "source": "FT",
+      "published_at": "2026-04-25T09:00:00Z",
+      "raw_tags": ["BNKE"],
+      "matched_entities": ["BNKE"]
+    }
+  ],
+  "exposure_map": {
+    "NVDA": {
+      "composite_weight": "0.04",
+      "paths": [{"source": "direct", "weight": "0.04"}]
+    },
+    "GDX": {
+      "composite_weight": "0.02",
+      "paths": [{"source": "etf:GDX", "weight": "0.02"}]
+    },
+    "BNKE": {
+      "composite_weight": "0.06",
+      "paths": [{"source": "etf:BNKE", "weight": "0.06"}]
+    }
+  }
+}

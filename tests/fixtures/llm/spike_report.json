@@ -1,0 +1,87 @@
+{
+  "captured_at": "2026-04-25T23:01:49.604480+00:00",
+  "db_path": "/Users/juanfpinzon/python_projects/AndyJuan_Newsletter-worktrees/phase3/data/phase3_spike.db",
+  "total_cost_usd": "0.023605",
+  "captures": [
+    {
+      "kind": "ranker",
+      "scenario": "threshold_boundary",
+      "model": "anthropic/claude-4.5-haiku-20251001",
+      "tokens_in": 747,
+      "tokens_out": 165,
+      "cost_usd": "0.001572",
+      "output_path": "tests/fixtures/llm/ranker/threshold_boundary/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/ranker/threshold_boundary/live_normalized.json"
+    },
+    {
+      "kind": "ranker",
+      "scenario": "top_window_only",
+      "model": "anthropic/claude-4.5-haiku-20251001",
+      "tokens_in": 949,
+      "tokens_out": 245,
+      "cost_usd": "0.002174",
+      "output_path": "tests/fixtures/llm/ranker/top_window_only/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/ranker/top_window_only/live_normalized.json"
+    },
+    {
+      "kind": "theme_flash",
+      "scenario": "ai_semis",
+      "model": "anthropic/claude-4.6-sonnet-20260217",
+      "tokens_in": 252,
+      "tokens_out": 59,
+      "cost_usd": "0.001641",
+      "output_path": "tests/fixtures/llm/theme_flash/ai_semis/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/theme_flash/ai_semis/live_normalized.json"
+    },
+    {
+      "kind": "theme_flash",
+      "scenario": "defense_macro_mix",
+      "model": "anthropic/claude-4.6-sonnet-20260217",
+      "tokens_in": 242,
+      "tokens_out": 45,
+      "cost_usd": "0.001401",
+      "output_path": "tests/fixtures/llm/theme_flash/defense_macro_mix/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/theme_flash/defense_macro_mix/live_normalized.json"
+    },
+    {
+      "kind": "synthesis",
+      "scenario": "balanced_day",
+      "model": "anthropic/claude-4.6-sonnet-20260217",
+      "tokens_in": 522,
+      "tokens_out": 390,
+      "cost_usd": "0.007416",
+      "output_path": "tests/fixtures/llm/synthesis/balanced_day/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/synthesis/balanced_day/live_normalized.json"
+    },
+    {
+      "kind": "synthesis",
+      "scenario": "crowded_day",
+      "model": "anthropic/claude-4.6-sonnet-20260217",
+      "tokens_in": 719,
+      "tokens_out": 392,
+      "cost_usd": "0.008037",
+      "output_path": "tests/fixtures/llm/synthesis/crowded_day/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/synthesis/crowded_day/live_normalized.json"
+    },
+    {
+      "kind": "fact_checker",
+      "scenario": "clean_pass",
+      "model": "anthropic/claude-4.5-haiku-20251001",
+      "tokens_in": 178,
+      "tokens_out": 99,
+      "cost_usd": "0.000673",
+      "output_path": "tests/fixtures/llm/fact_checker/clean_pass/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/fact_checker/clean_pass/live_normalized.json"
+    },
+    {
+      "kind": "fact_checker",
+      "scenario": "planted_novel_fact",
+      "model": "anthropic/claude-4.5-haiku-20251001",
+      "tokens_in": 176,
+      "tokens_out": 103,
+      "cost_usd": "0.000691",
+      "output_path": "tests/fixtures/llm/fact_checker/planted_novel_fact/live_output.txt",
+      "normalized_path": "tests/fixtures/llm/fact_checker/planted_novel_fact/live_normalized.json"
+    }
+  ]
+}

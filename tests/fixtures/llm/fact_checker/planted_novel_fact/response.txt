@@ -1,0 +1,1 @@
+{"ok": false, "flagged_claims": ["NVDA acquired AMD"]}
