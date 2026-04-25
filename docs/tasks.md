@@ -129,9 +129,9 @@ Sequential within phase; gates Phase 2.
 #### Task 1.1: `Position` dataclass + `portfolio.yaml` loader
 **Description:** Define `Position` (frozen dataclass, Decimal money fields) and `load_portfolio(path) -> list[Position]`. Validate required fields.
 **Acceptance:**
-- [ ] `Position` has: `ticker`, `isin`, `asset_type`, `issuer`, `shares (Decimal)`, `cost_basis_eur (Decimal)`, `currency`
-- [ ] `load_portfolio(Path("tests/fixtures/portfolio.yaml"))` returns `list[Position]`
-- [ ] Loader raises `PortfolioLoadError` on schema violations with a clear message
+- [x] `Position` has: `ticker`, `isin`, `asset_type`, `issuer`, `shares (Decimal)`, `cost_basis_eur (Decimal)`, `currency`
+- [x] `load_portfolio(Path("tests/fixtures/portfolio.yaml"))` returns `list[Position]`
+- [x] Loader raises `PortfolioLoadError` on schema violations with a clear message
 **Verify:** `pytest tests/test_portfolio.py -v`
 **Dependencies:** Task 0.1
 **Files:** `src/portfolio/models.py`, `src/portfolio/loader.py`, `tests/test_portfolio.py`, `tests/fixtures/portfolio.yaml`
@@ -140,9 +140,9 @@ Sequential within phase; gates Phase 2.
 #### Task 1.2: Initial config files (settings, recipients, themes, macro_feeds)
 **Description:** Create `config/settings.yaml` (initial thresholds + model assignments + cadence flags), `config/recipients.yaml` (juan + andrea placeholder), `config/themes.yaml` (6 themes + entity → theme mapping with `primary_theme`), `config/macro_feeds.yaml` (ECB, Fed, FT macro, Reuters macro RSS URLs).
 **Acceptance:**
-- [ ] All 4 yaml files load via `yaml.safe_load` with no errors
-- [ ] `themes.yaml` covers Defense, AI/Semis, Precious Metals, EU Banks, US Megacaps, Macro/FX
-- [ ] Every entity in the seed `portfolio.yaml` has a `primary_theme` assignment in `themes.yaml`
+- [x] All 4 yaml files load via `yaml.safe_load` with no errors
+- [x] `themes.yaml` covers Defense, AI/Semis, Precious Metals, EU Banks, US Megacaps, Macro/FX
+- [x] Every entity in the seed `portfolio.yaml` has a `primary_theme` assignment in `themes.yaml`
 **Verify:** `python -c "import yaml; [yaml.safe_load(open(f)) for f in ['config/settings.yaml','config/recipients.yaml','config/themes.yaml','config/macro_feeds.yaml']]"` exits 0
 **Dependencies:** Task 0.1
 **Files:** `config/settings.yaml`, `config/recipients.yaml`, `config/themes.yaml`, `config/macro_feeds.yaml`
@@ -151,9 +151,9 @@ Sequential within phase; gates Phase 2.
 #### Task 1.3: Initial `config/portfolio.yaml` from Snowball snapshot
 **Description:** Seed the 10 positions from the Snowball snapshot: BNKE, DFEN, EGLN (Gold), GDX, GOOGL, NVDA, PPFD (Silver), QDVE, SILV, SPYY. Include ticker, ISIN (lookup as needed), asset_type, issuer, shares, cost_basis_eur, currency.
 **Acceptance:**
-- [ ] `load_portfolio()` on this file returns exactly 10 positions
-- [ ] Sum of `shares × cost_basis_per_share` matches Snowball total cost basis (€2,693.16) within €0.01
-- [ ] All ETF positions have non-null `issuer`
+- [x] `load_portfolio()` on this file returns exactly 10 positions
+- [x] Sum of `shares × cost_basis_per_share` matches Snowball total cost basis (€2,693.16) within €0.01
+- [x] All ETF positions have non-null `issuer`
 **Verify:** `python -c "from src.portfolio.loader import load_portfolio; from pathlib import Path; print(len(load_portfolio(Path('config/portfolio.yaml'))))"` prints `10`
 **Dependencies:** Task 1.1
 **Files:** `config/portfolio.yaml`
@@ -162,9 +162,9 @@ Sequential within phase; gates Phase 2.
 #### Task 1.4: `config/etf_holdings.yaml` (manual top-10 fallback per ETF)
 **Description:** For each of the 8 ETFs in `portfolio.yaml`, hand-build a `top_10` list of `{ticker, isin, weight}` entries from the issuer's latest fact sheet. This is the fallback used when the scraper for that issuer fails.
 **Acceptance:**
-- [ ] Each of 8 ETFs has exactly 10 holdings entries
-- [ ] Weights for each ETF sum to a sane concentration level; narrow ETFs should generally exceed 30%, broad-index ETFs may be lower if documented in a `note`
-- [ ] All ticker fields are non-empty
+- [x] Each of 8 ETFs has exactly 10 holdings entries
+- [x] Weights for each ETF sum to a sane concentration level; narrow ETFs should generally exceed 30%, broad-index ETFs may be lower if documented in a `note`
+- [x] All ticker fields are non-empty
 **Verify:** `python -c "import yaml; d = yaml.safe_load(open('config/etf_holdings.yaml')); assert all(len(d[k]['top_10']) == 10 for k in d), [k for k in d if len(d[k]['top_10']) != 10]"` exits 0
 **Dependencies:** Task 1.3
 **Files:** `config/etf_holdings.yaml`
@@ -173,21 +173,21 @@ Sequential within phase; gates Phase 2.
 #### Task 1.5: Snowball CSV importer (`scripts/import_snowball.py`)
 **Description:** Read either a Snowball holdings snapshot CSV or Snowball's transaction export, merge into `config/portfolio.yaml`, and aggregate transactions into current holdings when needed. Preserve enrichment on existing tickers; scaffold new tickers with `asset_type: stock` defaulted; warn (don't auto-remove) on tickers missing from the CSV; fail loudly on column-header schema drift or currency mismatch in holdings snapshots. Support `--dry-run` for diff preview.
 **Acceptance:**
-- [ ] `python scripts/import_snowball.py tests/fixtures/snowball-export.csv --dry-run` shows diff without writing
-- [ ] `python scripts/import_snowball.py tests/fixtures/snowball-transactions.csv --dry-run` aggregates transactions into current holdings without writing
-- [ ] Existing tickers preserve `asset_type`, `issuer`, `isin`, `theme`, etc.
-- [ ] New tickers are scaffolded with `asset_type: stock` and a logged warning
-- [ ] Missing column headers raise a clear `SnowballSchemaError`
+- [x] `python scripts/import_snowball.py tests/fixtures/snowball-export.csv --dry-run` shows diff without writing
+- [x] `python scripts/import_snowball.py tests/fixtures/snowball-transactions.csv --dry-run` aggregates transactions into current holdings without writing
+- [x] Existing tickers preserve `asset_type`, `issuer`, `isin`, `theme`, etc.
+- [x] New tickers are scaffolded with `asset_type: stock` and a logged warning
+- [x] Missing column headers raise a clear `SnowballSchemaError`
 **Verify:** `pytest tests/test_import_snowball.py -v`
 **Dependencies:** Task 1.1, 1.3
 **Files:** `scripts/import_snowball.py`, `tests/test_import_snowball.py`, `tests/fixtures/snowball-export.csv`, `tests/fixtures/snowball-transactions.csv`
 **Scope:** M
 
 ### Checkpoint: Phase 1 complete
-- [ ] All config files load cleanly
-- [ ] Portfolio loader passes all tests
-- [ ] Importer round-trips a real Snowball transaction export without losing enrichment fields
-- [ ] Reviewer signs off before Phase 2
+- [x] All config files load cleanly
+- [x] Portfolio loader passes all tests
+- [x] Importer round-trips a real Snowball transaction export without losing enrichment fields
+- [x] Reviewer signs off before Phase 2
 
 ---
 
