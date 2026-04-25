@@ -1,0 +1,273 @@
+BNKE:
+  issuer: Amundi ETF
+  top_10:
+    - ticker: SAN
+      isin: null
+      weight: 14.00
+    - ticker: BBVA
+      isin: null
+      weight: 10.15
+    - ticker: UCG
+      isin: null
+      weight: 10.08
+    - ticker: BNP
+      isin: null
+      weight: 8.78
+    - ticker: ISP
+      isin: null
+      weight: 7.81
+    - ticker: INGA
+      isin: null
+      weight: 6.61
+    - ticker: DBK
+      isin: null
+      weight: 5.27
+    - ticker: GLE
+      isin: null
+      weight: 4.93
+    - ticker: NDA-FI
+      isin: null
+      weight: 4.81
+    - ticker: CABK
+      isin: null
+      weight: 3.36
+DFEN:
+  issuer: VanEck
+  aliases:
+    - DFNS
+  top_10:
+    - ticker: PLTR
+      isin: null
+      weight: 8.40
+    - ticker: RTX
+      isin: null
+      weight: 8.11
+    - ticker: HO
+      isin: null
+      weight: 7.31
+    - ticker: LDO
+      isin: null
+      weight: 7.04
+    - ticker: 012450
+      isin: null
+      weight: 6.23
+    - ticker: ESLT
+      isin: null
+      weight: 5.95
+    - ticker: SAAB-B
+      isin: null
+      weight: 5.58
+    - ticker: CW
+      isin: null
+      weight: 5.16
+    - ticker: LDOS
+      isin: null
+      weight: 4.09
+    - ticker: S63
+      isin: null
+      weight: 3.32
+EGLN:
+  issuer: iShares
+  note: Physical ETC fallback uses repeated gold exposure rows to preserve the top_10 schema.
+  top_10:
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+    - ticker: GOLD
+      isin: null
+      weight: 10.0
+GDX:
+  issuer: VanEck
+  top_10:
+    - ticker: AEM
+      isin: null
+      weight: 8.88
+    - ticker: NEM
+      isin: null
+      weight: 8.76
+    - ticker: B
+      isin: null
+      weight: 7.21
+    - ticker: WPM
+      isin: null
+      weight: 4.96
+    - ticker: AU
+      isin: null
+      weight: 4.93
+    - ticker: GFI
+      isin: null
+      weight: 4.83
+    - ticker: FNV
+      isin: null
+      weight: 4.74
+    - ticker: KGC
+      isin: null
+      weight: 4.42
+    - ticker: PAAS
+      isin: null
+      weight: 3.99
+    - ticker: NST
+      isin: null
+      weight: 3.60
+PPFD:
+  issuer: iShares
+  note: Physical ETC fallback uses repeated silver exposure rows to preserve the top_10 schema.
+  top_10:
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+    - ticker: SILVER
+      isin: null
+      weight: 10.0
+QDVE:
+  issuer: iShares
+  aliases:
+    - IUIT
+  top_10:
+    - ticker: NVDA
+      isin: null
+      weight: 23.01
+    - ticker: AAPL
+      isin: null
+      weight: 18.53
+    - ticker: MSFT
+      isin: null
+      weight: 15.36
+    - ticker: AVGO
+      isin: null
+      weight: 8.20
+    - ticker: MU
+      isin: null
+      weight: 2.12
+    - ticker: PLTR
+      isin: null
+      weight: 1.87
+    - ticker: AMD
+      isin: null
+      weight: 1.85
+    - ticker: CSCO
+      isin: null
+      weight: 1.71
+    - ticker: AMAT
+      isin: null
+      weight: 1.52
+    - ticker: LRCX
+      isin: null
+      weight: 1.49
+SILV:
+  issuer: Global X
+  aliases:
+    - SIL
+  top_10:
+    - ticker: WPM
+      isin: null
+      weight: 15.58
+    - ticker: PAAS
+      isin: null
+      weight: 13.30
+    - ticker: CDE
+      isin: null
+      weight: 8.42
+    - ticker: HL
+      isin: null
+      weight: 7.30
+    - ticker: PENOLES
+      isin: null
+      weight: 6.68
+    - ticker: AG
+      isin: null
+      weight: 6.20
+    - ticker: FRES
+      isin: null
+      weight: 5.63
+    - ticker: OR
+      isin: null
+      weight: 4.75
+    - ticker: 010130
+      isin: null
+      weight: 4.55
+    - ticker: SSRM
+      isin: null
+      weight: 4.15
+SPYY:
+  issuer: State Street
+  note: The actual ACWI fund is less concentrated than the Phase 1 >30% heuristic; the live top_10 is about 23.6%.
+  top_10:
+    - ticker: NVDA
+      isin: null
+      weight: 4.82
+    - ticker: AAPL
+      isin: null
+      weight: 4.08
+    - ticker: MSFT
+      isin: null
+      weight: 3.04
+    - ticker: AMZN
+      isin: null
+      weight: 2.17
+    - ticker: GOOGL
+      isin: null
+      weight: 1.90
+    - ticker: AVGO
+      isin: null
+      weight: 1.63
+    - ticker: GOOG
+      isin: null
+      weight: 1.62
+    - ticker: TSM
+      isin: null
+      weight: 1.61
+    - ticker: META
+      isin: null
+      weight: 1.52
+    - ticker: TSLA
+      isin: null
+      weight: 1.23

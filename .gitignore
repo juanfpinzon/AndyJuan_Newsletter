@@ -12,3 +12,4 @@ data/logs/*.jsonl
 dist/
 build/
 *.egg-info/
+Snowball-extracts/

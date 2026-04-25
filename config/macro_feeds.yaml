@@ -1,0 +1,17 @@
+feeds:
+  - key: ecb_press
+    name: ECB press releases and speeches
+    url: https://www.ecb.europa.eu/rss/press.html
+    theme: Macro/FX
+  - key: fed_monetary_policy
+    name: Federal Reserve monetary policy releases
+    url: https://www.federalreserve.gov/feeds/press_monetary.xml
+    theme: Macro/FX
+  - key: ft_alphaville
+    name: FT Alphaville
+    url: https://ftav.substack.com/feed
+    theme: Macro/FX
+  - key: reuters_business
+    name: Reuters business news
+    url: https://feeds.reuters.com/reuters/businessNews
+    theme: Macro/FX
