@@ -508,57 +508,57 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 
 Sequential. All Phase 4 outputs must be stable.
 
-#### Task 5.1: AgentMail sender (`src/sender/agentmail.py`)
+#### Task 5.1: AgentMail sender (`src/sender/agentmail.py`) [x]
 **Description:** Wrap AgentMail SDK. `send_email(to, subject, html, text, from_addr) -> SendResult(message_id)`. Log `email_sent` with message id + recipients.
 **Acceptance:**
-- [ ] Sends HTML + plain-text alternative
-- [ ] Returns message id; logs success
-- [ ] On AgentMail error, raises `EmailSendError` (don't swallow)
+- [x] Sends HTML + plain-text alternative
+- [x] Returns message id; logs success
+- [x] On AgentMail error, raises `EmailSendError` (don't swallow)
 **Verify:** `pytest tests/test_sender.py -v` with mocked AgentMail SDK
 **Dependencies:** Task 0.4
 **Files:** `src/sender/agentmail.py`, `tests/test_sender.py`
 **Scope:** S
 
-#### Task 5.2: Daily pipeline orchestration (`src/pipeline/daily.py`)
+#### Task 5.2: Daily pipeline orchestration (`src/pipeline/daily.py`) [x]
 **Description:** Chain Phase 1 → 2 → 3 → 4 → 5 for Mon-Fri. Handle fact-check failure gracefully (omit AI Take, send rest). Persist run metadata into `runs` table with cost summary.
 **Acceptance:**
-- [ ] `run_daily(send=True/False)` orchestrates the full pipeline
-- [ ] On fact-check failure, AI Take section is omitted; warning logged; email still sent
-- [ ] Run metadata (start, end, model spend, recipient count, success/fail) written to `runs` table
-- [ ] Integration test with all I/O mocked passes
+- [x] `run_daily(send=True/False)` orchestrates the full pipeline
+- [x] On fact-check failure, AI Take section is omitted; warning logged; email still sent
+- [x] Run metadata (start, end, model spend, recipient count, success/fail) written to `runs` table
+- [x] Integration test with all I/O mocked passes
 **Verify:** `pytest tests/test_pipeline_daily.py -v`
 **Dependencies:** Tasks 1.x, 2.x, 3.x, 4.x, 5.1
 **Files:** `src/pipeline/daily.py`, `tests/test_pipeline_daily.py`
 **Scope:** M
 
-#### Task 5.3: Saturday deep pipeline (`src/pipeline/deep.py`)
+#### Task 5.3: Saturday deep pipeline (`src/pipeline/deep.py`) [x]
 **Description:** Mostly reuses `daily.py`; swaps template, fetches week-ahead calendar (likely from a separate prompt or static config), uses the longer synthesis prompt variant if any.
 **Acceptance:**
-- [ ] `run_deep(send=True/False)` orchestrates Saturday flow
-- [ ] Uses `saturday_deep.html.j2`
-- [ ] Integration test passes
+- [x] `run_deep(send=True/False)` orchestrates Saturday flow
+- [x] Uses `saturday_deep.html.j2`
+- [x] Integration test passes
 **Verify:** `pytest tests/test_pipeline_deep.py -v`
 **Dependencies:** Task 5.2
 **Files:** `src/pipeline/deep.py`, `tests/test_pipeline_deep.py`
 **Scope:** M
 
-#### Task 5.4: Main CLI + operator script
+#### Task 5.4: Main CLI + operator script [x]
 **Description:** `src/main.py` is the production CLI: `python -m src.main --mode={daily|deep}`. `scripts/run_manual.py` is the operator entry with all the spec's flags: `--dry-run`, `--preview`, `--test-email`, `--reuse-seen-db`, `--ignore-seen-db`, `--mode={daily|deep}`. Subprocess-based smoke tests for flag combos.
 **Acceptance:**
-- [ ] All flag combinations from spec Section 4 work
-- [ ] Mutually-exclusive combos error cleanly (e.g., `--dry-run` + `--test-email`)
-- [ ] `--dry-run` end-to-end completes < 60s
-- [ ] Subprocess smoke tests for all flag combos pass
+- [x] All flag combinations from spec Section 4 work
+- [x] Mutually-exclusive combos error cleanly (e.g., `--dry-run` + `--test-email`)
+- [x] `--dry-run` end-to-end completes < 60s
+- [x] Subprocess smoke tests for all flag combos pass
 **Verify:** `pytest tests/test_run_manual.py -v && time python scripts/run_manual.py --dry-run`
 **Dependencies:** Task 5.2, 5.3
 **Files:** `src/main.py`, `scripts/run_manual.py`, `tests/test_run_manual.py`
 **Scope:** M
 
 ### Checkpoint: Phase 5 complete
-- [ ] `python scripts/run_manual.py --dry-run` completes < 60s
-- [ ] `python scripts/run_manual.py --test-email juan@gmail.com` lands an email in inbox
-- [ ] `python scripts/run_manual.py --mode=deep --dry-run` works
-- [ ] Reviewer signs off before Phase 6
+- [x] `python scripts/run_manual.py --dry-run` completes < 60s
+- [x] `python scripts/run_manual.py --test-email juan@gmail.com` lands an email in inbox
+- [x] `python scripts/run_manual.py --mode=deep --dry-run` works
+- [x] Reviewer signs off before Phase 6
 
 ---
 

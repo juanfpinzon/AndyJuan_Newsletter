@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -22,23 +23,34 @@ class NewsDataClient:
         db_path: str | Path,
         base_url: str = "https://newsdata.io/api/1/news",
         backoff_seconds: float = 0.25,
+        max_pages: int = 2,
     ) -> None:
         self.api_key = api_key
         self.db_path = db_path
         self.base_url = base_url
         self.backoff_seconds = backoff_seconds
+        self.max_pages = max(1, max_pages)
 
-    async def fetch_news(self, entity_query: str, hours: int = 24) -> list[Article]:
+    async def fetch_news(
+        self,
+        entity_query: str,
+        hours: int = 24,
+        *,
+        ignore_seen_db: bool = False,
+    ) -> list[Article]:
         database = init_db(self.db_path)
-        seen_urls = {
-            row["source_url"]
-            for row in database["articles_seen"].rows_where(
-                "source_url is not null", select="source_url"
-            )
-        }
+        seen_urls = set()
+        if not ignore_seen_db:
+            seen_urls = {
+                row["source_url"]
+                for row in database["articles_seen"].rows_where(
+                    "source_url is not null", select="source_url"
+                )
+            }
         articles: list[Article] = []
         next_page: str | None = None
-        from_date = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = _utcnow() - timedelta(hours=hours)
+        pages_fetched = 0
 
         async with get_async_client(
             retries=2,
@@ -48,11 +60,15 @@ class NewsDataClient:
                 payload = await self._fetch_page(
                     client,
                     entity_query=entity_query,
-                    from_date=from_date,
                     next_page=next_page,
                 )
+                pages_fetched += 1
+                page_crossed_cutoff = False
                 for item in payload.get("results", []):
                     article = self._parse_article(item)
+                    if not _is_within_window(article.published_at, cutoff):
+                        page_crossed_cutoff = True
+                        continue
                     if article.url in seen_urls:
                         continue
                     seen_urls.add(article.url)
@@ -63,25 +79,59 @@ class NewsDataClient:
                             "source_url": article.url,
                             "published_at": article.published_at,
                             "seen_at": datetime.now(timezone.utc).isoformat(),
+                            "title": article.title,
+                            "body": article.body,
+                            "source": article.source,
+                            "raw_tags_json": json.dumps(
+                                list(article.raw_tags),
+                                separators=(",", ":"),
+                            ),
                         }
                     )
 
                 next_page = payload.get("nextPage")
-                if not next_page:
+                # NewsData serves newest-first pages; once a page crosses the
+                # cutoff, later pages are older and can be skipped.
+                if (
+                    not next_page
+                    or page_crossed_cutoff
+                    or pages_fetched >= self.max_pages
+                ):
                     return articles
+
+    def load_cached_articles(
+        self,
+        *,
+        hours: int = 24,
+        now: str | datetime | None = None,
+    ) -> list[Article]:
+        database = init_db(self.db_path)
+        current_time = _coerce_now(now)
+        cutoff = current_time - timedelta(hours=hours)
+        rows = list(
+            database["articles_seen"].rows_where(
+                """
+                published_at is not null
+                and published_at >= :cutoff
+                and title is not null
+                and source_url is not null
+                order by published_at desc
+                """,
+                {"cutoff": cutoff.isoformat()},
+            )
+        )
+        return [self._parse_cached_article(row) for row in rows]
 
     async def _fetch_page(
         self,
         client,
         *,
         entity_query: str,
-        from_date: datetime,
         next_page: str | None,
     ) -> dict[str, Any]:
         params = {
             "apikey": self.api_key,
             "q": entity_query,
-            "from_date": from_date.date().isoformat(),
         }
         if next_page:
             params["page"] = next_page
@@ -100,6 +150,16 @@ class NewsDataClient:
             raw_tags=tuple(str(tag) for tag in item.get("keywords") or ()),
         )
 
+    def _parse_cached_article(self, row: dict[str, Any]) -> Article:
+        return Article(
+            title=str(row.get("title") or ""),
+            body=str(row.get("body") or ""),
+            url=str(row.get("source_url") or ""),
+            source=str(row.get("source") or ""),
+            published_at=str(row.get("published_at") or ""),
+            raw_tags=_parse_raw_tags_json(row.get("raw_tags_json")),
+        )
+
 
 def _normalize_newsdata_timestamp(value: Any) -> str:
     if not value:
@@ -112,3 +172,46 @@ def _normalize_newsdata_timestamp(value: Any) -> str:
             continue
         return parsed.replace(tzinfo=timezone.utc).isoformat()
     return text
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _coerce_now(value: str | datetime | None) -> datetime:
+    if value is None:
+        return _utcnow()
+    if isinstance(value, datetime):
+        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _parse_raw_tags_json(value: Any) -> tuple[str, ...]:
+    if not value:
+        return ()
+    try:
+        payload = json.loads(str(value))
+    except json.JSONDecodeError:
+        return ()
+    if not isinstance(payload, list):
+        return ()
+    return tuple(str(item) for item in payload)
+
+
+def _is_within_window(published_at: str, cutoff: datetime) -> bool:
+    parsed = _parse_published_at(published_at)
+    if parsed is None:
+        return True
+    return parsed >= cutoff
+
+
+def _parse_published_at(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)

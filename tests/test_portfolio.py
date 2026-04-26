@@ -33,11 +33,13 @@ def test_load_portfolio_returns_positions_with_decimal_fields() -> None:
             shares=Decimal("1.2500"),
             cost_basis_eur=Decimal("35.183007"),
             currency="EUR",
+            market_symbol="IITU.L",
         ),
     ]
 
     assert isinstance(positions[0].shares, Decimal)
     assert isinstance(positions[0].cost_basis_eur, Decimal)
+    assert positions[0].market_symbol is None
 
     with pytest.raises(FrozenInstanceError):
         positions[0].ticker = "AMD"

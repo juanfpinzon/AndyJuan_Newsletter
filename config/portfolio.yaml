@@ -8,6 +8,7 @@ positions:
     shares: "1.1023"
     cost_basis_eur: "301.551302"
     currency: EUR
+    market_symbol: BNKE.PA
   - ticker: DFEN
     isin: IE000YYE6WK5
     asset_type: etf
@@ -16,6 +17,7 @@ positions:
     shares: "6.4643"
     cost_basis_eur: "54.140433"
     currency: EUR
+    market_symbol: DFNS.L
   - ticker: EGLN
     isin: IE00B4ND3602
     asset_type: etf
@@ -24,6 +26,7 @@ positions:
     shares: "0.9627"
     cost_basis_eur: "81.790797"
     currency: EUR
+    market_symbol: IGLN.L
   - ticker: GDX
     isin: IE00BQQP9F84
     asset_type: etf
@@ -32,6 +35,7 @@ positions:
     shares: "2.2003"
     cost_basis_eur: "104.522111"
     currency: USD
+    market_symbol: GDX.L
   - ticker: GOOGL
     isin: US02079K3059
     asset_type: stock
@@ -56,6 +60,7 @@ positions:
     shares: "0.5759"
     cost_basis_eur: "63.795798"
     currency: EUR
+    market_symbol: ISLN.L
   - ticker: QDVE
     isin: IE00B3WJKG14
     asset_type: etf
@@ -64,6 +69,7 @@ positions:
     shares: "9.9477"
     cost_basis_eur: "35.183007"
     currency: EUR
+    market_symbol: IITU.L
   - ticker: SILV
     isin: IE000UL6CLP7
     asset_type: etf
@@ -72,6 +78,7 @@ positions:
     shares: "4.8716"
     cost_basis_eur: "47.212415"
     currency: USD
+    market_symbol: SILV.L
   - ticker: SPYY
     isin: IE00B44Z5B48
     asset_type: etf
@@ -80,3 +87,4 @@ positions:
     shares: "2.1875"
     cost_basis_eur: "249.654857"
     currency: USD
+    market_symbol: SPYY.DE
