@@ -444,9 +444,9 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 #### Task 4.1: Theme groups + Concentrated Exposures widget (`src/renderer/theme_groups.py`)
 **Description:** Group ranked news + position cards by `primary_theme`. Apply 5-item-per-theme cap. Compute the Concentrated Exposures widget rows (entities with composite weight ≥5%).
 **Acceptance:**
-- [ ] Each theme has ≤5 news items after capping
-- [ ] An item with multiple theme tags renders only under its `primary_theme`
-- [ ] Concentrated Exposures rows include `entity, composite_weight, path_count`
+- [x] Each theme has ≤5 news items after capping
+- [x] An item with multiple theme tags renders only under its `primary_theme`
+- [x] Concentrated Exposures rows include `entity, composite_weight, path_count`
 **Verify:** `pytest tests/test_theme_groups.py -v`
 **Dependencies:** Task 2a.7, Task 1.2 (themes.yaml)
 **Files:** `src/renderer/theme_groups.py`, `tests/test_theme_groups.py`
@@ -455,9 +455,9 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 #### Task 4.2: Daily email template + dark CSS (`templates/daily_email.html.j2`)
 **Description:** Build the daily Mon-Fri layout with all 6 sections. Inline CSS (premailer will run later). Dark Binance/IBKR-inspired palette: deep navy/charcoal base (#0b0e11/#1e2329), green gain (#0ecb81), red loss (#f6465d), muted gold AI accent (#f0b90b), high-contrast off-white text (#eaecef). Include AI chip macro.
 **Acceptance:**
-- [ ] All 6 sections present in correct order
-- [ ] AI chip macro reusable across per-theme flashes and bottom synthesis
-- [ ] Renders in Gmail web (paste-into-draft visual check)
+- [x] All 6 sections present in correct order
+- [x] AI chip macro reusable across per-theme flashes and bottom synthesis
+- [x] Renders in Gmail web (paste-into-draft visual check)
 **Verify:** `python scripts/test_email.py` (after Task 4.5) opens preview that visually reviews
 **Dependencies:** Task 4.1
 **Files:** `templates/daily_email.html.j2`
@@ -466,9 +466,9 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 #### Task 4.3: Saturday deep template (`templates/saturday_deep.html.j2`)
 **Description:** Extends `daily_email.html.j2` (jinja inheritance). Adds: longer synthesis section, week-ahead earnings/macro calendar.
 **Acceptance:**
-- [ ] Inherits from `daily_email.html.j2` cleanly
-- [ ] Adds `{% block week_ahead %}` and longer synthesis block
-- [ ] Renders without breaking the daily layout
+- [x] Inherits from `daily_email.html.j2` cleanly
+- [x] Adds `{% block week_ahead %}` and longer synthesis block
+- [x] Renders without breaking the daily layout
 **Verify:** Mock-render a Saturday preview via `python scripts/test_email.py --mode=deep`
 **Dependencies:** Task 4.2
 **Files:** `templates/saturday_deep.html.j2`
@@ -477,10 +477,10 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 #### Task 4.4: Renderer assembly (`src/renderer/render.py`) + tests
 **Description:** Compose: load template → render with context → premailer inline CSS → also produce plain-text fallback. Public API: `render_email(context, mode='daily') -> RenderedEmail(html, text, word_count)`.
 **Acceptance:**
-- [ ] Word count of rendered HTML body text ≤ 1,000 on a representative input
-- [ ] Every news item has a non-empty `href`
-- [ ] AI chip is present on every AI Take block
-- [ ] Plain-text fallback is generated alongside HTML
+- [x] Word count of rendered HTML body text ≤ 1,000 on a representative input
+- [x] Every news item has a non-empty `href`
+- [x] AI chip is present on every AI Take block
+- [x] Plain-text fallback is generated alongside HTML
 **Verify:** `pytest tests/test_renderer.py -v`
 **Dependencies:** Task 4.2, 4.3
 **Files:** `src/renderer/render.py`, `tests/test_renderer.py`
@@ -489,18 +489,18 @@ Sequential within phase. Phase 4 can begin in parallel with late Phase 3 once da
 #### Task 4.5: Mock-render preview (`scripts/test_email.py`)
 **Description:** Render with canned data fixtures, write HTML to `/tmp/preview.html`, open in browser. Support `--mode=deep` flag.
 **Acceptance:**
-- [ ] `python scripts/test_email.py` opens HTML preview in default browser
-- [ ] `python scripts/test_email.py --mode=deep` opens Saturday preview
+- [x] `python scripts/test_email.py` opens HTML preview in default browser
+- [x] `python scripts/test_email.py --mode=deep` opens Saturday preview
 **Verify:** Manual browser check
 **Dependencies:** Task 4.4
 **Files:** `scripts/test_email.py`
 **Scope:** S
 
 ### Checkpoint: Phase 4 complete
-- [ ] Visual review in Gmail web — looks right (paste rendered HTML into a draft)
-- [ ] Visual review in Gmail iOS — looks right (forward draft to test inbox)
-- [ ] Word-count test passes on canned input
-- [ ] Reviewer signs off before Phase 5
+- [x] Visual review in Gmail web — looks right (paste rendered HTML into a draft)
+- [x] Visual review in Gmail iOS — looks right (forward draft to test inbox)
+- [x] Word-count test passes on canned input
+- [x] Reviewer signs off before Phase 5
 
 ---
 
