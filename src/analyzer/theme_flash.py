@@ -9,7 +9,7 @@ from typing import Callable
 from src.config import Settings, load_settings
 from src.utils.llm import LLMResponse, call_openrouter
 
-from ._prompting import count_sentences, render_prompt
+from ._prompting import count_sentences, render_prompt, split_sentences
 from .ranker import RankedArticle
 
 MAX_THEME_FLASH_TOKENS = 300
@@ -53,6 +53,9 @@ def generate_theme_flash(
 
     text = response.content.strip()
     sentence_count = count_sentences(text)
+    if sentence_count > 2:
+        text = " ".join(split_sentences(text)[:2]).strip()
+        sentence_count = count_sentences(text)
     if sentence_count not in (1, 2):
         raise ThemeFlashFormatError("Theme flash must be exactly 1 or 2 sentences")
 

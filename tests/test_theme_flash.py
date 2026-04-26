@@ -2,10 +2,8 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-
 from src.analyzer.ranker import RankedArticle
-from src.analyzer.theme_flash import ThemeFlashFormatError, generate_theme_flash
+from src.analyzer.theme_flash import generate_theme_flash
 from src.config import Settings
 from src.fetcher.models import Article
 from src.utils.llm import LLMResponse
@@ -121,13 +119,15 @@ def test_generate_theme_flash_handles_single_sentence_output() -> None:
     assert flash.sentence_count == 1
 
 
-def test_generate_theme_flash_rejects_three_sentences() -> None:
+def test_generate_theme_flash_truncates_three_sentences_to_two() -> None:
     scenario = load_input("ai_semis")
 
-    with pytest.raises(ThemeFlashFormatError):
-        generate_theme_flash(
-            str(scenario["theme"]),
-            make_ranked_articles(scenario["articles"]),
-            llm_caller=FakeLLMCaller("One sentence. Two sentence. Three sentence."),
-            settings=make_settings(),
-        )
+    flash = generate_theme_flash(
+        str(scenario["theme"]),
+        make_ranked_articles(scenario["articles"]),
+        llm_caller=FakeLLMCaller("One sentence. Two sentence. Three sentence."),
+        settings=make_settings(),
+    )
+
+    assert flash.text == "One sentence. Two sentence."
+    assert flash.sentence_count == 2

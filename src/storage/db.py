@@ -23,6 +23,7 @@ def init_db(path: str | Path) -> Database:
             pk=schema.pk,
             if_not_exists=True,
         )
+        _ensure_columns(database, table_name, schema.columns)
     return database
 
 
@@ -110,3 +111,15 @@ def _open_database(path: str | Path) -> Database:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
     return Database(connection)
+
+
+def _ensure_columns(
+    database: Database,
+    table_name: str,
+    columns: dict[str, type],
+) -> None:
+    existing = {column.name for column in database[table_name].columns}
+    for column_name, column_type in columns.items():
+        if column_name in existing:
+            continue
+        database[table_name].add_column(column_name, column_type)

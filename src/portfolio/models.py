@@ -18,3 +18,4 @@ class Position:
     shares: Decimal
     cost_basis_eur: Decimal
     currency: str
+    market_symbol: str | None = None

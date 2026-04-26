@@ -117,3 +117,76 @@ def test_fetch_prices_uses_last_available_trading_day(
     assert prices["BNKE"].previous_close == Decimal("320.4995001")
     assert prices["BNKE"].last_eur == Decimal("317.7174998")
 
+
+def test_fetch_prices_supports_market_symbol_overrides(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = {
+        "currencies": {
+            "BNKE.PA": "EUR",
+            "SPYY.DE": "EUR",
+        },
+        "history": {
+            "BNKE.PA": [
+                {"date": "2026-04-24T16:00:00Z", "close": "317.71"},
+                {"date": "2026-04-25T16:00:00Z", "close": "320.49"},
+            ],
+            "SPYY.DE": [
+                {"date": "2026-04-24T16:00:00Z", "close": "250.90"},
+                {"date": "2026-04-25T16:00:00Z", "close": "251.30"},
+            ],
+        },
+    }
+    download_calls = _install_fake_yfinance(monkeypatch, payload)
+
+    prices = fetch_prices(
+        ["BNKE", "SPYY"],
+        market_symbols={
+            "BNKE": "BNKE.PA",
+            "SPYY": "SPYY.DE",
+        },
+    )
+
+    assert set(prices) == {"BNKE", "SPYY"}
+    assert prices["BNKE"].ticker == "BNKE"
+    assert prices["SPYY"].ticker == "SPYY"
+    downloaded_tickers, _ = download_calls[0]
+    assert set(downloaded_tickers.split()) == {"BNKE.PA", "SPYY.DE"}
+
+
+def test_fetch_prices_normalizes_london_pence_quotes_before_eur_conversion(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    payload = {
+        "currencies": {
+            "IITU.L": "GBp",
+        },
+        "history": {
+            "IITU.L": [
+                {"date": "2026-04-24T16:00:00Z", "close": "3200"},
+                {"date": "2026-04-25T16:00:00Z", "close": "3250"},
+            ],
+            "EURGBP=X": [
+                {"date": "2026-04-24T16:00:00Z", "close": "0.84"},
+                {"date": "2026-04-25T16:00:00Z", "close": "0.85"},
+            ],
+        },
+    }
+    _install_fake_yfinance(monkeypatch, payload)
+
+    prices = fetch_prices(
+        ["QDVE"],
+        market_symbols={
+            "QDVE": "IITU.L",
+        },
+    )
+
+    assert prices["QDVE"] == PriceSnapshot(
+        ticker="QDVE",
+        last=Decimal("32.5"),
+        previous_close=Decimal("32"),
+        currency_native="GBP",
+        last_eur=Decimal("38.23529411764705882352941176"),
+        change_pct=Decimal("1.562500"),
+        fx_rate_to_eur=Decimal("0.85"),
+    )

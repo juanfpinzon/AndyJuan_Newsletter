@@ -10,9 +10,11 @@ from time import struct_time
 from typing import Any
 
 import feedparser
+import httpx
 import yaml
 
 from src.utils.http import get_async_client
+from src.utils.log import get_logger
 
 from .models import Article
 
@@ -53,16 +55,28 @@ class MacroRSSReader:
         current_time = now or datetime.now(timezone.utc)
         cutoff = current_time - timedelta(hours=hours)
         articles: list[Article] = []
+        logger = get_logger("macro_rss")
 
         async with get_async_client(backoff_base=self.backoff_seconds) as client:
             for feed in _load_feeds(self.config_path):
-                response = await client.get(
-                    feed["url"],
-                    headers=self._request_headers(feed["url"]),
-                )
-                if response.status_code == 304:
+                try:
+                    response = await client.get(
+                        feed["url"],
+                        headers=self._request_headers(feed["url"]),
+                    )
+                    if response.status_code == 304:
+                        continue
+                    response.raise_for_status()
+                except httpx.HTTPError as exc:
+                    logger.warning(
+                        "macro_feed_fetch_failed",
+                        feed_key=feed.get("key", ""),
+                        feed_name=feed.get("name", ""),
+                        url=feed.get("url", ""),
+                        error=str(exc),
+                    )
                     continue
-                response.raise_for_status()
+
                 self._store_validators(feed["url"], response.headers)
                 parsed_feed = feedparser.parse(response.text)
                 articles.extend(

@@ -332,6 +332,7 @@
           {% endfor %}
         </section>
 
+        {% if synthesis_paragraphs %}
         <section class="panel section" data-section="ai-synthesis">
           <div class="eyebrow">AI Synthesis</div>
           <div style="margin-top:14px;">{{ ai_disclaimer_chip() }}</div>
@@ -343,10 +344,12 @@
             {% endblock %}
           </div>
         </section>
+        {% endif %}
         {% block week_ahead %}{% endblock %}
 
         <section class="panel section" data-section="macro-footer">
           <div class="eyebrow">Macro Footer</div>
+          {% if macro_items %}
           <table class="macro-grid" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
             <tr>
               {% for item in macro_items %}
@@ -361,6 +364,11 @@
               {% endfor %}
             </tr>
           </table>
+          {% else %}
+          <p class="footer-note" style="margin:12px 0 0;">
+            No fresh macro items cleared the last 24h window.
+          </p>
+          {% endif %}
           <p class="footer-note" style="margin:10px 0 0;">
             Generated for {{ generated_for_date }}. Review source links before acting on any market-moving information.
           </p>

@@ -14,3 +14,4 @@ positions:
     shares: "1.2500"
     cost_basis_eur: "35.183007"
     currency: EUR
+    market_symbol: IITU.L

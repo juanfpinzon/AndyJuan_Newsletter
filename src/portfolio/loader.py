@@ -89,6 +89,7 @@ def load_portfolio(path: str | Path | None = None) -> list[Position]:
                     ticker=ticker,
                 ),
                 currency=currency,
+                market_symbol=_coerce_optional_string(entry.get("market_symbol")),
             )
         )
 

@@ -119,6 +119,21 @@ def test_render_email_rejects_unsupported_mode() -> None:
         render_email(_sample_context(), mode="weekly")
 
 
+def test_render_email_shows_macro_fallback_when_items_are_missing() -> None:
+    context = _sample_context()
+    context["macro_items"] = []
+    fallback = "No fresh macro items cleared the last 24h window."
+
+    rendered = render_email(context, mode="daily")
+
+    soup = BeautifulSoup(rendered.html, "html.parser")
+    macro_section = soup.select_one("[data-section='macro-footer']")
+
+    assert macro_section is not None
+    assert fallback in rendered.text
+    assert fallback in macro_section.get_text(" ", strip=True)
+
+
 def test_render_email_supports_deep_mode_week_ahead_section() -> None:
     rendered = render_email(_sample_context(), mode="deep")
 
