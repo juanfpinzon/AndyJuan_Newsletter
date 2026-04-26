@@ -19,6 +19,7 @@ def write_settings(path: Path) -> None:
                 "news_item_limit: 15",
                 "exposure_threshold_percent: 5.0",
                 "entity_match_threshold: 85.0",
+                "theme_item_cap: 5",
             ]
         )
         + "\n",
@@ -83,3 +84,4 @@ def test_load_settings_defaults_to_repository_config() -> None:
 
     assert settings.database_path == "data/andyjuan.db"
     assert settings.entity_match_threshold == 85.0
+    assert settings.theme_item_cap == 5
