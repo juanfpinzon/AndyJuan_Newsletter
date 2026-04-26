@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, fields
+from dataclasses import MISSING, dataclass, fields
 from pathlib import Path
 from typing import Any, get_type_hints
 
@@ -25,6 +25,7 @@ class Settings:
     news_item_limit: int
     exposure_threshold_percent: float
     entity_match_threshold: float
+    theme_item_cap: int = 5
 
 
 DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"
@@ -42,7 +43,11 @@ def load_settings(path: str | Path | None = None) -> Settings:
     if not isinstance(data, dict):
         raise ConfigError(f"Settings file must contain a mapping: {settings_path}")
 
-    missing = [field.name for field in fields(Settings) if field.name not in data]
+    missing = [
+        field.name
+        for field in fields(Settings)
+        if field.name not in data and field.default is MISSING
+    ]
     if missing:
         raise ConfigError(
             "Missing required settings keys: " + ", ".join(sorted(missing))
@@ -50,7 +55,10 @@ def load_settings(path: str | Path | None = None) -> Settings:
 
     resolved: dict[str, Any] = {}
     for field in fields(Settings):
-        raw_value = os.getenv(field.name.upper(), data[field.name])
+        default_value = (
+            field.default if field.default is not MISSING else data[field.name]
+        )
+        raw_value = os.getenv(field.name.upper(), data.get(field.name, default_value))
         resolved[field.name] = _coerce_value(
             field.name,
             raw_value,

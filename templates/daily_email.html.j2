@@ -1,0 +1,371 @@
+{% macro ai_disclaimer_chip() -%}
+<span style="display:inline-block;padding:6px 10px;border:1px solid #3a455f;border-radius:999px;background:#151c2c;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">🤖 AI-generated · not investment advice</span>
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0b0f19;
+        color: #e6edf7;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      a {
+        color: #f3ba2f;
+        text-decoration: none;
+      }
+      .shell {
+        width: 100%;
+        background:
+          radial-gradient(circle at top right, rgba(243, 186, 47, 0.16), transparent 28%),
+          linear-gradient(180deg, #111827 0%, #0b0f19 100%);
+      }
+      .container {
+        width: 100%;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 28px 16px 44px;
+      }
+      .panel {
+        background: #131a2a;
+        border: 1px solid #222c42;
+        border-radius: 20px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+      }
+      .section {
+        margin-top: 18px;
+        padding: 22px;
+      }
+      .eyebrow {
+        color: #8b9bb8;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .title {
+        margin: 10px 0 8px;
+        color: #ffffff;
+        font-size: 32px;
+        line-height: 1.1;
+        font-weight: 700;
+      }
+      .subtitle {
+        margin: 0;
+        color: #b7c2d9;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      .mode-chip {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 8px 12px;
+        background: #1a2335;
+        border: 1px solid #32405d;
+        border-radius: 999px;
+        color: #f3ba2f;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .score-grid,
+      .card-grid,
+      .theme-grid,
+      .macro-grid {
+        width: 100%;
+      }
+      .metric,
+      .mini-card,
+      .theme-card,
+      .macro-card {
+        background: #0f1524;
+        border: 1px solid #202b40;
+        border-radius: 16px;
+      }
+      .metric-value {
+        margin: 8px 0 0;
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .muted {
+        color: #91a0bb;
+      }
+      .positive {
+        color: #0ecb81;
+      }
+      .negative {
+        color: #f6465d;
+      }
+      .neutral {
+        color: #f3ba2f;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .table th,
+      .table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #202b40;
+        text-align: left;
+        font-size: 13px;
+        vertical-align: top;
+      }
+      .table th {
+        color: #8b9bb8;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .table tr:last-child td {
+        border-bottom: 0;
+      }
+      .theme-wrap {
+        margin-top: 18px;
+        padding: 20px;
+        background: linear-gradient(180deg, #101726 0%, #0d1320 100%);
+        border: 1px solid #1d2740;
+        border-radius: 18px;
+      }
+      .article-card {
+        margin-top: 12px;
+        padding: 16px;
+        background: #121a2a;
+        border: 1px solid #202b40;
+        border-radius: 16px;
+      }
+      .badge {
+        display: inline-block;
+        margin: 8px 8px 0 0;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #1a2335;
+        border: 1px solid #2c3953;
+        color: #d5deed;
+        font-size: 11px;
+      }
+      .flash-block {
+        margin-top: 14px;
+        padding: 16px;
+        border-left: 3px solid #f3ba2f;
+        border-radius: 14px;
+        background: rgba(243, 186, 47, 0.08);
+      }
+      .copy p {
+        margin: 0 0 14px;
+        color: #d5deed;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .footer-note {
+        color: #8b9bb8;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      @media only screen and (max-width: 640px) {
+        .container {
+          padding: 16px 10px 28px;
+        }
+        .section {
+          padding: 16px;
+        }
+        .title {
+          font-size: 28px;
+        }
+        .metric-value {
+          font-size: 24px;
+        }
+        .table th,
+        .table td {
+          padding-left: 0;
+          padding-right: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="container">
+        <section class="panel section" data-section="hero">
+          <div class="eyebrow">Portfolio Radar · {{ generated_for_date }}</div>
+          <h1 class="title">{{ title }}</h1>
+          <p class="subtitle">{{ subtitle }}</p>
+          <div class="mode-chip">{{ mode_label }}</div>
+        </section>
+
+        <section class="panel section" data-section="pnl-scoreboard">
+          <div class="eyebrow">PnL Scoreboard</div>
+          <table class="score-grid" role="presentation" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="width:50%;padding:12px 8px 0 0;">
+                <div class="metric" style="padding:18px;">
+                  <div class="eyebrow">Current Value</div>
+                  <p class="metric-value">{{ total_pnl.current_value_total_eur }}</p>
+                </div>
+              </td>
+              <td style="width:50%;padding:12px 0 0 8px;">
+                <div class="metric" style="padding:18px;">
+                  <div class="eyebrow">Total PnL</div>
+                  <p class="metric-value">{{ total_pnl.total_pnl_eur }}</p>
+                  <div class="muted">{{ total_pnl.total_pnl_pct }}</div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 8px 0 0;">
+                <div class="metric" style="padding:18px;">
+                  <div class="eyebrow">Daily PnL</div>
+                  <p class="metric-value">{{ total_pnl.daily_pnl_eur }}</p>
+                </div>
+              </td>
+              <td style="padding:16px 0 0 8px;">
+                <div class="metric" style="padding:18px;">
+                  <div class="eyebrow">Tracked Positions</div>
+                  <p class="metric-value">{{ position_rows|length }}</p>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <table class="table" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:18px;">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Theme</th>
+                <th>Value</th>
+                <th>Total PnL</th>
+                <th>Daily</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in position_rows %}
+              <tr>
+                <td style="color:#ffffff;font-weight:700;">{{ row.ticker }}</td>
+                <td class="muted">{{ row.theme }}</td>
+                <td>{{ row.current_value_eur }}</td>
+                <td>{{ row.total_pnl_pct }}</td>
+                <td>{{ row.daily_change_pct }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel section" data-section="concentrated-exposures">
+          <div class="eyebrow">Concentrated Exposures</div>
+          <table class="table" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
+            <thead>
+              <tr>
+                <th>Entity</th>
+                <th>Composite Weight</th>
+                <th>Paths</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in concentrated_exposures %}
+              <tr>
+                <td style="color:#ffffff;font-weight:700;">{{ row.entity }}</td>
+                <td>{{ row.composite_weight_percent }}</td>
+                <td class="muted">{{ row.path_count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel section" data-section="theme-groups">
+          <div class="eyebrow">Theme Groups</div>
+          {% for group in theme_groups %}
+          <div class="theme-wrap">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+              <div>
+                <h2 style="margin:0;color:#ffffff;font-size:22px;">{{ group.name }}</h2>
+                <p style="margin:8px 0 0;color:#aebbd2;font-size:14px;line-height:1.6;">{{ group.description }}</p>
+              </div>
+            </div>
+
+            <table class="card-grid" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:14px;">
+              <tr>
+                {% for card in group.cards %}
+                <td style="width:33.33%;padding:0 10px 10px 0;">
+                  <div class="mini-card" style="padding:16px;height:100%;">
+                    <div class="eyebrow">{{ card.ticker }}</div>
+                    <div style="margin-top:10px;color:#ffffff;font-size:20px;font-weight:700;">{{ card.current_value_eur }}</div>
+                    <div style="margin-top:8px;" class="muted">Total {{ card.total_pnl_pct }}</div>
+                    <div style="margin-top:4px;" class="muted">Daily {{ card.daily_change_pct }}</div>
+                  </div>
+                </td>
+                {% endfor %}
+              </tr>
+            </table>
+
+            {% if group.flash_text %}
+            <div class="flash-block">
+              {{ ai_disclaimer_chip() }}
+              <p style="margin:12px 0 0;color:#f4f7fb;font-size:14px;line-height:1.7;">{{ group.flash_text }}</p>
+            </div>
+            {% endif %}
+
+            {% for article in group.articles %}
+            <div class="article-card news-item">
+              <div class="eyebrow">{{ article.source }} · {{ article.published_at_label }}</div>
+              <h3 style="margin:8px 0 0;font-size:18px;line-height:1.4;">
+                <a href="{{ article.href }}" style="color:#ffffff;">{{ article.title }}</a>
+              </h3>
+              <div style="margin-top:10px;color:#b7c2d9;font-size:13px;line-height:1.6;">
+                Primary entity: <span style="color:#ffffff;font-weight:700;">{{ article.primary_entity }}</span>
+                <span class="badge">{{ article.composite_weight_percent }} composite weight</span>
+              </div>
+              {% if article.affects_themes %}
+                {% for theme in article.affects_themes %}
+                <span class="badge">Affects {{ theme }}</span>
+                {% endfor %}
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </section>
+
+        <section class="panel section" data-section="ai-synthesis">
+          <div class="eyebrow">AI Synthesis</div>
+          <div style="margin-top:14px;">{{ ai_disclaimer_chip() }}</div>
+          <div class="copy" style="margin-top:16px;">
+            {% block synthesis_copy %}
+            {% for paragraph in synthesis_paragraphs %}
+            <p>{{ paragraph }}</p>
+            {% endfor %}
+            {% endblock %}
+          </div>
+        </section>
+        {% block week_ahead %}{% endblock %}
+
+        <section class="panel section" data-section="macro-footer">
+          <div class="eyebrow">Macro Footer</div>
+          <table class="macro-grid" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
+            <tr>
+              {% for item in macro_items %}
+              <td style="width:50%;padding:0 12px 12px 0;">
+                <div class="macro-card" style="padding:16px;height:100%;">
+                  <div class="eyebrow">{{ item.source }} · {{ item.published_at_label }}</div>
+                  <div style="margin-top:10px;font-size:16px;line-height:1.5;">
+                    <a href="{{ item.href }}" style="color:#ffffff;">{{ item.title }}</a>
+                  </div>
+                </div>
+              </td>
+              {% endfor %}
+            </tr>
+          </table>
+          <p class="footer-note" style="margin:10px 0 0;">
+            Generated for {{ generated_for_date }}. Review source links before acting on any market-moving information.
+          </p>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>
