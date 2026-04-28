@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+>
+  <url>
+    <loc>https://www.reuters.com/business/energy/hsbc-sees-limited-near-term-impact-opec-uaes-departure-2026-04-28/</loc>
+    <lastmod>2026-04-28T21:23:43.765Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Reuters</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-28T21:23:43.765Z</news:publication_date>
+      <news:title><![CDATA[HSBC sees limited near-term impact on OPEC+ from UAE's departure]]></news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://www.reuters.com/world/americas/mexico-inflation-close-resuming-decline-toward-target-governor-says-2026-04-28/</loc>
+    <lastmod>2026-04-28T21:22:09.896Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Reuters</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-28T21:22:09.896Z</news:publication_date>
+      <news:title><![CDATA[Mexico inflation close to resuming decline toward target, governor says]]></news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://www.reuters.com/business/robinhood-quarterly-profit-rises-trading-strength-2026-04-28/</loc>
+    <lastmod>2026-04-28T21:14:14.569Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Reuters</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-28T21:14:14.569Z</news:publication_date>
+      <news:title><![CDATA[Robinhood's quarterly profit misses estimates on weak transaction revenue]]></news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://www.reuters.com/markets/asia/oil-rises-another-sample-story-2026-04-28/</loc>
+    <lastmod>2026-04-28T20:55:00.000Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Reuters</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-28T20:55:00.000Z</news:publication_date>
+      <news:title><![CDATA[Oil rises on renewed supply worries]]></news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://www.reuters.com/business/retail-consumer/stale-item-2026-04-26/</loc>
+    <lastmod>2026-04-26T08:00:00.000Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Reuters</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-26T08:00:00.000Z</news:publication_date>
+      <news:title><![CDATA[Stale business item should be filtered]]></news:title>
+    </news:news>
+  </url>
+</urlset>
