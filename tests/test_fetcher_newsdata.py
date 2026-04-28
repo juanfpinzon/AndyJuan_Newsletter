@@ -7,7 +7,7 @@ import pytest
 import respx
 
 from src.fetcher.models import Article
-from src.fetcher.newsdata import NewsDataClient
+from src.fetcher.newsdata import NewsDataClient, NewsDataConfigError
 from src.storage.db import init_db
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "news" / "newsdata"
@@ -17,10 +17,38 @@ def load_fixture(name: str) -> dict:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
+def _freeze_news_clock(monkeypatch: pytest.MonkeyPatch) -> None:
+    import src.fetcher.newsdata as newsdata
+
+    monkeypatch.setattr(
+        newsdata,
+        "_utcnow",
+        lambda: datetime(2026, 4, 26, 5, 30, tzinfo=timezone.utc),
+    )
+
+
+@pytest.mark.asyncio
+async def test_fetch_news_raises_clear_error_when_api_key_missing(
+    tmp_path: Path,
+) -> None:
+    client = NewsDataClient(
+        api_key="",
+        db_path=tmp_path / "missing-key.db",
+        base_url="https://newsdata.example/api/1/news",
+        backoff_seconds=0,
+    )
+
+    with pytest.raises(NewsDataConfigError, match="NEWSDATA_API_KEY is not set"):
+        await client.fetch_news("NVDA", hours=24)
+
+
 @pytest.mark.asyncio
 async def test_fetch_news_paginates_dedups_and_persists_seen_urls(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     db_path = tmp_path / "newsdata.db"
     database = init_db(db_path)
     database["articles_seen"].insert(
@@ -79,8 +107,11 @@ async def test_fetch_news_paginates_dedups_and_persists_seen_urls(
 
 @pytest.mark.asyncio
 async def test_fetch_news_retries_once_on_rate_limit(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     route = respx_mock.get("https://newsdata.example/api/1/news").mock(
         side_effect=[
             httpx.Response(429),
@@ -107,7 +138,9 @@ async def test_fetch_news_retries_once_on_rate_limit(
 async def test_fetch_news_stops_at_configured_page_limit(
     tmp_path: Path,
     respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     route = respx_mock.get("https://newsdata.example/api/1/news").mock(
         side_effect=[
             httpx.Response(
@@ -188,8 +221,11 @@ async def test_fetch_news_stops_at_configured_page_limit(
 
 @pytest.mark.asyncio
 async def test_fetch_news_ignore_seen_db_refetches_previous_urls(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     db_path = tmp_path / "newsdata.db"
     database = init_db(db_path)
     database["articles_seen"].insert(

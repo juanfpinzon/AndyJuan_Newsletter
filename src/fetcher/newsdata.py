@@ -13,6 +13,10 @@ from src.utils.http import get_async_client
 from .models import Article
 
 
+class NewsDataConfigError(RuntimeError):
+    """Raised when NewsData client configuration is incomplete."""
+
+
 class NewsDataClient:
     """Fetch portfolio news with pagination and SQLite-backed dedup."""
 
@@ -130,7 +134,7 @@ class NewsDataClient:
         next_page: str | None,
     ) -> dict[str, Any]:
         params = {
-            "apikey": self.api_key,
+            "apikey": _require_api_key(self.api_key),
             "q": entity_query,
         }
         if next_page:
@@ -215,3 +219,10 @@ def _parse_published_at(value: str) -> datetime | None:
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _require_api_key(value: str) -> str:
+    api_key = value.strip()
+    if not api_key:
+        raise NewsDataConfigError("NEWSDATA_API_KEY is not set")
+    return api_key
