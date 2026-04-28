@@ -20,10 +20,15 @@ def main(argv: list[str] | None = None) -> int:
         default="daily",
         help="Pipeline mode to run.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the pipeline without sending email.",
+    )
     args = parser.parse_args(argv)
 
     runner = run_deep if args.mode == "deep" else run_daily
-    runner(send=True)
+    runner(send=not args.dry_run)
     return 0
 
 

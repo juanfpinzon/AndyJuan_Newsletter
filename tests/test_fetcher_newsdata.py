@@ -17,10 +17,23 @@ def load_fixture(name: str) -> dict:
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
 
 
+def _freeze_news_clock(monkeypatch: pytest.MonkeyPatch) -> None:
+    import src.fetcher.newsdata as newsdata
+
+    monkeypatch.setattr(
+        newsdata,
+        "_utcnow",
+        lambda: datetime(2026, 4, 26, 5, 30, tzinfo=timezone.utc),
+    )
+
+
 @pytest.mark.asyncio
 async def test_fetch_news_paginates_dedups_and_persists_seen_urls(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     db_path = tmp_path / "newsdata.db"
     database = init_db(db_path)
     database["articles_seen"].insert(
@@ -79,8 +92,11 @@ async def test_fetch_news_paginates_dedups_and_persists_seen_urls(
 
 @pytest.mark.asyncio
 async def test_fetch_news_retries_once_on_rate_limit(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     route = respx_mock.get("https://newsdata.example/api/1/news").mock(
         side_effect=[
             httpx.Response(429),
@@ -107,7 +123,9 @@ async def test_fetch_news_retries_once_on_rate_limit(
 async def test_fetch_news_stops_at_configured_page_limit(
     tmp_path: Path,
     respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     route = respx_mock.get("https://newsdata.example/api/1/news").mock(
         side_effect=[
             httpx.Response(
@@ -188,8 +206,11 @@ async def test_fetch_news_stops_at_configured_page_limit(
 
 @pytest.mark.asyncio
 async def test_fetch_news_ignore_seen_db_refetches_previous_urls(
-    tmp_path: Path, respx_mock: respx.MockRouter
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    _freeze_news_clock(monkeypatch)
     db_path = tmp_path / "newsdata.db"
     database = init_db(db_path)
     database["articles_seen"].insert(

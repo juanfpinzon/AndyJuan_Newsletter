@@ -21,22 +21,92 @@ on:
       - run-daily-radar
 
 jobs:
-  stub:
+  run-radar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      AGENTMAIL_API_KEY: ${{ secrets.AGENTMAIL_API_KEY }}
+      AGENTMAIL_INBOX_ID: ${{ secrets.AGENTMAIL_INBOX_ID }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
+      PYTHONUNBUFFERED: "1"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Show workflow_dispatch inputs
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "mode=${{ inputs.mode }}"
-          echo "dry_run=${{ inputs.dry_run }}"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Show repository_dispatch payload
-        if: github.event_name == 'repository_dispatch'
+      - name: Resolve run configuration
+        id: config
+        env:
+          WORKFLOW_MODE: ${{ inputs.mode }}
+          WORKFLOW_DRY_RUN: ${{ inputs.dry_run }}
+          DISPATCH_MODE: ${{ github.event.client_payload.mode }}
+          DISPATCH_DRY_RUN: ${{ github.event.client_payload.dry_run }}
         run: |
-          echo 'payload=${{ toJson(github.event.client_payload) }}'
+          mode="${WORKFLOW_MODE:-daily}"
+          dry_run="${WORKFLOW_DRY_RUN:-false}"
 
-      - name: Stub pipeline step
-        run: echo "Daily radar pipeline stub"
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            if [ -n "$DISPATCH_MODE" ]; then
+              mode="$DISPATCH_MODE"
+            fi
+
+            if [ "$DISPATCH_DRY_RUN" = "true" ]; then
+              dry_run="true"
+            else
+              dry_run="false"
+            fi
+          fi
+
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+          if [ "$dry_run" = "true" ]; then
+            echo "dry_run_flag=--dry-run" >> "$GITHUB_OUTPUT"
+          else
+            echo "dry_run_flag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Show resolved configuration
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "mode=${{ steps.config.outputs.mode }}"
+          echo "dry_run_flag=${{ steps.config.outputs.dry_run_flag }}"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run radar pipeline
+        env:
+          MODE: ${{ steps.config.outputs.mode }}
+          DRY_RUN_FLAG: ${{ steps.config.outputs.dry_run_flag }}
+        run: |
+          if [ -n "$DRY_RUN_FLAG" ]; then
+            python -m src.main --mode "$MODE" "$DRY_RUN_FLAG"
+          else
+            python -m src.main --mode "$MODE"
+          fi
+
+      - name: Show pipeline log tail
+        if: always()
+        run: |
+          if [ -f data/logs/andyjuan.jsonl ]; then
+            tail -n 200 data/logs/andyjuan.jsonl
+          else
+            echo "No pipeline log file found"
+          fi
+
+      - name: Upload pipeline logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-radar-logs
+          path: data/logs/andyjuan.jsonl
+          if-no-files-found: ignore
