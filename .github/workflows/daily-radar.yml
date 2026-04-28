@@ -78,6 +78,43 @@ jobs:
           echo "mode=${{ steps.config.outputs.mode }}"
           echo "dry_run_flag=${{ steps.config.outputs.dry_run_flag }}"
 
+      - name: Validate required secrets
+        env:
+          DRY_RUN_FLAG: ${{ steps.config.outputs.dry_run_flag }}
+        run: |
+          missing=0
+
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::error::OPENROUTER_API_KEY is not set"
+            missing=1
+          fi
+
+          if [ -z "$NEWSDATA_API_KEY" ]; then
+            echo "::error::NEWSDATA_API_KEY is not set"
+            missing=1
+          fi
+
+          if [ -z "$DRY_RUN_FLAG" ]; then
+            if [ -z "$AGENTMAIL_API_KEY" ]; then
+              echo "::error::AGENTMAIL_API_KEY is not set"
+              missing=1
+            fi
+
+            if [ -z "$AGENTMAIL_INBOX_ID" ]; then
+              echo "::error::AGENTMAIL_INBOX_ID is not set"
+              missing=1
+            fi
+
+            if [ -z "$EMAIL_FROM" ]; then
+              echo "::error::EMAIL_FROM is not set"
+              missing=1
+            fi
+          fi
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

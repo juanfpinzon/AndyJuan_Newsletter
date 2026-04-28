@@ -7,7 +7,7 @@ import pytest
 import respx
 
 from src.fetcher.models import Article
-from src.fetcher.newsdata import NewsDataClient
+from src.fetcher.newsdata import NewsDataClient, NewsDataConfigError
 from src.storage.db import init_db
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "news" / "newsdata"
@@ -25,6 +25,21 @@ def _freeze_news_clock(monkeypatch: pytest.MonkeyPatch) -> None:
         "_utcnow",
         lambda: datetime(2026, 4, 26, 5, 30, tzinfo=timezone.utc),
     )
+
+
+@pytest.mark.asyncio
+async def test_fetch_news_raises_clear_error_when_api_key_missing(
+    tmp_path: Path,
+) -> None:
+    client = NewsDataClient(
+        api_key="",
+        db_path=tmp_path / "missing-key.db",
+        base_url="https://newsdata.example/api/1/news",
+        backoff_seconds=0,
+    )
+
+    with pytest.raises(NewsDataConfigError, match="NEWSDATA_API_KEY is not set"):
+        await client.fetch_news("NVDA", hours=24)
 
 
 @pytest.mark.asyncio

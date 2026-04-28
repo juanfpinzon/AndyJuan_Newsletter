@@ -83,6 +83,10 @@ Saturday `repository_dispatch` body:
 
 For a safe end-to-end smoke test, set `client_payload.dry_run` to `true` or use
 manual `workflow_dispatch` with `dry_run=true` from the GitHub Actions UI.
+Dry-run still performs live news fetches and LLM calls. It only skips email
+delivery, so `OPENROUTER_API_KEY` and `NEWSDATA_API_KEY` must still be set even
+for `dry_run=true`. `AGENTMAIL_API_KEY`, `AGENTMAIL_INBOX_ID`, and
+`EMAIL_FROM` are only required for `dry_run=false`.
 
 GitHub token requirements:
 

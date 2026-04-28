@@ -40,6 +40,9 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
 
     assert "python -m pip install --upgrade pip" in run_script
     assert 'pip install -e ".[dev]"' in run_script
+    assert "::error::NEWSDATA_API_KEY is not set" in run_script
+    assert 'if [ -z "$DRY_RUN_FLAG" ]; then' in run_script
+    assert "::error::AGENTMAIL_API_KEY is not set" in run_script
     assert 'if [ -n "$DRY_RUN_FLAG" ]; then' in run_script
     assert 'python -m src.main --mode "$MODE" "$DRY_RUN_FLAG"' in run_script
     assert 'python -m src.main --mode "$MODE"' in run_script
@@ -56,5 +59,6 @@ def test_readme_documents_operations_setup() -> None:
     assert "run-daily-radar" in readme
     assert "client_payload" in readme
     assert "/dispatches" in readme
+    assert "Dry-run still performs live news fetches and LLM calls" in readme
     assert "fine-grained personal access token" in readme
     assert "Contents: write" in readme
