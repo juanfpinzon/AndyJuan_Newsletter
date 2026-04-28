@@ -564,42 +564,42 @@ Sequential. All Phase 4 outputs must be stable.
 
 ## Phase 6 — Schedule + Deploy
 
-#### Task 6.1: Complete GitHub Actions workflow body
+#### Task 6.1: Complete GitHub Actions workflow body [x]
 **Description:** Fill in `daily-radar.yml` job: install deps, run `python -m src.main --mode=$MODE`, surface logs. Wire all secrets (OPENROUTER_API_KEY, AGENTMAIL_API_KEY, AGENTMAIL_INBOX_ID, EMAIL_FROM, NEWSDATA_API_KEY).
 **Acceptance:**
-- [ ] Manual `workflow_dispatch` with `dry_run=true` completes successfully on a real run
-- [ ] Manual `workflow_dispatch` with `dry_run=false` lands a real email in juan's inbox
+- [x] Manual `workflow_dispatch` with `dry_run=true` completes successfully on a real run
+- [x] Manual `workflow_dispatch` with `dry_run=false` lands a real email in juan's inbox
 **Verify:** Trigger via GitHub UI; check job logs and inbox
 **Dependencies:** Task 5.4, configured secrets in GitHub
 **Files:** `.github/workflows/daily-radar.yml`
 **Scope:** S
 
-#### Task 6.2: cron-job.org config + README ops section
+#### Task 6.2: cron-job.org config + README ops section [x]
 **Description:** Document the cron-job.org dispatch configuration in `README.md`: schedule (Mon-Fri 06:30 UTC for 07:30 CET CEST-aware; Sat 07:00 UTC for 08:00 CET CEST-aware), payload format, GitHub PAT requirements. Set up the actual cron jobs on cron-job.org.
 **Acceptance:**
-- [ ] README has a complete "Operations" section with cron-job.org setup steps
-- [ ] cron-job.org dispatches successfully (test trigger from cron-job.org UI fires the workflow)
+- [x] README has a complete "Operations" section with cron-job.org setup steps
+- [x] cron-job.org dispatches successfully (test trigger from cron-job.org UI fires the workflow)
 **Verify:** Trigger cron-job.org test; observe GH Actions run start
 **Dependencies:** Task 6.1
 **Files:** `README.md`
 **Scope:** S
 
-#### Task 6.3: Production smoke tests + go-live
+#### Task 6.3: Production smoke tests + go-live [x]
 **Description:** First real production sends. Smoke test daily at the next weekday 07:30 CET. Smoke test Saturday at 08:00 CET.
 **Acceptance:**
-- [ ] Mon-Fri 07:30 CET: real email lands in both inboxes
-- [ ] Saturday 08:00 CET: deep email lands in both inboxes
-- [ ] Run summary in `runs` table shows expected costs
+- [x] Mon-Fri 07:30 CET: real email lands in both inboxes
+- [x] Saturday 08:00 CET: deep email lands in both inboxes
+- [x] Run summary in `runs` table shows expected costs
 **Verify:** Inbox check + `python scripts/debug_exposure.py --costs`
 **Dependencies:** Task 6.2
 **Files:** None (operational)
 **Scope:** S
 
 ### Checkpoint: v0.1 launched
-- [ ] Both readers receive daily and Saturday emails on schedule
-- [ ] Cost-per-run is below ~$0.50/day (sanity threshold)
-- [ ] No silent failures in `runs` table over first week
-- [ ] Move to v0.2 planning when stable for 2 weeks
+- [x] Both readers receive daily and Saturday emails on schedule
+- [x] Cost-per-run is below ~$0.50/day (sanity threshold)
+- [x] No silent failures in `runs` table over first week
+- [x] Move to v0.2 planning when stable for 2 weeks
 
 ---
 
