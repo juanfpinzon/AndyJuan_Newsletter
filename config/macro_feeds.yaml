@@ -9,9 +9,14 @@ feeds:
     theme: Macro/FX
   - key: ft_alphaville
     name: FT Alphaville
-    url: https://ftav.substack.com/feed
+    url: https://www.ft.com/alphaville?format=rss
     theme: Macro/FX
   - key: reuters_business
     name: Reuters business news
-    url: https://feeds.reuters.com/reuters/businessNews
+    url: https://www.reuters.com/arc/outboundfeeds/news-sitemap/?outputType=xml
     theme: Macro/FX
+    format: news_sitemap
+    include_url_prefixes:
+      - /business/
+      - /markets/
+    max_items: 4

@@ -4,10 +4,12 @@ from pathlib import Path
 import httpx
 import pytest
 import respx
+import yaml
 
 from src.fetcher.macro_rss import MacroRSSReader
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "news" / "rss"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.asyncio
@@ -110,3 +112,64 @@ async def test_fetch_macro_skips_unreachable_feed_and_continues(
         "ECB signals patience on rate path"
     ]
     assert articles[0].source == "Working Feed"
+
+
+@pytest.mark.asyncio
+async def test_fetch_macro_supports_reuters_news_sitemap_with_prefix_filters(
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+) -> None:
+    config_path = tmp_path / "macro_feeds.yaml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "feeds:",
+                "  - key: reuters_business",
+                "    name: Reuters business news",
+                "    url: https://feeds.example.com/reuters-news-sitemap.xml",
+                "    theme: Macro/FX",
+                "    format: news_sitemap",
+                "    include_url_prefixes:",
+                "      - /business/",
+                "      - /markets/",
+                "    max_items: 2",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    xml_body = (FIXTURES_DIR / "reuters_news_sitemap.xml").read_text(
+        encoding="utf-8"
+    )
+    respx_mock.get("https://feeds.example.com/reuters-news-sitemap.xml").mock(
+        return_value=httpx.Response(200, text=xml_body)
+    )
+
+    reader = MacroRSSReader(config_path=config_path, backoff_seconds=0)
+    now = datetime(2026, 4, 28, 12, 0, tzinfo=timezone.utc)
+
+    articles = await reader.fetch_macro(now=now)
+
+    assert [article.title for article in articles] == [
+        "HSBC sees limited near-term impact on OPEC+ from UAE's departure",
+        "Robinhood's quarterly profit misses estimates on weak transaction revenue",
+    ]
+    assert [article.url for article in articles] == [
+        "https://www.reuters.com/business/energy/hsbc-sees-limited-near-term-impact-opec-uaes-departure-2026-04-28/",
+        "https://www.reuters.com/business/robinhood-quarterly-profit-rises-trading-strength-2026-04-28/",
+    ]
+    assert all(article.source == "Reuters business news" for article in articles)
+
+
+def test_repository_macro_feed_config_uses_live_ft_and_reuters_sources() -> None:
+    payload = yaml.safe_load(
+        (REPOSITORY_ROOT / "config" / "macro_feeds.yaml").read_text(encoding="utf-8")
+    )
+    feeds = {feed["key"]: feed for feed in payload["feeds"]}
+
+    assert feeds["ft_alphaville"]["url"] == "https://www.ft.com/alphaville?format=rss"
+    assert feeds["reuters_business"]["url"] == (
+        "https://www.reuters.com/arc/outboundfeeds/news-sitemap/?outputType=xml"
+    )
+    assert feeds["reuters_business"]["format"] == "news_sitemap"

@@ -8,6 +8,8 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from time import struct_time
 from typing import Any
+from urllib.parse import urlparse
+from xml.etree import ElementTree
 
 import feedparser
 import httpx
@@ -21,6 +23,10 @@ from .models import Article
 DEFAULT_MACRO_FEEDS_PATH = (
     Path(__file__).resolve().parents[2] / "config" / "macro_feeds.yaml"
 )
+SITEMAP_NS = {
+    "news": "http://www.google.com/schemas/sitemap-news/0.9",
+    "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9",
+}
 
 
 @dataclass
@@ -78,11 +84,10 @@ class MacroRSSReader:
                     continue
 
                 self._store_validators(feed["url"], response.headers)
-                parsed_feed = feedparser.parse(response.text)
                 articles.extend(
-                    self._recent_articles(
+                    self._recent_feed_articles(
                         feed=feed,
-                        parsed_feed=parsed_feed,
+                        payload=response.text,
                         cutoff=cutoff,
                     )
                 )
@@ -107,14 +112,37 @@ class MacroRSSReader:
             last_modified=headers.get("Last-Modified"),
         )
 
-    def _recent_articles(
+    def _recent_feed_articles(
         self,
         *,
-        feed: dict[str, str],
+        feed: dict[str, Any],
+        payload: str,
+        cutoff: datetime,
+    ) -> list[Article]:
+        feed_format = str(feed.get("format") or "rss").strip().lower()
+        if feed_format == "news_sitemap":
+            return self._recent_sitemap_articles(
+                feed=feed,
+                payload=payload,
+                cutoff=cutoff,
+            )
+
+        parsed_feed = feedparser.parse(payload)
+        return self._recent_rss_articles(
+            feed=feed,
+            parsed_feed=parsed_feed,
+            cutoff=cutoff,
+        )
+
+    def _recent_rss_articles(
+        self,
+        *,
+        feed: dict[str, Any],
         parsed_feed: feedparser.FeedParserDict,
         cutoff: datetime,
     ) -> list[Article]:
         articles: list[Article] = []
+        max_items = _coerce_max_items(feed.get("max_items"))
         for entry in parsed_feed.entries:
             published_at = _entry_datetime(entry)
             if published_at is None or published_at < cutoff:
@@ -129,10 +157,61 @@ class MacroRSSReader:
                     raw_tags=(feed.get("theme") or "",),
                 )
             )
+            if max_items is not None and len(articles) >= max_items:
+                break
+        return articles
+
+    def _recent_sitemap_articles(
+        self,
+        *,
+        feed: dict[str, Any],
+        payload: str,
+        cutoff: datetime,
+    ) -> list[Article]:
+        try:
+            root = ElementTree.fromstring(payload)
+        except ElementTree.ParseError:
+            return []
+
+        include_url_prefixes = _coerce_url_prefixes(feed.get("include_url_prefixes"))
+        max_items = _coerce_max_items(feed.get("max_items"))
+        articles: list[Article] = []
+
+        for url_node in root.findall("sitemap:url", SITEMAP_NS):
+            article_url = _xml_text(url_node.find("sitemap:loc", SITEMAP_NS))
+            if not article_url:
+                continue
+            if include_url_prefixes and not _matches_url_prefix(
+                article_url,
+                include_url_prefixes,
+            ):
+                continue
+
+            published_at = _sitemap_entry_datetime(url_node)
+            if published_at is None or published_at < cutoff:
+                continue
+
+            title = _xml_text(url_node.find("news:news/news:title", SITEMAP_NS))
+            if not title:
+                continue
+
+            articles.append(
+                Article(
+                    title=title,
+                    body="",
+                    url=article_url,
+                    source=str(feed.get("name") or ""),
+                    published_at=published_at.isoformat(),
+                    raw_tags=(str(feed.get("theme") or ""),),
+                )
+            )
+            if max_items is not None and len(articles) >= max_items:
+                break
+
         return articles
 
 
-def _load_feeds(path: Path) -> list[dict[str, str]]:
+def _load_feeds(path: Path) -> list[dict[str, Any]]:
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     return list(payload.get("feeds", []))
 
@@ -147,3 +226,49 @@ def _entry_datetime(entry: feedparser.FeedParserDict) -> datetime | None:
         return datetime(*published_parsed[:6], tzinfo=timezone.utc)
 
     return None
+
+
+def _sitemap_entry_datetime(url_node: ElementTree.Element) -> datetime | None:
+    value = _xml_text(url_node.find("news:news/news:publication_date", SITEMAP_NS))
+    if not value:
+        value = _xml_text(url_node.find("sitemap:lastmod", SITEMAP_NS))
+    return _parse_iso_datetime(value)
+
+
+def _parse_iso_datetime(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _xml_text(node: ElementTree.Element | None) -> str:
+    if node is None or node.text is None:
+        return ""
+    return node.text.strip()
+
+
+def _coerce_url_prefixes(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    return tuple(str(item).strip() for item in value if str(item).strip())
+
+
+def _coerce_max_items(value: Any) -> int | None:
+    if value in (None, ""):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def _matches_url_prefix(article_url: str, prefixes: tuple[str, ...]) -> bool:
+    path = urlparse(article_url).path
+    return any(path.startswith(prefix) for prefix in prefixes)
