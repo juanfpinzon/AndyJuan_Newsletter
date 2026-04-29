@@ -14,7 +14,7 @@ looking through ETFs to top-10 constituents — and reports yesterday's P&L,
 in a Gmail-rendered dark-themed brief with clearly-labeled AI commentary
 that respects a 90-second read budget.
 
-**Users:** Juan (`juancho704@gmail.com`), Andrea (TBD address). Identical content.
+**Users:** Juan (`juancho704@gmail.com`), Andrea (`andrea.aliciap@gmail.com`). Identical content.
 
 **Why:** Personalized portfolio news radar with exposure-weighted ranking is
 not available off-the-shelf. Snowball Analytics tracks performance but
@@ -426,7 +426,7 @@ for mocking httpx.
 - [ ] Every news item rendered has a clickable source URL
 - [ ] Every AI Take block (per-theme flash + bottom synthesis) renders with accent color + `🤖 AI-generated · not investment advice` chip
 - [ ] Email word count ≤ 1,000 words on a representative day (validated by automated word-count test in renderer suite)
-- [ ] Both `juan@gmail` and `andrea@gmail` receive the daily and Saturday emails on schedule
+- [ ] Both `juancho704@gmail.com` and `andrea.aliciap@gmail.com` receive the daily and Saturday emails on schedule
 
 **Correctness:**
 - [ ] Exposure map for the current `portfolio.yaml` computes within 1s; output validated by `tests/test_exposure.py`
@@ -447,7 +447,6 @@ for mocking httpx.
 
 ## 10. Open Questions
 
-- [ ] Andrea's email address (placeholder until provided)
 - [ ] Exact NewsData.io plan for prod — free + heavy caching may suffice; if not, $20/mo Basic. Settle during the v0.1 NewsData spike.
 - [ ] Accent color hex for AI Take — design pass after first render lands
 - [ ] AI Take prompt length tuning — iterate after week-1 review when we see real outputs

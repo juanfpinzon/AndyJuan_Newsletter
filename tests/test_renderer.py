@@ -12,15 +12,12 @@ from src.renderer import build_concentrated_exposures, build_theme_groups
 from src.renderer.render import RenderValidationError, render_email
 
 
-def test_render_email_renders_all_sections_with_plain_text() -> None:
-    rendered = render_email(_sample_context(), mode="daily")
+def test_render_email_renders_refreshed_daily_structure_with_plain_text() -> None:
+    context = _sample_context()
+    rendered = render_email(context, mode="daily")
 
     soup = BeautifulSoup(rendered.html, "html.parser")
-    sections = [
-        element["data-section"]
-        for element in soup.select("[data-section]")
-        if element.name == "section"
-    ]
+    sections = _rendered_section_names(soup)
 
     assert sections == [
         "hero",
@@ -35,11 +32,67 @@ def test_render_email_renders_all_sections_with_plain_text() -> None:
     assert "Daily Portfolio Radar" in rendered.text
     assert "AI-generated" in rendered.text
 
+    body = soup.body
+    assert body is not None
+    preheader = _first_element_child(body)
+    assert preheader is not None
+    assert _style_contains(
+        preheader,
+        "display:none",
+        "max-height:0",
+        "overflow:hidden",
+        "opacity:0",
+    )
+    preheader_text = preheader.get_text(" ", strip=True)
+    assert context["subtitle"] in preheader_text
+    assert f"Daily PnL {context['total_pnl']['daily_pnl_eur']}" in preheader_text
+    assert f"{len(context['position_rows'])} positions tracked." in preheader_text
+
+    macro_section = soup.select_one("[data-section='macro-footer']")
+    assert macro_section is not None
+    macro_text = macro_section.get_text(" ", strip=True)
+    assert "Macro & Markets" in macro_text
+    assert "Macro Footer" not in macro_text
+
     article_links = soup.select(".news-item a")
     assert article_links
     assert all(link.get("href") for link in article_links)
     assert rendered.html.count("🤖 AI-generated · not investment advice") == 3
-    assert "Affects" in rendered.html
+    assert "Primary entity:" not in rendered.html
+    assert "Affects " not in rendered.html
+
+    score_section = soup.select_one("[data-section='pnl-scoreboard']")
+    assert score_section is not None
+    numeric_values = {
+        context["total_pnl"]["current_value_total_eur"],
+        context["total_pnl"]["total_pnl_eur"],
+        context["total_pnl"]["total_pnl_pct"],
+        context["total_pnl"]["daily_pnl_eur"],
+        str(len(context["position_rows"])),
+    }
+    for value in numeric_values:
+        assert _find_text_element(score_section, value, class_name="num") is not None
+
+    _assert_text_has_style(
+        score_section,
+        context["total_pnl"]["total_pnl_eur"],
+        "color:#0ecb81",
+    )
+    _assert_text_has_style(
+        score_section,
+        context["total_pnl"]["daily_pnl_eur"],
+        "color:#0ecb81",
+    )
+    _assert_text_has_style(
+        score_section,
+        context["position_rows"][0]["total_pnl_pct"],
+        "color:#0ecb81",
+    )
+    _assert_text_has_style(
+        score_section,
+        context["position_rows"][0]["daily_change_pct"],
+        "color:#0ecb81",
+    )
 
 
 def test_render_email_accepts_renderer_dataclasses(tmp_path: Path) -> None:
@@ -98,6 +151,28 @@ def test_render_email_accepts_renderer_dataclasses(tmp_path: Path) -> None:
     assert "€112.50" in rendered.html
 
 
+def test_render_email_color_codes_negative_scoreboard_values_after_refresh() -> None:
+    context = _sample_context()
+    context["total_pnl"]["total_pnl_eur"] = "-€67.52"
+    context["total_pnl"]["total_pnl_pct"] = "-2.51%"
+    context["total_pnl"]["daily_pnl_eur"] = "-€0.14"
+    context["position_rows"][0]["total_pnl_pct"] = "-14.2%"
+    context["position_rows"][0]["daily_change_pct"] = "-1.1%"
+
+    rendered = render_email(context, mode="daily")
+
+    soup = BeautifulSoup(rendered.html, "html.parser")
+    score_section = soup.select_one("[data-section='pnl-scoreboard']")
+
+    assert score_section is not None
+    _assert_text_has_style(score_section, "-€67.52", "color:#f6465d")
+    _assert_text_has_style(score_section, "-€0.14", "color:#f6465d")
+    _assert_text_has_style(score_section, "-14.2%", "color:#f6465d")
+    _assert_text_has_style(score_section, "-1.1%", "color:#f6465d")
+    assert _find_text_element(score_section, "-€67.52", class_name="num") is not None
+    assert _find_text_element(score_section, "-€0.14", class_name="num") is not None
+
+
 def test_render_email_rejects_blank_news_href() -> None:
     context = _sample_context()
     context["theme_groups"][0]["articles"][0]["href"] = ""
@@ -134,26 +209,76 @@ def test_render_email_shows_macro_fallback_when_items_are_missing() -> None:
     assert fallback in macro_section.get_text(" ", strip=True)
 
 
-def test_render_email_supports_deep_mode_week_ahead_section() -> None:
-    rendered = render_email(_sample_context(), mode="deep")
+def test_render_email_supports_refreshed_deep_mode_structure() -> None:
+    context = _sample_context()
+    context["deep_lede"] = (
+        "Leadership stayed narrow through the week while rate repricing kept "
+        "macro sensitivity in the foreground."
+    )
+
+    rendered = render_email(context, mode="deep")
 
     soup = BeautifulSoup(rendered.html, "html.parser")
+    sections = _rendered_section_names(soup)
+    deep_lede = soup.select_one("[data-section='deep-lede']")
+    ai_section = soup.select_one("[data-section='ai-synthesis']")
     week_ahead = soup.select_one("[data-section='week-ahead']")
 
+    assert sections == [
+        "hero",
+        "deep-lede",
+        "pnl-scoreboard",
+        "concentrated-exposures",
+        "theme-groups",
+        "ai-synthesis",
+        "week-ahead",
+        "macro-footer",
+    ]
+    assert deep_lede is not None
+    assert context["deep_lede"] in deep_lede.get_text(" ", strip=True)
+    assert ai_section is not None
+    assert "This week, in five paragraphs." in ai_section.get_text(" ", strip=True)
+    _assert_text_has_style(
+        ai_section,
+        context["deep_synthesis_paragraphs"][0],
+        "font-size:16px",
+        "line-height:1.8",
+    )
     assert week_ahead is not None
     assert "Week Ahead" in week_ahead.get_text(" ", strip=True)
+    assert not week_ahead.select("th")
+    assert _find_text_element(week_ahead, "Mon") is not None
+    _assert_text_has_style(
+        week_ahead,
+        "Mon",
+        "background:rgba(243,186,47,0.10)",
+        "border-radius:8px",
+    )
+    _assert_text_has_style(week_ahead, "Macro", "text-transform:uppercase")
     assert "Saturday deep mode extends the synthesis" in rendered.text
 
 
-def test_render_email_deep_mode_shows_week_ahead_fallback() -> None:
+def test_render_email_deep_mode_handles_missing_optional_refresh_fields() -> None:
     context = _sample_context()
+    context.pop("deep_synthesis_paragraphs")
     context["week_ahead_items"] = []
 
     rendered = render_email(context, mode="deep")
 
     soup = BeautifulSoup(rendered.html, "html.parser")
+    ai_section = soup.select_one("[data-section='ai-synthesis']")
     week_ahead = soup.select_one("[data-section='week-ahead']")
 
+    assert soup.select_one("[data-section='deep-lede']") is None
+    assert ai_section is not None
+    assert "This week, in five paragraphs." in ai_section.get_text(" ", strip=True)
+    assert context["synthesis_paragraphs"][0] in ai_section.get_text(" ", strip=True)
+    _assert_text_has_style(
+        ai_section,
+        context["synthesis_paragraphs"][0],
+        "font-size:16px",
+        "line-height:1.8",
+    )
     assert week_ahead is not None
     assert "No week-ahead items were supplied for this Saturday run." in rendered.text
     assert (
@@ -344,3 +469,48 @@ def _make_snapshot(ticker: str):
             change_pct=Decimal("1.123"),
         ),
     )
+
+
+def _rendered_section_names(soup: BeautifulSoup) -> list[str]:
+    return [
+        element["data-section"]
+        for element in soup.select("section[data-section]")
+    ]
+
+
+def _first_element_child(tag) -> object | None:
+    return next(
+        (child for child in tag.children if getattr(child, "name", None)),
+        None,
+    )
+
+
+def _find_text_element(
+    container,
+    text: str,
+    *,
+    class_name: str | None = None,
+):
+    for node in container.find_all(
+        string=lambda value: value and value.strip() == text
+    ):
+        parent = node.parent
+        if parent is None:
+            continue
+        if class_name is None:
+            return parent
+        classes = parent.get("class", [])
+        if class_name in classes:
+            return parent
+    return None
+
+
+def _style_contains(tag, *parts: str) -> bool:
+    style = str(tag.get("style", "")).replace(" ", "").lower()
+    return all(part.replace(" ", "").lower() in style for part in parts)
+
+
+def _assert_text_has_style(container, text: str, *parts: str) -> None:
+    element = _find_text_element(container, text)
+    assert element is not None
+    assert _style_contains(element, *parts)
