@@ -46,6 +46,11 @@ DEFAULT_THEMES_PATH = Path(__file__).resolve().parents[2] / "config" / "themes.y
 MAX_NEWS_QUERY_TERMS = 6
 # Precious-metals aliases generate broad macro/news noise for the current matcher.
 NOISE_NEWS_QUERY_TERMS = {"GOLD", "SILVER"}
+PLACEHOLDER_RECIPIENT_DOMAINS = {
+    "example.com",
+    "example.net",
+    "example.org",
+}
 
 
 @dataclass(frozen=True)
@@ -546,12 +551,28 @@ def _resolve_recipients(
 
     payload = yaml.safe_load(Path(recipients_path).read_text(encoding="utf-8")) or {}
     recipients = payload.get("recipients", {})
-    emails = [
-        str(config.get("email", "")).strip()
-        for config in recipients.values()
-        if str(config.get("email", "")).strip()
-    ]
+    emails: list[str] = []
+    for config in recipients.values():
+        email = str(config.get("email", "")).strip()
+        if not email:
+            continue
+        if _is_placeholder_recipient(email):
+            get_logger("pipeline").warning(
+                "recipient_skipped_placeholder",
+                email=email,
+            )
+            continue
+        emails.append(email)
+
+    if not emails:
+        raise ValueError("No deliverable recipients configured")
+
     return tuple(emails)
+
+
+def _is_placeholder_recipient(email: str) -> bool:
+    _, _, domain = email.rpartition("@")
+    return domain.lower() in PLACEHOLDER_RECIPIENT_DOMAINS
 
 
 def _build_subject(mode: str, now: datetime) -> str:
