@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Callable
 
 from src.config import Settings, load_settings
 from src.exposure.models import ExposureEntry
 from src.utils.llm import LLMResponse, call_openrouter
+from src.utils.log import get_logger
 
 from ._prompting import render_prompt, split_paragraphs
 from .ranker import RankedArticle
@@ -37,6 +39,8 @@ def generate_synthesis(
     ranked_articles: list[RankedArticle],
     exposure_map: dict[str, ExposureEntry],
     *,
+    mode: str = "daily",
+    week_ahead_items: Sequence[Mapping[str, str]] = (),
     llm_caller: LLMCaller = call_openrouter,
     settings: Settings | None = None,
 ) -> Synthesis:
@@ -44,7 +48,7 @@ def generate_synthesis(
 
     resolved_settings = settings or load_settings()
     prompt = render_prompt(
-        "ai_synthesis.md",
+        _prompt_template_name(mode),
         theme_flashes_json=json.dumps(
             _serialize_theme_flashes(theme_flashes),
             indent=2,
@@ -58,6 +62,10 @@ def generate_synthesis(
             indent=2,
             sort_keys=True,
         ),
+        week_ahead_items_json=json.dumps(
+            _serialize_week_ahead_items(week_ahead_items),
+            indent=2,
+        ),
     )
     response = llm_caller(
         prompt,
@@ -68,14 +76,24 @@ def generate_synthesis(
 
     text = response.content.strip()
     paragraphs = split_paragraphs(text)
-    if len(paragraphs) < 3:
-        raise SynthesisFormatError("Synthesis must contain at least 3 paragraphs")
-    if not SUGGESTION_RE.search(paragraphs[-1]):
+    minimum_paragraphs = 4 if mode == "deep" else 3
+    if len(paragraphs) < minimum_paragraphs:
         raise SynthesisFormatError(
-            "Final synthesis paragraph must contain a Watch or Note suggestion"
+            f"Synthesis must contain at least {minimum_paragraphs} paragraphs"
         )
 
+    paragraphs = _normalize_suggestion_paragraph(paragraphs, mode=mode)
+    text = "\n\n".join(paragraphs)
+
     return Synthesis(text=text, paragraphs=paragraphs)
+
+
+def _prompt_template_name(mode: str) -> str:
+    if mode == "daily":
+        return "ai_synthesis.md"
+    if mode == "deep":
+        return "ai_synthesis_deep.md"
+    raise SynthesisFormatError(f"Unsupported synthesis mode: {mode}")
 
 
 def _serialize_theme_flashes(
@@ -123,3 +141,25 @@ def _serialize_exposure_map(
         }
         for entity, entry in exposure_map.items()
     }
+
+
+def _serialize_week_ahead_items(
+    week_ahead_items: Sequence[Mapping[str, str]]
+) -> list[dict[str, str]]:
+    return [dict(item) for item in week_ahead_items]
+
+
+def _normalize_suggestion_paragraph(
+    paragraphs: tuple[str, ...],
+    *,
+    mode: str,
+) -> tuple[str, ...]:
+    final_paragraph = paragraphs[-1]
+    if SUGGESTION_RE.search(final_paragraph):
+        return paragraphs
+
+    get_logger("synthesis").warning(
+        "synthesis_suggestion_normalized",
+        mode=mode,
+    )
+    return (*paragraphs[:-1], f"Note: {final_paragraph}")

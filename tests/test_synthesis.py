@@ -159,7 +159,62 @@ def test_generate_synthesis_handles_a_second_fixture_shape() -> None:
     assert synthesis.paragraphs[-1].startswith("Watch")
 
 
-def test_generate_synthesis_requires_watch_or_note_in_final_paragraph() -> None:
+def test_generate_synthesis_supports_deep_mode_prompting() -> None:
+    scenario = load_input("balanced_day")
+    llm = FakeLLMCaller(
+        "\n\n".join(
+            (
+                "Deep paragraph one.",
+                "Deep paragraph two.",
+                "Deep paragraph three.",
+                "Watch Eurozone CPI flash and Nvidia supplier earnings next week.",
+            )
+        )
+    )
+
+    synthesis = generate_synthesis(
+        make_theme_flashes(scenario["theme_flashes"]),
+        make_ranked_articles(scenario["ranked_articles"]),
+        make_exposure_map(scenario["exposure_map"]),
+        week_ahead_items=(
+            {"date_label": "Mon", "label": "Eurozone CPI flash", "kind": "Macro"},
+            {
+                "date_label": "Wed",
+                "label": "Nvidia supplier earnings",
+                "kind": "Earnings",
+            },
+        ),
+        mode="deep",
+        llm_caller=llm,
+        settings=make_settings(),
+    )
+
+    assert len(synthesis.paragraphs) == 4
+    assert synthesis.paragraphs[-1].startswith("Watch")
+    assert "Eurozone CPI flash" in str(llm.calls[0]["prompt"])
+    assert "Saturday deep" in str(llm.calls[0]["prompt"])
+
+
+def test_generate_synthesis_normalizes_final_paragraph_without_watch_or_note() -> None:
+    scenario = load_input("balanced_day")
+
+    synthesis = generate_synthesis(
+        make_theme_flashes(scenario["theme_flashes"]),
+        make_ranked_articles(scenario["ranked_articles"]),
+        make_exposure_map(scenario["exposure_map"]),
+        llm_caller=FakeLLMCaller(
+            "Paragraph one.\n\nParagraph two.\n\nFinal paragraph without "
+            "the required keyword."
+        ),
+        settings=make_settings(),
+    )
+
+    assert synthesis.paragraphs[-1] == (
+        "Note: Final paragraph without the required keyword."
+    )
+
+
+def test_generate_synthesis_requires_minimum_paragraphs() -> None:
     scenario = load_input("balanced_day")
 
     with pytest.raises(SynthesisFormatError):
@@ -167,9 +222,6 @@ def test_generate_synthesis_requires_watch_or_note_in_final_paragraph() -> None:
             make_theme_flashes(scenario["theme_flashes"]),
             make_ranked_articles(scenario["ranked_articles"]),
             make_exposure_map(scenario["exposure_map"]),
-            llm_caller=FakeLLMCaller(
-                "Paragraph one.\n\nParagraph two.\n\nFinal paragraph without "
-                "the required keyword."
-            ),
+            llm_caller=FakeLLMCaller("Only one paragraph."),
             settings=make_settings(),
         )

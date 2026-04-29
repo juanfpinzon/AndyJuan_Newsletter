@@ -145,6 +145,23 @@ def test_render_email_supports_deep_mode_week_ahead_section() -> None:
     assert "Saturday deep mode extends the synthesis" in rendered.text
 
 
+def test_render_email_deep_mode_shows_week_ahead_fallback() -> None:
+    context = _sample_context()
+    context["week_ahead_items"] = []
+
+    rendered = render_email(context, mode="deep")
+
+    soup = BeautifulSoup(rendered.html, "html.parser")
+    week_ahead = soup.select_one("[data-section='week-ahead']")
+
+    assert week_ahead is not None
+    assert "No week-ahead items were supplied for this Saturday run." in rendered.text
+    assert (
+        "No week-ahead items were supplied for this Saturday run."
+        in week_ahead.get_text(" ", strip=True)
+    )
+
+
 def _sample_context() -> dict[str, object]:
     return {
         "title": "Daily Portfolio Radar",

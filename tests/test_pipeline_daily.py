@@ -5,6 +5,8 @@ from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from src.exposure.models import ExposureEntry
 from src.portfolio.models import Position
 from src.sender.agentmail import SendResult
@@ -242,3 +244,51 @@ def test_build_market_symbols_uses_portfolio_config() -> None:
         "QDVE": "IITU.L",
         "BNKE": "BNKE.PA",
     }
+
+
+def test_resolve_recipients_skips_placeholder_config_addresses(tmp_path: Path) -> None:
+    import src.pipeline.daily as daily
+
+    recipients_path = tmp_path / "recipients.yaml"
+    recipients_path.write_text(
+        "\n".join(
+            [
+                "recipients:",
+                "  juan:",
+                "    name: Juan",
+                "    email: juan@gmail.com",
+                "  andrea:",
+                "    name: Andrea",
+                "    email: andrea.placeholder@example.com",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    recipients = daily._resolve_recipients(recipients_path, recipients_override=None)
+
+    assert recipients == ("juan@gmail.com",)
+
+
+def test_resolve_recipients_raises_when_only_placeholders_remain(
+    tmp_path: Path,
+) -> None:
+    import src.pipeline.daily as daily
+
+    recipients_path = tmp_path / "recipients.yaml"
+    recipients_path.write_text(
+        "\n".join(
+            [
+                "recipients:",
+                "  andrea:",
+                "    name: Andrea",
+                "    email: andrea.placeholder@example.com",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="No deliverable recipients configured"):
+        daily._resolve_recipients(recipients_path, recipients_override=None)
