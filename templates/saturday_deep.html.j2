@@ -1,33 +1,77 @@
 {% extends "daily_email.html.j2" %}
 
+{% block hero_chip %}
+  {% set has_reading_stats = word_count is defined and word_count and reading_time_min is defined and reading_time_min %}
+  <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:18px;">
+    <tr>
+      <td style="padding-right:8px;">
+        <div style="display:inline-block;padding:6px 14px;background:#1a2335;border:1px solid #32405d;border-radius:999px;color:#b7c2d9;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
+          {{ mode_label }}
+        </div>
+      </td>
+      {% if has_reading_stats %}
+      <td style="padding-right:8px;">
+        <div style="display:inline-block;padding:6px 14px;background:rgba(243,186,47,0.06);border:1px solid rgba(243,186,47,0.20);border-radius:999px;color:#f3ba2f;font-size:11px;font-weight:600;letter-spacing:0.04em;">
+          Weekly · {{ word_count }} words · ≈ {{ reading_time_min }} min read
+        </div>
+      </td>
+      {% endif %}
+    </tr>
+  </table>
+{% endblock %}
+
+{% block deep_lede %}
+  {% if deep_lede is defined and deep_lede %}
+  <section class="panel section" data-section="deep-lede" style="padding:24px 28px;background:linear-gradient(180deg,#131a2a 0%,#0f1524 100%);">
+    <div style="border-left:3px solid #f3ba2f;padding-left:16px;">
+      <p style="margin:0;color:#e6edf7;font-size:16px;line-height:1.7;font-weight:400;letter-spacing:0.005em;">{{ deep_lede }}</p>
+    </div>
+  </section>
+  {% endif %}
+{% endblock %}
+
+{% block synthesis_class %}copy-longform{% endblock %}
+
+{% block synthesis_intro %}
+  <p style="margin:14px 0 0;color:#8b9bb8;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;">
+    This week, in five paragraphs.
+  </p>
+{% endblock %}
+
 {% block synthesis_copy %}
   {% set paragraphs = deep_synthesis_paragraphs if deep_synthesis_paragraphs is defined and deep_synthesis_paragraphs else synthesis_paragraphs %}
   {% for paragraph in paragraphs %}
-  <p>{{ paragraph }}</p>
+  <p style="font-size:{% if loop.first %}16px{% else %}15px{% endif %};line-height:1.8;color:{% if loop.first %}#ffffff{% else %}#e6edf7{% endif %};margin-bottom:18px;">{{ paragraph }}</p>
   {% endfor %}
 {% endblock %}
 
 {% block week_ahead %}
-  <section class="panel section" data-section="week-ahead">
-    <div class="eyebrow">Week Ahead</div>
-    {% if week_ahead_items %}
-    <table class="table" role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Event</th>
-          <th>Kind</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in week_ahead_items %}
-        <tr>
-          <td style="color:#ffffff;font-weight:700;">{{ item.date_label }}</td>
-          <td>{{ item.label }}</td>
-          <td class="muted">{{ item.kind }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
+  {% set items = week_ahead_items if week_ahead_items is defined else () %}
+  <section class="panel section" data-section="week-ahead" style="padding:28px 24px;">
+    {{ section_header("Week Ahead", accent='#f3ba2f') }}
+    {% if items %}
+    <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+      {% for item in items %}
+      <tr>
+        <td style="padding:0;">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-bottom:10px;">
+            <tr>
+              <td style="width:104px;vertical-align:top;padding:14px 0;">
+                <div style="display:inline-block;padding:6px 12px;background:rgba(243,186,47,0.10);border:1px solid rgba(243,186,47,0.30);border-radius:8px;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.06em;text-align:center;min-width:64px;">
+                  {{ item.date_label }}
+                </div>
+              </td>
+              <td style="vertical-align:top;padding:14px 0 14px 16px;border-bottom:1px solid #1d2740;">
+                <div style="color:#ffffff;font-size:15px;font-weight:600;line-height:1.45;letter-spacing:-0.005em;">{{ item.label }}</div>
+                <div style="margin-top:6px;">
+                  <span style="display:inline-block;padding:3px 8px;background:#0f1524;border:1px solid #202b40;border-radius:6px;color:#aebbd2;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">{{ item.kind }}</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      {% endfor %}
     </table>
     {% else %}
     <p class="footer-note" style="margin:12px 0 0;">
