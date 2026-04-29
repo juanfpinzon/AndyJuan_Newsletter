@@ -106,6 +106,16 @@ def test_repository_phase_one_config_files_load_cleanly() -> None:
         assert yaml.safe_load(path.read_text(encoding="utf-8")) is not None
 
 
+def test_repository_recipients_config_uses_real_andrea_address() -> None:
+    recipients = yaml.safe_load(
+        (REPOSITORY_ROOT / "config" / "recipients.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert recipients["recipients"]["andrea"]["email"] == "andrea.aliciap@gmail.com"
+
+
 def test_repository_portfolio_matches_seed_screenshot_totals() -> None:
     positions = load_portfolio(REPOSITORY_ROOT / "config" / "portfolio.yaml")
 

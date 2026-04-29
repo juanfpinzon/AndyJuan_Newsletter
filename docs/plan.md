@@ -414,7 +414,7 @@ The following are **explicitly out of v0.1** and stay out of this plan:
 - **Cost optimization for prod** (entity-level caching, article dedup across
   entities, RSS-first macro to reduce news API calls) → v0.3 plan
 - **Monitoring + alerting** (heartbeat, send-failure pages) → v0.3 plan
-- **Andrea's email address resolution** — config edit, not engineering work
+- **Recipient email changes** — config edits, not engineering work
 - **Lot-level cost basis (FIFO)** — averaged cost basis only; revisit only
   if AI Take needs lot-level granularity
 

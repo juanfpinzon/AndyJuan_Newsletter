@@ -138,7 +138,7 @@ Sequential within phase; gates Phase 2.
 **Scope:** M
 
 #### Task 1.2: Initial config files (settings, recipients, themes, macro_feeds)
-**Description:** Create `config/settings.yaml` (initial thresholds + model assignments + cadence flags), `config/recipients.yaml` (juan + andrea placeholder), `config/themes.yaml` (6 themes + entity → theme mapping with `primary_theme`), `config/macro_feeds.yaml` (ECB, Fed, FT macro, Reuters macro RSS URLs).
+**Description:** Create `config/settings.yaml` (initial thresholds + model assignments + cadence flags), `config/recipients.yaml` (juan + andrea recipients), `config/themes.yaml` (6 themes + entity → theme mapping with `primary_theme`), `config/macro_feeds.yaml` (ECB, Fed, FT macro, Reuters macro RSS URLs).
 **Acceptance:**
 - [x] All 4 yaml files load via `yaml.safe_load` with no errors
 - [x] `themes.yaml` covers Defense, AI/Semis, Precious Metals, EU Banks, US Megacaps, Macro/FX
@@ -619,7 +619,6 @@ Sequential. All Phase 4 outputs must be stable.
 
 ## Open Questions
 
-- Andrea's email address (placeholder until provided)
 - Final accent color hex for AI Take (design pass after Phase 4 first render)
 - Whether Phase 3 spike day uses real-money OpenRouter or a free credit; document spend per run from spike
 
