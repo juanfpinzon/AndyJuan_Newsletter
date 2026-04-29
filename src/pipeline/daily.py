@@ -195,6 +195,8 @@ async def _run_pipeline_async(
         theme_flashes,
         ranked_articles,
         exposure_map,
+        mode=mode,
+        week_ahead_items=week_ahead_items or (),
         settings=settings,
     )
 
@@ -318,6 +320,8 @@ def _generate_synthesis(
     ranked_articles,
     exposure_map,
     *,
+    mode: str,
+    week_ahead_items: Sequence[Mapping[str, str]],
     settings: Settings,
 ) -> Synthesis | None:
     if not ranked_articles:
@@ -326,6 +330,8 @@ def _generate_synthesis(
         list(theme_flashes),
         list(ranked_articles),
         exposure_map,
+        mode=mode,
+        week_ahead_items=week_ahead_items,
         settings=settings,
     )
 

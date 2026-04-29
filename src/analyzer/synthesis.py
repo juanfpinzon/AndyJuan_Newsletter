@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Callable
 
@@ -37,6 +38,8 @@ def generate_synthesis(
     ranked_articles: list[RankedArticle],
     exposure_map: dict[str, ExposureEntry],
     *,
+    mode: str = "daily",
+    week_ahead_items: Sequence[Mapping[str, str]] = (),
     llm_caller: LLMCaller = call_openrouter,
     settings: Settings | None = None,
 ) -> Synthesis:
@@ -44,7 +47,7 @@ def generate_synthesis(
 
     resolved_settings = settings or load_settings()
     prompt = render_prompt(
-        "ai_synthesis.md",
+        _prompt_template_name(mode),
         theme_flashes_json=json.dumps(
             _serialize_theme_flashes(theme_flashes),
             indent=2,
@@ -58,6 +61,10 @@ def generate_synthesis(
             indent=2,
             sort_keys=True,
         ),
+        week_ahead_items_json=json.dumps(
+            _serialize_week_ahead_items(week_ahead_items),
+            indent=2,
+        ),
     )
     response = llm_caller(
         prompt,
@@ -68,14 +75,25 @@ def generate_synthesis(
 
     text = response.content.strip()
     paragraphs = split_paragraphs(text)
-    if len(paragraphs) < 3:
-        raise SynthesisFormatError("Synthesis must contain at least 3 paragraphs")
+    minimum_paragraphs = 4 if mode == "deep" else 3
+    if len(paragraphs) < minimum_paragraphs:
+        raise SynthesisFormatError(
+            f"Synthesis must contain at least {minimum_paragraphs} paragraphs"
+        )
     if not SUGGESTION_RE.search(paragraphs[-1]):
         raise SynthesisFormatError(
             "Final synthesis paragraph must contain a Watch or Note suggestion"
         )
 
     return Synthesis(text=text, paragraphs=paragraphs)
+
+
+def _prompt_template_name(mode: str) -> str:
+    if mode == "daily":
+        return "ai_synthesis.md"
+    if mode == "deep":
+        return "ai_synthesis_deep.md"
+    raise SynthesisFormatError(f"Unsupported synthesis mode: {mode}")
 
 
 def _serialize_theme_flashes(
@@ -123,3 +141,9 @@ def _serialize_exposure_map(
         }
         for entity, entry in exposure_map.items()
     }
+
+
+def _serialize_week_ahead_items(
+    week_ahead_items: Sequence[Mapping[str, str]]
+) -> list[dict[str, str]]:
+    return [dict(item) for item in week_ahead_items]

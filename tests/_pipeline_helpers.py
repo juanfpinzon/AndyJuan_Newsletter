@@ -171,10 +171,19 @@ def fake_generate_synthesis(db_path: Path):
         ranked_articles,
         exposure_map,
         *,
+        mode="daily",
+        week_ahead_items=(),
         llm_caller=None,
         settings=None,
     ) -> Synthesis:
-        del theme_flashes, ranked_articles, exposure_map, llm_caller, settings
+        del (
+            theme_flashes,
+            ranked_articles,
+            exposure_map,
+            week_ahead_items,
+            llm_caller,
+            settings,
+        )
         record_llm_call(
             db_path,
             model="synthesis",
@@ -184,14 +193,28 @@ def fake_generate_synthesis(db_path: Path):
             cost_usd=0.03,
             success=True,
         )
-        paragraphs = (
-            (
-                "AI and platform exposure remain the main drivers "
-                "of portfolio sensitivity."
-            ),
-            "Cross-theme spillovers still cluster around mega-cap demand signals.",
-            "Watch whether macro rate repricing changes the breadth of leadership.",
-        )
+        if mode == "deep":
+            paragraphs = (
+                (
+                    "AI and platform exposure remain the main drivers "
+                    "of portfolio sensitivity."
+                ),
+                "Cross-theme spillovers still cluster around mega-cap demand signals.",
+                (
+                    "Saturday deep mode keeps the focus on whether breadth can "
+                    "expand beyond the same leaders."
+                ),
+                "Watch whether macro rate repricing changes the breadth of leadership.",
+            )
+        else:
+            paragraphs = (
+                (
+                    "AI and platform exposure remain the main drivers "
+                    "of portfolio sensitivity."
+                ),
+                "Cross-theme spillovers still cluster around mega-cap demand signals.",
+                "Watch whether macro rate repricing changes the breadth of leadership.",
+            )
         return Synthesis(text="\n\n".join(paragraphs), paragraphs=paragraphs)
 
     return runner
