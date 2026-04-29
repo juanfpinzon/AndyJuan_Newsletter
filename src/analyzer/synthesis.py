@@ -11,6 +11,7 @@ from typing import Callable
 from src.config import Settings, load_settings
 from src.exposure.models import ExposureEntry
 from src.utils.llm import LLMResponse, call_openrouter
+from src.utils.log import get_logger
 
 from ._prompting import render_prompt, split_paragraphs
 from .ranker import RankedArticle
@@ -80,10 +81,9 @@ def generate_synthesis(
         raise SynthesisFormatError(
             f"Synthesis must contain at least {minimum_paragraphs} paragraphs"
         )
-    if not SUGGESTION_RE.search(paragraphs[-1]):
-        raise SynthesisFormatError(
-            "Final synthesis paragraph must contain a Watch or Note suggestion"
-        )
+
+    paragraphs = _normalize_suggestion_paragraph(paragraphs, mode=mode)
+    text = "\n\n".join(paragraphs)
 
     return Synthesis(text=text, paragraphs=paragraphs)
 
@@ -147,3 +147,19 @@ def _serialize_week_ahead_items(
     week_ahead_items: Sequence[Mapping[str, str]]
 ) -> list[dict[str, str]]:
     return [dict(item) for item in week_ahead_items]
+
+
+def _normalize_suggestion_paragraph(
+    paragraphs: tuple[str, ...],
+    *,
+    mode: str,
+) -> tuple[str, ...]:
+    final_paragraph = paragraphs[-1]
+    if SUGGESTION_RE.search(final_paragraph):
+        return paragraphs
+
+    get_logger("synthesis").warning(
+        "synthesis_suggestion_normalized",
+        mode=mode,
+    )
+    return (*paragraphs[:-1], f"Note: {final_paragraph}")
