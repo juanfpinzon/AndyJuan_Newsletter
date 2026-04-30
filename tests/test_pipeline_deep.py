@@ -189,3 +189,19 @@ def test_run_deep_uses_deep_template_and_week_ahead_items(
     assert 'data-section="week-ahead"' in result.rendered_email.html
     assert "Eurozone CPI flash" in result.rendered_email.html
     assert "Week Ahead" in result.rendered_email.text
+
+
+def test_run_deep_forwards_juan_only_flag(monkeypatch) -> None:
+    import src.pipeline.deep as deep
+
+    forwarded: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        deep,
+        "run_daily",
+        lambda **kwargs: forwarded.append(kwargs) or SimpleNamespace(),
+    )
+
+    deep.run_deep(send=False, juan_only=True)
+
+    assert len(forwarded) == 1
+    assert forwarded[0]["juan_only"] is True

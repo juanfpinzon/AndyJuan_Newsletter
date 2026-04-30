@@ -11,6 +11,11 @@ on:
         options:
           - daily
           - deep
+      juan_only:
+        description: Send only to Juan for test runs
+        required: true
+        default: false
+        type: boolean
       dry_run:
         description: Run without sending email
         required: true
@@ -45,16 +50,25 @@ jobs:
         id: config
         env:
           WORKFLOW_MODE: ${{ inputs.mode }}
+          WORKFLOW_JUAN_ONLY: ${{ inputs.juan_only }}
           WORKFLOW_DRY_RUN: ${{ inputs.dry_run }}
           DISPATCH_MODE: ${{ github.event.client_payload.mode }}
+          DISPATCH_JUAN_ONLY: ${{ github.event.client_payload.juan_only }}
           DISPATCH_DRY_RUN: ${{ github.event.client_payload.dry_run }}
         run: |
           mode="${WORKFLOW_MODE:-daily}"
+          juan_only="${WORKFLOW_JUAN_ONLY:-false}"
           dry_run="${WORKFLOW_DRY_RUN:-false}"
 
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
             if [ -n "$DISPATCH_MODE" ]; then
               mode="$DISPATCH_MODE"
+            fi
+
+            if [ "$DISPATCH_JUAN_ONLY" = "true" ]; then
+              juan_only="true"
+            else
+              juan_only="false"
             fi
 
             if [ "$DISPATCH_DRY_RUN" = "true" ]; then
@@ -70,6 +84,12 @@ jobs:
             echo "dry_run_flag=--dry-run" >> "$GITHUB_OUTPUT"
           else
             echo "dry_run_flag=" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ "$juan_only" = "true" ]; then
+            echo "juan_only_flag=--juan-only" >> "$GITHUB_OUTPUT"
+          else
+            echo "juan_only_flag=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Show resolved configuration
@@ -124,12 +144,16 @@ jobs:
         env:
           MODE: ${{ steps.config.outputs.mode }}
           DRY_RUN_FLAG: ${{ steps.config.outputs.dry_run_flag }}
+          JUAN_ONLY_FLAG: ${{ steps.config.outputs.juan_only_flag }}
         run: |
+          run_args=(--mode "$MODE")
           if [ -n "$DRY_RUN_FLAG" ]; then
-            python -m src.main --mode "$MODE" "$DRY_RUN_FLAG"
-          else
-            python -m src.main --mode "$MODE"
+            run_args+=("$DRY_RUN_FLAG")
           fi
+          if [ -n "$JUAN_ONLY_FLAG" ]; then
+            run_args+=("$JUAN_ONLY_FLAG")
+          fi
+          python -m src.main "${run_args[@]}"
 
       - name: Show pipeline log tail
         if: always()

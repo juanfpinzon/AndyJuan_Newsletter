@@ -40,6 +40,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Send one test email to a single address.",
     )
     parser.add_argument(
+        "--juan-only",
+        action="store_true",
+        help="Send only to Juan for test runs.",
+    )
+    parser.add_argument(
         "--reuse-seen-db",
         action="store_true",
         help="Reuse cached news articles from the seen-article database.",
@@ -62,14 +67,17 @@ def main(argv: list[str] | None = None) -> int:
 
     runner = _resolve_runner(args.mode)
     send = not (args.dry_run or args.preview)
-    recipients_override = [args.test_email] if args.test_email else None
-    result = runner(
-        send=send,
-        recipients_override=recipients_override,
-        from_addr=os.getenv("EMAIL_FROM"),
-        reuse_seen_db=args.reuse_seen_db,
-        ignore_seen_db=args.ignore_seen_db,
-    )
+    runner_kwargs = {
+        "send": send,
+        "from_addr": os.getenv("EMAIL_FROM"),
+        "reuse_seen_db": args.reuse_seen_db,
+        "ignore_seen_db": args.ignore_seen_db,
+    }
+    if args.test_email:
+        runner_kwargs["recipients_override"] = [args.test_email]
+    elif args.juan_only:
+        runner_kwargs["juan_only"] = True
+    result = runner(**runner_kwargs)
 
     if args.preview:
         preview_path = Path(

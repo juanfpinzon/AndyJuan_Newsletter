@@ -18,6 +18,7 @@ def run_deep(
     *,
     send: bool = True,
     recipients_override: Sequence[str] | None = None,
+    juan_only: bool = False,
     from_addr: str | None = None,
     database_path: str | Path | None = None,
     settings_path: str | Path | None = None,
@@ -33,6 +34,7 @@ def run_deep(
     return run_daily(
         send=send,
         recipients_override=recipients_override,
+        juan_only=juan_only,
         from_addr=from_addr,
         database_path=database_path,
         settings_path=settings_path,

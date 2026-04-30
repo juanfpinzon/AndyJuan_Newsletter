@@ -25,10 +25,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Run the pipeline without sending email.",
     )
+    parser.add_argument(
+        "--juan-only",
+        action="store_true",
+        help="Send to Juan only for test runs.",
+    )
     args = parser.parse_args(argv)
 
     runner = run_deep if args.mode == "deep" else run_daily
-    runner(send=not args.dry_run)
+    runner_kwargs = {"send": not args.dry_run}
+    if args.juan_only:
+        runner_kwargs["juan_only"] = True
+    runner(**runner_kwargs)
     return 0
 
 

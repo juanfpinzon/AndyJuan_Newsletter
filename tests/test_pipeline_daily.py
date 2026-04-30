@@ -172,6 +172,72 @@ def test_run_daily_omits_ai_take_when_fact_check_blocks_it(
     assert "🤖 AI-generated" not in result.rendered_email.html
 
 
+def test_run_daily_with_juan_only_sends_to_juan_only(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import src.pipeline.daily as daily
+
+    db_path = tmp_path / "andyjuan.db"
+    init_db(db_path)
+    now = datetime(2026, 4, 26, 8, 0, tzinfo=timezone.utc)
+    sent: list[dict[str, object]] = []
+
+    monkeypatch.setattr(daily, "load_portfolio", lambda path=None: [make_position()])
+    monkeypatch.setattr(daily, "resolve_lookthrough", async_return({}))
+    monkeypatch.setattr(
+        daily,
+        "fetch_prices",
+        lambda tickers, base_currency="EUR", market_symbols=None: {
+            "NVDA": make_price_snapshot()
+        },
+    )
+    monkeypatch.setattr(
+        daily,
+        "NewsDataClient",
+        lambda **kwargs: StubNewsDataClient(make_news_article(), []),
+    )
+    monkeypatch.setattr(daily, "MacroRSSReader", lambda **kwargs: StubMacroRSSReader())
+    monkeypatch.setattr(
+        daily,
+        "EntityMatcher",
+        SimpleNamespace(from_themes_file=lambda **kwargs: StubMatcher()),
+    )
+    monkeypatch.setattr(daily, "rank_news", fake_rank_news(db_path))
+    monkeypatch.setattr(
+        daily,
+        "generate_theme_flash",
+        fake_generate_theme_flash(db_path),
+    )
+    monkeypatch.setattr(daily, "generate_synthesis", fake_generate_synthesis(db_path))
+    monkeypatch.setattr(
+        daily,
+        "filter_ai_take",
+        lambda rendered_content, ai_take_text, **kwargs: ai_take_text,
+    )
+    monkeypatch.setattr(
+        daily,
+        "send_email",
+        lambda **kwargs: sent.append(kwargs) or SendResult(message_id="msg_789"),
+    )
+
+    result = daily.run_daily(
+        send=True,
+        juan_only=True,
+        from_addr="radar@example.com",
+        database_path=db_path,
+        now=now,
+    )
+
+    assert result.send_result == SendResult(message_id="msg_789")
+    assert len(sent) == 1
+    assert sent[0]["to"] == ["juancho704@gmail.com"]
+
+    runs = list(init_db(db_path)["runs"].rows)
+    assert len(runs) == 1
+    assert runs[0]["recipient_count"] == 1
+
+
 def test_build_news_queries_prioritize_direct_stocks_and_cap_terms() -> None:
     import src.pipeline.daily as daily
 
