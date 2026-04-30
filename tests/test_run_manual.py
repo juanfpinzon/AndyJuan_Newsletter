@@ -61,6 +61,14 @@ def test_run_manual_ignore_seen_db_passes_flag(tmp_path: Path) -> None:
     assert payload["send"] is True
 
 
+def test_run_manual_juan_only_passes_flag(tmp_path: Path) -> None:
+    result, payload = run_script(tmp_path, ["--juan-only"])
+
+    assert result.returncode == 0
+    assert payload["send"] is True
+    assert payload["juan_only"] is True
+
+
 def test_run_manual_rejects_dry_run_with_test_email(tmp_path: Path) -> None:
     result, _ = run_script(tmp_path, ["--dry-run", "--test-email", "ops@example.com"])
 

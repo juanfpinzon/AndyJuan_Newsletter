@@ -65,6 +65,7 @@ def run_daily(
     *,
     send: bool = True,
     recipients_override: Sequence[str] | None = None,
+    juan_only: bool = False,
     from_addr: str | None = None,
     database_path: str | Path | None = None,
     settings_path: str | Path | None = None,
@@ -93,6 +94,7 @@ def run_daily(
                 settings=settings,
                 db_path=db_path,
                 recipients_override=recipients_override,
+                juan_only=juan_only,
                 recipients_path=recipients_path,
                 themes_path=themes_path,
                 from_addr=from_addr,
@@ -150,6 +152,7 @@ async def _run_pipeline_async(
     settings: Settings,
     db_path: Path,
     recipients_override: Sequence[str] | None,
+    juan_only: bool,
     recipients_path: str | Path,
     themes_path: str | Path,
     from_addr: str | None,
@@ -248,7 +251,11 @@ async def _run_pipeline_async(
     )
     rendered_email = render_email(final_context, mode=mode)
 
-    recipients = _resolve_recipients(recipients_path, recipients_override)
+    recipients = _resolve_recipients(
+        recipients_path,
+        recipients_override,
+        juan_only=juan_only,
+    )
     send_result = None
     if send:
         send_result = send_email(
@@ -543,6 +550,8 @@ def _resolve_primary_theme(article, entity_themes: Mapping[str, str]) -> str | N
 def _resolve_recipients(
     recipients_path: str | Path,
     recipients_override: Sequence[str] | None,
+    *,
+    juan_only: bool = False,
 ) -> tuple[str, ...]:
     if recipients_override is not None:
         return tuple(
@@ -551,6 +560,16 @@ def _resolve_recipients(
 
     payload = yaml.safe_load(Path(recipients_path).read_text(encoding="utf-8")) or {}
     recipients = payload.get("recipients", {})
+    if juan_only:
+        juan_config = recipients.get("juan")
+        if not isinstance(juan_config, Mapping):
+            raise ValueError("Juan recipient is not configured")
+
+        email = str(juan_config.get("email", "")).strip()
+        if not email or _is_placeholder_recipient(email):
+            raise ValueError("Juan recipient is not configured")
+        return (email,)
+
     emails: list[str] = []
     for config in recipients.values():
         email = str(config.get("email", "")).strip()

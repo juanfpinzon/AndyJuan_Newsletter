@@ -18,6 +18,7 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
 
     assert on["workflow_dispatch"]["inputs"]["mode"]["default"] == "daily"
     assert on["workflow_dispatch"]["inputs"]["dry_run"]["default"] == "false"
+    assert on["workflow_dispatch"]["inputs"]["juan_only"]["default"] == "false"
     assert on["repository_dispatch"]["types"] == ["run-daily-radar"]
 
     job = workflow["jobs"]["run-radar"]
@@ -26,6 +27,27 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
     assert job["env"]["AGENTMAIL_INBOX_ID"] == "${{ secrets.AGENTMAIL_INBOX_ID }}"
     assert job["env"]["EMAIL_FROM"] == "${{ secrets.EMAIL_FROM }}"
     assert job["env"]["NEWSDATA_API_KEY"] == "${{ secrets.NEWSDATA_API_KEY }}"
+
+    config_step = next(
+        step
+        for step in job["steps"]
+        if isinstance(step, dict) and step.get("name") == "Resolve run configuration"
+    )
+    assert config_step["env"]["WORKFLOW_JUAN_ONLY"] == "${{ inputs.juan_only }}"
+    assert (
+        config_step["env"]["DISPATCH_JUAN_ONLY"]
+        == "${{ github.event.client_payload.juan_only }}"
+    )
+
+    run_step = next(
+        step
+        for step in job["steps"]
+        if isinstance(step, dict) and step.get("name") == "Run radar pipeline"
+    )
+    assert (
+        run_step["env"]["JUAN_ONLY_FLAG"]
+        == "${{ steps.config.outputs.juan_only_flag }}"
+    )
 
     run_script = "\n".join(
         step.get("run", "")
@@ -43,9 +65,14 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
     assert "::error::NEWSDATA_API_KEY is not set" in run_script
     assert 'if [ -z "$DRY_RUN_FLAG" ]; then' in run_script
     assert "::error::AGENTMAIL_API_KEY is not set" in run_script
+    assert 'run_args=(--mode "$MODE")' in run_script
     assert 'if [ -n "$DRY_RUN_FLAG" ]; then' in run_script
-    assert 'python -m src.main --mode "$MODE" "$DRY_RUN_FLAG"' in run_script
-    assert 'python -m src.main --mode "$MODE"' in run_script
+    assert 'run_args+=("$DRY_RUN_FLAG")' in run_script
+    assert 'juan_only="${WORKFLOW_JUAN_ONLY:-false}"' in run_script
+    assert 'DISPATCH_JUAN_ONLY' in run_script
+    assert 'echo "juan_only_flag=--juan-only" >> "$GITHUB_OUTPUT"' in run_script
+    assert 'run_args+=("$JUAN_ONLY_FLAG")' in run_script
+    assert 'python -m src.main "${run_args[@]}"' in run_script
     assert "actions/upload-artifact@v4" in uses_steps
 
 
