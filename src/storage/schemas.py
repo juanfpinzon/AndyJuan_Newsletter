@@ -38,6 +38,7 @@ TABLE_SCHEMAS: dict[str, TableSchema] = {
             "body": str,
             "source": str,
             "raw_tags_json": str,
+            "language": str,
         },
         pk="id",
     ),

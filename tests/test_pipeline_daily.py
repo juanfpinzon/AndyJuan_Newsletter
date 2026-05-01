@@ -7,7 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.analyzer.ranker import RankedArticle
 from src.exposure.models import ExposureEntry
+from src.fetcher.models import Article
 from src.portfolio.models import Position
 from src.sender.agentmail import SendResult
 from src.storage.db import init_db
@@ -236,6 +238,193 @@ def test_run_daily_with_juan_only_sends_to_juan_only(
     runs = list(init_db(db_path)["runs"].rows)
     assert len(runs) == 1
     assert runs[0]["recipient_count"] == 1
+
+
+def test_run_daily_filters_presented_news_to_english_and_spanish(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import src.pipeline.daily as daily
+
+    db_path = tmp_path / "andyjuan.db"
+    init_db(db_path)
+    news_articles = [
+        Article(
+            title="Nvidia suppliers signal firm AI demand",
+            body="Suppliers still report broad AI server demand.",
+            url="https://example.com/nvda-demand-en",
+            source="Reuters",
+            published_at="2026-04-26T07:30:00+00:00",
+            raw_tags=("NVDA", "AI"),
+            language="en",
+        ),
+        Article(
+            title="Nvidia mantiene impulso de IA en Europa",
+            body="La demanda de infraestructura sigue solida.",
+            url="https://example.com/nvda-demand-es",
+            source="Expansion",
+            published_at="2026-04-26T07:00:00+00:00",
+            raw_tags=("NVDA", "AI"),
+            language="es",
+        ),
+        Article(
+            title="英伟达需求推动服务器支出",
+            body="亚洲客户继续增加订单。",
+            url="https://example.com/nvda-demand-zh",
+            source="Example CN",
+            published_at="2026-04-26T06:30:00+00:00",
+            raw_tags=("NVDA", "AI"),
+            language="zh",
+        ),
+        Article(
+            title="إنفيديا تواصل الاستفادة من طلب الذكاء الاصطناعي",
+            body="الطلب على الخوادم ما زال قويا.",
+            url="https://example.com/nvda-demand-ar",
+            source="Example AR",
+            published_at="2026-04-26T06:00:00+00:00",
+            raw_tags=("NVDA", "AI"),
+            language="ar",
+        ),
+    ]
+    ranked_titles: list[str] = []
+
+    class MixedLanguageNewsClient:
+        def __init__(self) -> None:
+            self.fetch_calls: list[dict[str, object]] = []
+
+        async def fetch_news(
+            self,
+            entity_query: str,
+            hours: int = 24,
+            *,
+            ignore_seen_db: bool = False,
+        ) -> list[Article]:
+            self.fetch_calls.append(
+                {
+                    "entity_query": entity_query,
+                    "hours": hours,
+                    "ignore_seen_db": ignore_seen_db,
+                }
+            )
+            return list(news_articles)
+
+        def load_cached_articles(
+            self,
+            *,
+            hours: int = 24,
+            now: str | datetime | None = None,
+        ) -> list[Article]:
+            del hours, now
+            return list(news_articles)
+
+    class MixedLanguageMacroReader(StubMacroRSSReader):
+        async def fetch_macro(
+            self,
+            *,
+            hours: int = 24,
+            now: datetime | None = None,
+        ) -> list[Article]:
+            del hours, now
+            return [
+                Article(
+                    title="ECB speakers keep rate path data-dependent",
+                    body="",
+                    url="https://example.com/ecb-rates-en",
+                    source="ECB",
+                    published_at="2026-04-26T05:50:00+00:00",
+                    raw_tags=("Macro/FX",),
+                    language="en",
+                ),
+                Article(
+                    title="الأسواق تترقب قرار البنك المركزي",
+                    body="",
+                    url="https://example.com/ecb-rates-ar",
+                    source="Example AR",
+                    published_at="2026-04-26T05:20:00+00:00",
+                    raw_tags=("Macro/FX",),
+                    language="ar",
+                ),
+            ]
+
+    def rank_news_stub(
+        articles,
+        exposure_map,
+        *,
+        llm_caller=None,
+        settings=None,
+    ) -> list[RankedArticle]:
+        del exposure_map, llm_caller, settings
+        ranked_titles[:] = [candidate.article.title for candidate in articles]
+        return [
+            RankedArticle(
+                article=candidate.article,
+                primary_entity="NVDA",
+                matched_entities=("NVDA",),
+                composite_weight=Decimal("1"),
+                llm_score=95,
+                included_by="rank",
+                rationale="High exposure",
+            )
+            for candidate in articles
+        ]
+
+    monkeypatch.setattr(daily, "load_portfolio", lambda path=None: [make_position()])
+    monkeypatch.setattr(daily, "resolve_lookthrough", async_return({}))
+    monkeypatch.setattr(
+        daily,
+        "fetch_prices",
+        lambda tickers, base_currency="EUR", market_symbols=None: {
+            "NVDA": make_price_snapshot()
+        },
+    )
+    monkeypatch.setattr(
+        daily,
+        "NewsDataClient",
+        lambda **kwargs: MixedLanguageNewsClient(),
+    )
+    monkeypatch.setattr(
+        daily,
+        "MacroRSSReader",
+        lambda **kwargs: MixedLanguageMacroReader(),
+    )
+    monkeypatch.setattr(
+        daily,
+        "EntityMatcher",
+        SimpleNamespace(from_themes_file=lambda **kwargs: StubMatcher()),
+    )
+    monkeypatch.setattr(daily, "rank_news", rank_news_stub)
+    monkeypatch.setattr(
+        daily,
+        "generate_theme_flash",
+        fake_generate_theme_flash(db_path),
+    )
+    monkeypatch.setattr(daily, "generate_synthesis", fake_generate_synthesis(db_path))
+    monkeypatch.setattr(
+        daily,
+        "filter_ai_take",
+        lambda rendered_content, ai_take_text, **kwargs: ai_take_text,
+    )
+
+    result = daily.run_daily(
+        send=False,
+        recipients_override=["juan@example.com"],
+        database_path=db_path,
+        now=datetime(2026, 4, 26, 8, 0, tzinfo=timezone.utc),
+    )
+
+    assert ranked_titles == [
+        "Nvidia suppliers signal firm AI demand",
+        "Nvidia mantiene impulso de IA en Europa",
+    ]
+    assert "Nvidia suppliers signal firm AI demand" in result.rendered_email.html
+    assert "Nvidia mantiene impulso de IA en Europa" in result.rendered_email.html
+    assert "英伟达需求推动服务器支出" not in result.rendered_email.html
+    assert (
+        "إنفيديا تواصل الاستفادة من طلب الذكاء الاصطناعي"
+        not in result.rendered_email.html
+    )
+    assert "ECB speakers keep rate path data-dependent" in result.rendered_email.html
+    assert "الأسواق تترقب قرار البنك المركزي" not in result.rendered_email.html
 
 
 def test_build_news_queries_prioritize_direct_stocks_and_cap_terms() -> None:
