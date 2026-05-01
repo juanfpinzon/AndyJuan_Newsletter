@@ -90,6 +90,7 @@ class NewsDataClient:
                                 list(article.raw_tags),
                                 separators=(",", ":"),
                             ),
+                            "language": article.language,
                         }
                     )
 
@@ -152,6 +153,7 @@ class NewsDataClient:
             source=str(item.get("source_name") or item.get("source_id") or ""),
             published_at=_normalize_newsdata_timestamp(item.get("pubDate")),
             raw_tags=tuple(str(tag) for tag in item.get("keywords") or ()),
+            language=str(item.get("language") or ""),
         )
 
     def _parse_cached_article(self, row: dict[str, Any]) -> Article:
@@ -162,6 +164,7 @@ class NewsDataClient:
             source=str(row.get("source") or ""),
             published_at=str(row.get("published_at") or ""),
             raw_tags=_parse_raw_tags_json(row.get("raw_tags_json")),
+            language=str(row.get("language") or ""),
         )
 
 

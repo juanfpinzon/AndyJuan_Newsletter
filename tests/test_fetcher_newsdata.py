@@ -376,3 +376,60 @@ def test_load_cached_articles_returns_recent_article_payloads(tmp_path: Path) ->
             raw_tags=("NVDA", "AI"),
         )
     ]
+
+
+@pytest.mark.asyncio
+async def test_fetch_news_round_trips_language_metadata_through_cache(
+    tmp_path: Path,
+    respx_mock: respx.MockRouter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _freeze_news_clock(monkeypatch)
+    db_path = tmp_path / "language-cache.db"
+    respx_mock.get("https://newsdata.example/api/1/news").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "status": "success",
+                "results": [
+                    {
+                        "article_id": "article-es",
+                        "title": "Nvidia mantiene impulso de IA en Europa",
+                        "description": "La demanda sigue firme.",
+                        "link": "https://example.com/nvda-demand-es",
+                        "source_id": "expansion",
+                        "source_name": "Expansion",
+                        "pubDate": "2026-04-25 07:00:00",
+                        "keywords": ["NVDA", "AI"],
+                        "language": "es",
+                    }
+                ],
+            },
+        )
+    )
+
+    client = NewsDataClient(
+        api_key="test-key",
+        db_path=db_path,
+        base_url="https://newsdata.example/api/1/news",
+        backoff_seconds=0,
+    )
+
+    fetched_articles = await client.fetch_news("NVDA", hours=24)
+    cached_articles = client.load_cached_articles(
+        hours=24,
+        now="2026-04-26T00:00:00+00:00",
+    )
+
+    assert fetched_articles == [
+        Article(
+            title="Nvidia mantiene impulso de IA en Europa",
+            body="La demanda sigue firme.",
+            url="https://example.com/nvda-demand-es",
+            source="Expansion",
+            published_at="2026-04-25T07:00:00+00:00",
+            raw_tags=("NVDA", "AI"),
+            language="es",
+        )
+    ]
+    assert cached_articles == fetched_articles

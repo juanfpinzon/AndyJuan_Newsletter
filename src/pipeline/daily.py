@@ -26,7 +26,7 @@ from src.config import Settings, load_settings
 from src.entity_match.matcher import EntityMatcher
 from src.exposure.resolver import compute_exposure
 from src.fetcher.macro_rss import MacroRSSReader
-from src.fetcher.models import Article
+from src.fetcher.models import Article, filter_supported_articles
 from src.fetcher.newsdata import NewsDataClient
 from src.lookthrough.resolver import resolve_lookthrough
 from src.pnl import compute_pnl, compute_total
@@ -185,9 +185,12 @@ async def _run_pipeline_async(
             queries=_build_news_queries(positions, exposure_map),
             ignore_seen_db=ignore_seen_db,
         )
+    news_articles = filter_supported_articles(news_articles)
 
     macro_reader = MacroRSSReader()
-    macro_articles = await macro_reader.fetch_macro(hours=24, now=now)
+    macro_articles = filter_supported_articles(
+        await macro_reader.fetch_macro(hours=24, now=now)
+    )
     matcher = EntityMatcher.from_themes_file(themes_path=themes_path)
     candidates = _build_article_candidates(news_articles, matcher)
     ranked_articles = (

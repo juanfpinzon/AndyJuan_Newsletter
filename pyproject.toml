@@ -17,6 +17,7 @@ dependencies = [
   "feedparser",
   "httpx[http2]",
   "jinja2",
+  "langid",
   "lxml",
   "openai",
   "premailer",

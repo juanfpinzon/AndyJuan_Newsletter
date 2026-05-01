@@ -143,6 +143,7 @@ class MacroRSSReader:
     ) -> list[Article]:
         articles: list[Article] = []
         max_items = _coerce_max_items(feed.get("max_items"))
+        feed_language = str(parsed_feed.feed.get("language") or "")
         for entry in parsed_feed.entries:
             published_at = _entry_datetime(entry)
             if published_at is None or published_at < cutoff:
@@ -155,6 +156,7 @@ class MacroRSSReader:
                     source=feed["name"],
                     published_at=published_at.isoformat(),
                     raw_tags=(feed.get("theme") or "",),
+                    language=str(entry.get("language") or feed_language),
                 )
             )
             if max_items is not None and len(articles) >= max_items:
@@ -203,6 +205,9 @@ class MacroRSSReader:
                     source=str(feed.get("name") or ""),
                     published_at=published_at.isoformat(),
                     raw_tags=(str(feed.get("theme") or ""),),
+                    language=_xml_text(
+                        url_node.find("news:news/news:language", SITEMAP_NS)
+                    ),
                 )
             )
             if max_items is not None and len(articles) >= max_items:
