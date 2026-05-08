@@ -40,8 +40,6 @@ def load_settings(path: str | Path | None = None) -> Settings:
         raise ConfigError(f"Settings file does not exist: {settings_path}")
 
     data = yaml.safe_load(settings_path.read_text(encoding="utf-8")) or {}
-    if not isinstance(data, dict):
-        raise ConfigError(f"Settings file must contain a mapping: {settings_path}")
 
     missing = [
         field.name
