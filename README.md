@@ -25,6 +25,18 @@ ruff check .
 pytest tests/ -v
 ```
 
+## Branch Protection
+
+Protect `main` in GitHub and require the fixture-backed CI checks before merge:
+
+- `CI / lint-and-test`
+- `CI / digest-check`
+
+The exact branch-rule settings are documented in
+[docs/runbooks/github-branch-protection.md](docs/runbooks/github-branch-protection.md).
+`daily-radar.yml` is intentionally not part of PR validation because its
+dry-run mode still performs live news fetches and LLM calls.
+
 ## Operations
 
 Phase 6 production scheduling uses GitHub `repository_dispatch` from cron-job.org

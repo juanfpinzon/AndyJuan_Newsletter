@@ -10,7 +10,7 @@ on:
       - synchronize
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -31,3 +31,30 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v
+
+  digest-check:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run fixture-backed digest validation
+        run: |
+          pytest \
+            tests/test_pipeline_daily.py \
+            tests/test_pipeline_deep.py \
+            tests/test_renderer.py \
+            tests/test_run_manual.py \
+            tests/test_phase6_ops.py \
+            -v
