@@ -176,12 +176,10 @@ def _assert_hero_logo_markup(html: str) -> None:
     assert hero_markup.count("<img") == 1
     assert hero_markup.count("data:image/png;base64,") == 1
 
-    logo_cell = hero.select_one("td.hero-logo[align='right'][valign='middle']")
+    logo_cell = hero.select_one("td.hero-mast-logo[align='left'][valign='middle']")
     assert logo_cell is not None
     assert _style_contains(
         logo_cell,
-        "width:25%",
-        "text-align:right",
         "vertical-align:middle",
     )
 
@@ -191,10 +189,9 @@ def _assert_hero_logo_markup(html: str) -> None:
     assert logo.attrs == {
         "src": logo_src,
         "alt": "Portfolio Radar",
-        "width": "160",
+        "width": "140",
         "style": (
-            "display:block;width:100%;max-width:160px;height:auto;border:0;"
-            "margin-left:auto;"
+            "display:block;width:140px;max-width:140px;height:auto;border:0;"
         ),
     }
     assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
