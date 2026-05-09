@@ -104,6 +104,12 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     assert "pytest tests/ -v" in lint_script
 
     digest_job = jobs["digest-check"]
+    dry_run_step = next(
+        step
+        for step in digest_job["steps"]
+        if isinstance(step, dict)
+        and step.get("name") == "Run stubbed daily radar dry run"
+    )
     digest_script = "\n".join(
         step.get("run", "")
         for step in digest_job["steps"]
@@ -115,9 +121,14 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     assert "tests/test_pipeline_deep.py" in digest_script
     assert "tests/test_renderer.py" in digest_script
     assert "tests/test_run_manual.py" in digest_script
+    assert "tests/test_main.py" not in digest_script
     assert "OPENROUTER_API_KEY" not in digest_script
     assert "NEWSDATA_API_KEY" not in digest_script
-    assert "python -m src.main" not in digest_script
+    assert (
+        dry_run_step["env"]["ANDYJUAN_PIPELINE_STUB_CAPTURE"]
+        == "${{ runner.temp }}/daily-radar-dry-run.json"
+    )
+    assert "python -m src.main --mode daily --dry-run" in digest_script
 
 
 def test_branch_protection_runbook_documents_required_checks() -> None:
@@ -128,6 +139,7 @@ def test_branch_protection_runbook_documents_required_checks() -> None:
     assert "Require status checks to pass before merging" in runbook
     assert "CI / digest-check" in runbook
     assert "CI / lint-and-test" in runbook
+    assert "stubbed `python -m src.main --mode daily --dry-run`" in runbook
 
 
 def test_readme_documents_operations_setup() -> None:
@@ -143,5 +155,6 @@ def test_readme_documents_operations_setup() -> None:
     assert "/dispatches" in readme
     assert "Dry-run still performs live news fetches and LLM calls" in readme
     assert "CI / digest-check" in readme
+    assert "stubbed `python -m src.main --mode daily --dry-run`" in readme
     assert "fine-grained personal access token" in readme
     assert "Contents: write" in readme

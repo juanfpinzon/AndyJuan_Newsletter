@@ -36,6 +36,9 @@ The exact branch-rule settings are documented in
 [docs/runbooks/github-branch-protection.md](docs/runbooks/github-branch-protection.md).
 `daily-radar.yml` is intentionally not part of PR validation because its
 dry-run mode still performs live news fetches and LLM calls.
+Instead, `CI / digest-check` runs a stubbed `python -m src.main --mode daily --dry-run`
+smoke test so the production CLI path is exercised on pull requests without
+external API calls or secrets.
 
 ## Operations
 
