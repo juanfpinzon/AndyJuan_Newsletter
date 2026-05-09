@@ -161,6 +161,8 @@ def test_render_email_embeds_logo_in_daily_hero() -> None:
     hero = soup.select_one("[data-section='hero']")
 
     assert hero is not None
+    assert "<img" in str(hero)
+    assert "data:image/png;base64," in str(hero)
     logo = hero.select_one("img[alt='Portfolio Radar']")
     assert logo is not None
     logo_src = str(logo.get("src", ""))
@@ -175,9 +177,13 @@ def test_render_email_embeds_logo_in_deep_hero() -> None:
     hero = soup.select_one("[data-section='hero']")
 
     assert hero is not None
+    assert "<img" in str(hero)
+    assert "data:image/png;base64," in str(hero)
     logo = hero.select_one("img[alt='Portfolio Radar']")
     assert logo is not None
-    assert str(logo.get("src", "")).startswith("data:image/png;base64,")
+    logo_src = str(logo.get("src", ""))
+    assert logo_src.startswith("data:image/png;base64,")
+    assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
 
 
 def test_render_email_keeps_daily_html_under_gmail_clipping_threshold() -> None:

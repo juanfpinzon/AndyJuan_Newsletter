@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 
@@ -124,4 +125,7 @@ def test_send_email_converts_embedded_logo_to_inline_attachment(
     assert attachment.content_type == "image/png"
     assert attachment.content_disposition == "inline"
     assert attachment.content_id == "portfolio-radar-logo"
-    assert attachment.content
+    expected_logo = base64.b64encode(Path("assets/logo.png").read_bytes()).decode(
+        "ascii"
+    )
+    assert attachment.content == expected_logo
