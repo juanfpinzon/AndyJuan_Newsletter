@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 import re
 from collections.abc import Mapping, Sequence
@@ -23,6 +24,7 @@ from .theme_groups import (
 )
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
+_ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets"
 _TEMPLATE_ENV = Environment(
     loader=FileSystemLoader(TEMPLATES_DIR),
     undefined=StrictUndefined,
@@ -32,6 +34,15 @@ _TEMPLATE_ENV = Environment(
 )
 WORD_RE = re.compile(r"\b[\w']+\b")
 _CSSUTILS_CONFIGURED = False
+
+
+def _logo_data_uri() -> str:
+    logo_path = _ASSETS_DIR / "logo.png"
+    encoded = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
+_LOGO_DATA_URI = _logo_data_uri()
 
 
 class RenderValidationError(RuntimeError):
@@ -75,6 +86,7 @@ def _template_name(mode: str) -> str:
 
 def _normalize_context(context: Mapping[str, Any]) -> dict[str, Any]:
     normalized = dict(context)
+    normalized["logo_data_uri"] = _LOGO_DATA_URI
     normalized["theme_groups"] = tuple(
         _normalize_theme_group(group) for group in context.get("theme_groups", ())
     )

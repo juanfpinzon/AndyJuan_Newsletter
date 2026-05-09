@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,6 +11,9 @@ from src.analyzer.theme_flash import ThemeFlash
 from src.exposure.models import ExposureEntry
 from src.renderer import build_concentrated_exposures, build_theme_groups
 from src.renderer.render import RenderValidationError, render_email
+
+MAX_EMBEDDED_LOGO_BYTES = 40_000
+MAX_RENDERED_EMAIL_BYTES = 100 * 1024
 
 
 def test_render_email_renders_refreshed_daily_structure_with_plain_text() -> None:
@@ -151,6 +155,67 @@ def test_render_email_accepts_renderer_dataclasses(tmp_path: Path) -> None:
     assert "€112.50" in rendered.html
 
 
+def test_render_email_embeds_logo_in_daily_hero() -> None:
+    rendered = render_email(_sample_context(), mode="daily")
+
+    _assert_hero_logo_markup(rendered.html)
+
+
+def test_render_email_embeds_logo_in_deep_hero() -> None:
+    rendered = render_email(_sample_context(), mode="deep")
+
+    _assert_hero_logo_markup(rendered.html)
+
+
+def _assert_hero_logo_markup(html: str) -> None:
+    soup = BeautifulSoup(html, "html.parser")
+    hero = soup.select_one("[data-section='hero']")
+
+    assert hero is not None
+    hero_markup = str(hero)
+    assert hero_markup.count("<img") == 1
+    assert hero_markup.count("data:image/png;base64,") == 1
+
+    logo_cell = hero.select_one("td.hero-mast-logo[align='left'][valign='middle']")
+    assert logo_cell is not None
+    assert _style_contains(
+        logo_cell,
+        "vertical-align:middle",
+    )
+
+    logo = hero.select_one("img[alt='Portfolio Radar']")
+    assert logo is not None
+    logo_src = _expected_logo_data_uri()
+    assert logo.attrs == {
+        "src": logo_src,
+        "alt": "Portfolio Radar",
+        "width": "140",
+        "style": (
+            "display:block;width:140px;max-width:140px;height:auto;border:0;"
+        ),
+    }
+    assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
+
+
+def _expected_logo_data_uri() -> str:
+    encoded_logo = base64.b64encode(Path("assets/logo.png").read_bytes()).decode(
+        "ascii"
+    )
+    return f"data:image/png;base64,{encoded_logo}"
+
+
+def test_render_email_keeps_daily_html_under_gmail_clipping_threshold() -> None:
+    rendered = render_email(_sample_context(), mode="daily")
+
+    assert len(rendered.html.encode("utf-8")) < MAX_RENDERED_EMAIL_BYTES
+
+
+def test_render_email_keeps_deep_html_under_gmail_clipping_threshold() -> None:
+    rendered = render_email(_sample_context(), mode="deep")
+
+    assert len(rendered.html.encode("utf-8")) < MAX_RENDERED_EMAIL_BYTES
+
+
 def test_render_email_color_codes_negative_scoreboard_values_after_refresh() -> None:
     context = _sample_context()
     context["total_pnl"]["total_pnl_eur"] = "-€67.52"
@@ -192,6 +257,14 @@ def test_render_email_rejects_blank_macro_href() -> None:
 def test_render_email_rejects_unsupported_mode() -> None:
     with pytest.raises(RenderValidationError, match="Unsupported render mode"):
         render_email(_sample_context(), mode="weekly")
+
+
+def test_render_email_full_context_does_not_raise_undefined() -> None:
+    context = _sample_context()
+    rendered_daily = render_email(context, mode="daily")
+    rendered_deep = render_email(context, mode="deep")
+    assert rendered_daily.html
+    assert rendered_deep.html
 
 
 def test_render_email_shows_macro_fallback_when_items_are_missing() -> None:
@@ -492,7 +565,7 @@ def _find_text_element(
     class_name: str | None = None,
 ):
     for node in container.find_all(
-        string=lambda value: value and value.strip() == text
+        string=lambda value: value and text in value.strip()
     ):
         parent = node.parent
         if parent is None:

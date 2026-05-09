@@ -2,9 +2,7 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-
-from src.analyzer.ranker import ArticleCandidate, RankerResponseError, rank_news
+from src.analyzer.ranker import ArticleCandidate, rank_news
 from src.config import Settings
 from src.exposure.models import ExposureEntry
 from src.fetcher.models import Article
@@ -199,13 +197,24 @@ def test_rank_news_limits_output_to_rank_window_when_threshold_adds_nothing() ->
     ]
 
 
-def test_rank_news_rejects_invalid_json() -> None:
+def test_rank_news_fails_closed_on_invalid_json() -> None:
     scenario = load_input("threshold_boundary")
 
-    with pytest.raises(RankerResponseError):
-        rank_news(
-            make_candidates(scenario["articles"]),
-            make_exposure_map(scenario["exposure_map"]),
-            llm_caller=FakeLLMCaller("not-json"),
-            settings=make_settings(),
-        )
+    ranked = rank_news(
+        make_candidates(scenario["articles"]),
+        make_exposure_map(scenario["exposure_map"]),
+        llm_caller=FakeLLMCaller("not-json"),
+        settings=make_settings(news_item_limit=2),
+    )
+
+    assert serialize_ranked_articles(ranked) == [
+        {
+            "title": "European banks extend gains on rates repricing",
+            "primary_entity": "BNKE",
+            "matched_entities": ["BNKE"],
+            "composite_weight": "0.06",
+            "llm_score": 0,
+            "included_by": "threshold",
+            "rationale": "",
+        }
+    ]

@@ -11,6 +11,7 @@ from src.config import Settings, load_settings
 from src.exposure.models import ExposureEntry
 from src.fetcher.models import Article
 from src.utils.llm import LLMResponse, call_openrouter
+from src.utils.log import get_logger
 
 from ._prompting import parse_json_response, render_prompt
 
@@ -73,7 +74,16 @@ def rank_news(
         resolved_settings.llm_fallback_model,
     )
 
-    ranking = _parse_ranking_response(response.content, len(articles))
+    try:
+        ranking = _parse_ranking_response(response.content, len(articles))
+    except RankerResponseError as exc:
+        get_logger("ranker").warning(
+            "ranker_response_invalid",
+            error=str(exc),
+            model=response.model,
+            content_length=len(response.content),
+        )
+        ranking = []
     ranked_window_ids = {
         record["article_id"]
         for record in ranking[: resolved_settings.news_item_limit]
