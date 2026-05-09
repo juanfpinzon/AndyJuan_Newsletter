@@ -10,6 +10,8 @@ import respx
 from src.sender.agentmail import SendResult
 from src.storage.db import init_db
 from tests._pipeline_helpers import (
+    CI_TEST_LLM_USAGES,
+    CI_TEST_TICKER,
     StubMacroRSSReader,
     StubMatcher,
     StubNewsDataClient,
@@ -21,6 +23,10 @@ from tests._pipeline_helpers import (
     make_position,
     make_price_snapshot,
 )
+
+EXPECTED_TOKENS_IN = sum(usage.tokens_in for usage in CI_TEST_LLM_USAGES)
+EXPECTED_TOKENS_OUT = sum(usage.tokens_out for usage in CI_TEST_LLM_USAGES)
+EXPECTED_COST_USD = sum(usage.cost_usd for usage in CI_TEST_LLM_USAGES)
 
 
 def test_run_radar_daily_dry_run_uses_mocked_provider_clients(
@@ -44,7 +50,7 @@ def test_run_radar_daily_dry_run_uses_mocked_provider_clients(
         daily,
         "fetch_prices",
         lambda tickers, base_currency="EUR", market_symbols=None: {
-            "NVDA": make_price_snapshot()
+            CI_TEST_TICKER: make_price_snapshot()
         },
     )
     monkeypatch.setattr(daily, "NewsDataClient", lambda **kwargs: news_client)
@@ -95,7 +101,7 @@ def test_run_radar_daily_dry_run_uses_mocked_provider_clients(
     assert exit_code == 0
     assert news_client.fetch_calls == [
         {
-            "entity_query": "NVDA",
+            "entity_query": CI_TEST_TICKER,
             "hours": 24,
             "ignore_seen_db": False,
         }
@@ -109,6 +115,16 @@ def test_run_radar_daily_dry_run_uses_mocked_provider_clients(
     assert runs[0]["mode"] == "daily"
     assert runs[0]["status"] == "success"
     assert runs[0]["recipient_count"] == 0
-    assert runs[0]["tokens_in"] == 30
-    assert runs[0]["tokens_out"] == 15
-    assert runs[0]["cost_usd"] == 0.06
+    assert runs[0]["tokens_in"] == EXPECTED_TOKENS_IN
+    assert runs[0]["tokens_out"] == EXPECTED_TOKENS_OUT
+    assert runs[0]["cost_usd"] == pytest.approx(EXPECTED_COST_USD)
+
+
+@pytest.mark.parametrize("argv", [["--mode"], ["--mode", "weekly"]])
+def test_run_radar_cli_exits_nonzero_for_invalid_args(argv: list[str]) -> None:
+    import src.main as main
+
+    with pytest.raises(SystemExit) as excinfo:
+        main.main(argv)
+
+    assert excinfo.value.code != 0
