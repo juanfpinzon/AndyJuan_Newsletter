@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from decimal import Decimal
 from pathlib import Path
 
@@ -157,33 +158,53 @@ def test_render_email_accepts_renderer_dataclasses(tmp_path: Path) -> None:
 def test_render_email_embeds_logo_in_daily_hero() -> None:
     rendered = render_email(_sample_context(), mode="daily")
 
-    soup = BeautifulSoup(rendered.html, "html.parser")
-    hero = soup.select_one("[data-section='hero']")
-
-    assert hero is not None
-    assert "<img" in str(hero)
-    assert "data:image/png;base64," in str(hero)
-    logo = hero.select_one("img[alt='Portfolio Radar']")
-    assert logo is not None
-    logo_src = str(logo.get("src", ""))
-    assert logo_src.startswith("data:image/png;base64,")
-    assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
+    _assert_hero_logo_markup(rendered.html)
 
 
 def test_render_email_embeds_logo_in_deep_hero() -> None:
     rendered = render_email(_sample_context(), mode="deep")
 
-    soup = BeautifulSoup(rendered.html, "html.parser")
+    _assert_hero_logo_markup(rendered.html)
+
+
+def _assert_hero_logo_markup(html: str) -> None:
+    soup = BeautifulSoup(html, "html.parser")
     hero = soup.select_one("[data-section='hero']")
 
     assert hero is not None
-    assert "<img" in str(hero)
-    assert "data:image/png;base64," in str(hero)
+    hero_markup = str(hero)
+    assert hero_markup.count("<img") == 1
+    assert hero_markup.count("data:image/png;base64,") == 1
+
+    logo_cell = hero.select_one("td.hero-logo[align='right'][valign='middle']")
+    assert logo_cell is not None
+    assert _style_contains(
+        logo_cell,
+        "width:25%",
+        "text-align:right",
+        "vertical-align:middle",
+    )
+
     logo = hero.select_one("img[alt='Portfolio Radar']")
     assert logo is not None
-    logo_src = str(logo.get("src", ""))
-    assert logo_src.startswith("data:image/png;base64,")
+    logo_src = _expected_logo_data_uri()
+    assert logo.attrs == {
+        "src": logo_src,
+        "alt": "Portfolio Radar",
+        "width": "160",
+        "style": (
+            "display:block;width:100%;max-width:160px;height:auto;border:0;"
+            "margin-left:auto;"
+        ),
+    }
     assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
+
+
+def _expected_logo_data_uri() -> str:
+    encoded_logo = base64.b64encode(Path("assets/logo.png").read_bytes()).decode(
+        "ascii"
+    )
+    return f"data:image/png;base64,{encoded_logo}"
 
 
 def test_render_email_keeps_daily_html_under_gmail_clipping_threshold() -> None:
