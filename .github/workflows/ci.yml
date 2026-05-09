@@ -58,3 +58,8 @@ jobs:
             tests/test_run_manual.py \
             tests/test_phase6_ops.py \
             -v
+
+      - name: Run stubbed daily radar dry run
+        env:
+          ANDYJUAN_PIPELINE_STUB_CAPTURE: ${{ runner.temp }}/daily-radar-dry-run.json
+        run: python -m src.main --mode daily --dry-run
