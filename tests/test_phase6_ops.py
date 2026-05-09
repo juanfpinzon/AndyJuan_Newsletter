@@ -6,7 +6,11 @@ import yaml
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "daily-radar.yml"
+CI_WORKFLOW_PATH = REPOSITORY_ROOT / ".github" / "workflows" / "ci.yml"
 README_PATH = REPOSITORY_ROOT / "README.md"
+BRANCH_PROTECTION_DOC_PATH = (
+    REPOSITORY_ROOT / "docs" / "runbooks" / "github-branch-protection.md"
+)
 
 
 def test_daily_radar_workflow_matches_phase6_contract() -> None:
@@ -16,6 +20,7 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
     )
     on = workflow["on"]
 
+    assert "pull_request" not in on
     assert on["workflow_dispatch"]["inputs"]["mode"]["default"] == "daily"
     assert on["workflow_dispatch"]["inputs"]["dry_run"]["default"] == "false"
     assert on["workflow_dispatch"]["inputs"]["juan_only"]["default"] == "false"
@@ -76,10 +81,60 @@ def test_daily_radar_workflow_matches_phase6_contract() -> None:
     assert "actions/upload-artifact@v4" in uses_steps
 
 
+def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
+    workflow = yaml.load(
+        CI_WORKFLOW_PATH.read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    on = workflow["on"]
+
+    assert on["pull_request"]["branches"] == ["main"]
+    assert set(on["pull_request"]["types"]) == {"opened", "reopened", "synchronize"}
+
+    jobs = workflow["jobs"]
+    assert "lint-and-test" in jobs
+    assert "digest-check" in jobs
+
+    lint_script = "\n".join(
+        step.get("run", "")
+        for step in jobs["lint-and-test"]["steps"]
+        if isinstance(step, dict)
+    )
+    assert "ruff check ." in lint_script
+    assert "pytest tests/ -v" in lint_script
+
+    digest_job = jobs["digest-check"]
+    digest_script = "\n".join(
+        step.get("run", "")
+        for step in digest_job["steps"]
+        if isinstance(step, dict)
+    )
+
+    assert digest_job["needs"] == "lint-and-test"
+    assert "tests/test_pipeline_daily.py" in digest_script
+    assert "tests/test_pipeline_deep.py" in digest_script
+    assert "tests/test_renderer.py" in digest_script
+    assert "tests/test_run_manual.py" in digest_script
+    assert "OPENROUTER_API_KEY" not in digest_script
+    assert "NEWSDATA_API_KEY" not in digest_script
+    assert "python -m src.main" not in digest_script
+
+
+def test_branch_protection_runbook_documents_required_checks() -> None:
+    runbook = BRANCH_PROTECTION_DOC_PATH.read_text(encoding="utf-8")
+
+    assert "main" in runbook
+    assert "Require a pull request before merging" in runbook
+    assert "Require status checks to pass before merging" in runbook
+    assert "CI / digest-check" in runbook
+    assert "CI / lint-and-test" in runbook
+
+
 def test_readme_documents_operations_setup() -> None:
     readme = README_PATH.read_text(encoding="utf-8")
 
     assert "## Operations" in readme
+    assert "## Branch Protection" in readme
     assert "Mon-Fri 06:30 UTC" in readme
     assert "Sat 07:00 UTC" in readme
     assert "repository_dispatch" in readme
@@ -87,5 +142,6 @@ def test_readme_documents_operations_setup() -> None:
     assert "client_payload" in readme
     assert "/dispatches" in readme
     assert "Dry-run still performs live news fetches and LLM calls" in readme
+    assert "CI / digest-check" in readme
     assert "fine-grained personal access token" in readme
     assert "Contents: write" in readme
