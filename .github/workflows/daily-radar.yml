@@ -1,6 +1,13 @@
 name: Daily Radar
 
 on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
   workflow_dispatch:
     inputs:
       mode:
@@ -60,7 +67,10 @@ jobs:
           juan_only="${WORKFLOW_JUAN_ONLY:-false}"
           dry_run="${WORKFLOW_DRY_RUN:-false}"
 
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Always run in dry-run mode for PRs
+            dry_run="true"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
             if [ -n "$DISPATCH_MODE" ]; then
               mode="$DISPATCH_MODE"
             fi
