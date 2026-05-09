@@ -25,7 +25,10 @@ Select these checks as required:
 - `CI / lint-and-test`
 - `CI / digest-check`
 
-`CI / digest-check` is the branch-gating digest validation. It runs only fixture-backed pipeline and renderer tests, so it is safe for pull requests and does not depend on live API secrets.
+`CI / digest-check` is the branch-gating digest validation. It runs fixture-backed
+pipeline and renderer tests plus a stubbed `python -m src.main --mode daily --dry-run`
+smoke test, so it is safe for pull requests and does not depend on live API
+secrets.
 
 ## Verification
 
