@@ -135,18 +135,14 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     run_radar_step = next(
         step
         for step in run_radar_job["steps"]
-        if isinstance(step, dict) and step.get("name") == "Run radar pipeline"
+        if isinstance(step, dict)
+        and step.get("name") == "Run fixture-backed run-radar validation"
     )
     run_radar_script = "\n".join(
         step.get("run", "")
         for step in run_radar_job["steps"]
         if isinstance(step, dict)
     )
-    run_radar_uses_steps = [
-        step.get("uses", "")
-        for step in run_radar_job["steps"]
-        if isinstance(step, dict)
-    ]
     run_radar_step_names = [
         step.get("name")
         for step in run_radar_job["steps"]
@@ -154,32 +150,14 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     ]
 
     assert run_radar_job["needs"] == "lint-and-test"
-    assert run_radar_job["env"]["OPENROUTER_API_KEY"] == "stub-openrouter"
-    assert run_radar_job["env"]["NEWSDATA_API_KEY"] == "stub-newsdata"
-    assert run_radar_job["env"]["AGENTMAIL_API_KEY"] == "stub-agentmail"
-    assert run_radar_job["env"]["AGENTMAIL_INBOX_ID"] == "stub-inbox"
-    assert run_radar_job["env"]["EMAIL_FROM"] == "stub@example.com"
-    assert "Resolve run configuration" in run_radar_step_names
-    assert "Show resolved configuration" in run_radar_step_names
-    assert "Validate required secrets" in run_radar_step_names
+    assert "env" not in run_radar_job
     assert "Install dependencies" in run_radar_step_names
-    assert "Run radar pipeline" in run_radar_step_names
-    assert "Show pipeline log tail" in run_radar_step_names
-    assert "Upload pipeline logs" in run_radar_step_names
-    assert 'echo "mode=daily" >> "$GITHUB_OUTPUT"' in run_radar_script
-    assert 'echo "dry_run_flag=--dry-run" >> "$GITHUB_OUTPUT"' in run_radar_script
-    assert 'echo "juan_only_flag=" >> "$GITHUB_OUTPUT"' in run_radar_script
-    assert "::error::OPENROUTER_API_KEY is not set" in run_radar_script
-    assert "::error::NEWSDATA_API_KEY is not set" in run_radar_script
-    assert 'if [ -z "$DRY_RUN_FLAG" ]; then' in run_radar_script
-    assert 'run_args=(--mode "$MODE")' in run_radar_script
-    assert 'run_args+=("$DRY_RUN_FLAG")' in run_radar_script
-    assert 'python -m src.main "${run_args[@]}"' in run_radar_script
-    assert (
-        run_radar_step["env"]["ANDYJUAN_PIPELINE_STUB_CAPTURE"]
-        == "${{ runner.temp }}/daily-radar-ci-run-radar.json"
-    )
-    assert "actions/upload-artifact@v4" in run_radar_uses_steps
+    assert "Run fixture-backed run-radar validation" in run_radar_step_names
+    assert "tests/test_ci_run_radar.py" in run_radar_script
+    assert "python -m src.main --mode daily --dry-run" not in run_radar_script
+    assert "ANDYJUAN_PIPELINE_STUB_CAPTURE" not in run_radar_script
+    assert "OPENROUTER_API_KEY" not in run_radar_script
+    assert run_radar_step["run"] == "pytest tests/test_ci_run_radar.py -v"
 
 
 def test_branch_protection_runbook_documents_required_checks() -> None:
@@ -191,7 +169,8 @@ def test_branch_protection_runbook_documents_required_checks() -> None:
     assert "CI / digest-check" in runbook
     assert "CI / lint-and-test" in runbook
     assert "CI / run-radar" in runbook
-    assert "stubbed `python -m src.main --mode daily --dry-run`" in runbook
+    assert "fixture-backed daily dry-run validation" in runbook
+    assert "mocked provider clients" in runbook
 
 
 def test_readme_documents_operations_setup() -> None:
@@ -208,6 +187,8 @@ def test_readme_documents_operations_setup() -> None:
     assert "Dry-run still performs live news fetches and LLM calls" in readme
     assert "CI / digest-check" in readme
     assert "CI / run-radar" in readme
-    assert "stubbed `python -m src.main --mode daily --dry-run`" in readme
+    assert "fixture-backed daily dry-run" in readme
+    assert "validation that exercises the daily CLI path" in readme
+    assert "mocked provider clients" in readme
     assert "fine-grained personal access token" in readme
     assert "Contents: write" in readme

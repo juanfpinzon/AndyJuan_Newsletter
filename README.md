@@ -39,9 +39,10 @@ The exact branch-rule settings are documented in
 dry-run mode still performs live news fetches and LLM calls.
 Instead, `CI / digest-check` runs a stubbed `python -m src.main --mode daily --dry-run`
 smoke test so the production CLI path is exercised on pull requests without
-external API calls or secrets. `CI / run-radar` mirrors the operational
-`Daily Radar / run-radar` job as a distinct third check, but forces
-`dry_run=true` and enables stub capture so the PR path stays provider-safe.
+external API calls or secrets. `CI / run-radar` is a fixture-backed daily dry-run
+validation that exercises the daily CLI path with mocked provider clients, so it
+remains distinct from `CI / digest-check` without relying on fake secrets or
+live network calls.
 
 ## Operations
 

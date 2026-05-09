@@ -31,9 +31,9 @@ pipeline and renderer tests plus a stubbed `python -m src.main --mode daily --dr
 smoke test, so it is safe for pull requests and does not depend on live API
 secrets.
 
-`CI / run-radar` mirrors the operational `Daily Radar / run-radar` job shape but
-forces `mode=daily` and `dry_run=true` with stubbed environment values, so pull
-requests expose a distinct third check without making live provider calls.
+`CI / run-radar` is a fixture-backed daily dry-run validation. It exercises the
+daily CLI path with mocked provider clients, so pull requests expose a distinct
+third check without fake secrets or live provider calls.
 
 ## Verification
 
