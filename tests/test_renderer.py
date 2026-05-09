@@ -11,6 +11,9 @@ from src.exposure.models import ExposureEntry
 from src.renderer import build_concentrated_exposures, build_theme_groups
 from src.renderer.render import RenderValidationError, render_email
 
+MAX_EMBEDDED_LOGO_BYTES = 40_000
+MAX_RENDERED_EMAIL_BYTES = 100 * 1024
+
 
 def test_render_email_renders_refreshed_daily_structure_with_plain_text() -> None:
     context = _sample_context()
@@ -149,6 +152,44 @@ def test_render_email_accepts_renderer_dataclasses(tmp_path: Path) -> None:
     assert "07:30 UTC" in rendered.html
     assert "13.00%" in rendered.html
     assert "€112.50" in rendered.html
+
+
+def test_render_email_embeds_logo_in_daily_hero() -> None:
+    rendered = render_email(_sample_context(), mode="daily")
+
+    soup = BeautifulSoup(rendered.html, "html.parser")
+    hero = soup.select_one("[data-section='hero']")
+
+    assert hero is not None
+    logo = hero.select_one("img[alt='Portfolio Radar']")
+    assert logo is not None
+    logo_src = str(logo.get("src", ""))
+    assert logo_src.startswith("data:image/png;base64,")
+    assert len(logo_src.encode("ascii")) <= MAX_EMBEDDED_LOGO_BYTES
+
+
+def test_render_email_embeds_logo_in_deep_hero() -> None:
+    rendered = render_email(_sample_context(), mode="deep")
+
+    soup = BeautifulSoup(rendered.html, "html.parser")
+    hero = soup.select_one("[data-section='hero']")
+
+    assert hero is not None
+    logo = hero.select_one("img[alt='Portfolio Radar']")
+    assert logo is not None
+    assert str(logo.get("src", "")).startswith("data:image/png;base64,")
+
+
+def test_render_email_keeps_daily_html_under_gmail_clipping_threshold() -> None:
+    rendered = render_email(_sample_context(), mode="daily")
+
+    assert len(rendered.html.encode("utf-8")) < MAX_RENDERED_EMAIL_BYTES
+
+
+def test_render_email_keeps_deep_html_under_gmail_clipping_threshold() -> None:
+    rendered = render_email(_sample_context(), mode="deep")
+
+    assert len(rendered.html.encode("utf-8")) < MAX_RENDERED_EMAIL_BYTES
 
 
 def test_render_email_color_codes_negative_scoreboard_values_after_refresh() -> None:

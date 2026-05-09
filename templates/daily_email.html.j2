@@ -206,6 +206,9 @@
         .conc-paths {
           display: none !important;
         }
+        .hero-logo {
+          display: none !important;
+        }
       }
     </style>
   </head>
@@ -216,14 +219,23 @@
     <div class="shell">
       <div class="container">
         <section class="panel section" data-section="hero" style="padding:32px 28px;">
-          <div class="eyebrow" style="color:#f3ba2f;">Portfolio Radar · {{ generated_for_date }}</div>
-          <h1 class="title" style="margin:14px 0 6px;letter-spacing:-0.01em;">{{ title }}</h1>
-          <p class="subtitle">{{ subtitle }}</p>
-          {% block hero_chip %}
-          <div style="margin-top:18px;display:inline-block;padding:6px 14px;background:rgba(243,186,47,0.12);border:1px solid rgba(243,186,47,0.35);border-radius:999px;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-            {{ mode_label }}
-          </div>
-          {% endblock %}
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+            <tr>
+              <td style="width:75%;padding-right:24px;vertical-align:middle;">
+                <div class="eyebrow" style="color:#f3ba2f;">Portfolio Radar · {{ generated_for_date }}</div>
+                <h1 class="title" style="margin:14px 0 6px;letter-spacing:-0.01em;">{{ title }}</h1>
+                <p class="subtitle">{{ subtitle }}</p>
+                {% block hero_chip %}
+                <div style="margin-top:18px;display:inline-block;padding:6px 14px;background:rgba(243,186,47,0.12);border:1px solid rgba(243,186,47,0.35);border-radius:999px;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
+                  {{ mode_label }}
+                </div>
+                {% endblock %}
+              </td>
+              <td class="hero-logo" align="right" valign="middle" style="width:25%;text-align:right;vertical-align:middle;">
+                <img src="{{ logo_data_uri }}" alt="Portfolio Radar" width="160" style="display:block;width:100%;max-width:160px;height:auto;border:0;margin-left:auto;" />
+              </td>
+            </tr>
+          </table>
         </section>
 
         {% block deep_lede %}{% endblock %}
