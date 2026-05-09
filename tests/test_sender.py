@@ -5,7 +5,9 @@ from pathlib import Path
 
 import pytest
 
+from src.renderer.render import render_email
 from src.sender.agentmail import EmailSendError, SendResult, send_email
+from tests.test_renderer import _sample_context
 
 
 class _StubMessagesClient:
@@ -91,3 +93,35 @@ def test_send_email_wraps_agentmail_errors(monkeypatch: pytest.MonkeyPatch) -> N
             from_addr="radar@example.com",
             client=client,
         )
+
+
+def test_send_email_converts_embedded_logo_to_inline_attachment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AGENTMAIL_INBOX_ID", "inbox_123")
+    messages_client = _StubMessagesClient(response=_StubSendResponse("msg_logo"))
+    client = _StubAgentMailClient(messages_client)
+    rendered = render_email(_sample_context(), mode="daily")
+
+    send_email(
+        to="juan@example.com",
+        subject="Daily Portfolio Radar",
+        html=rendered.html,
+        text=rendered.text,
+        from_addr="radar@example.com",
+        client=client,
+    )
+
+    assert len(messages_client.calls) == 1
+    call = messages_client.calls[0]
+    assert 'src="cid:portfolio-radar-logo"' in str(call["html"])
+    assert "data:image/png;base64," not in str(call["html"])
+    attachments = call["attachments"]
+    assert isinstance(attachments, list)
+    assert len(attachments) == 1
+    attachment = attachments[0]
+    assert attachment.filename == "logo.png"
+    assert attachment.content_type == "image/png"
+    assert attachment.content_disposition == "inline"
+    assert attachment.content_id == "portfolio-radar-logo"
+    assert attachment.content

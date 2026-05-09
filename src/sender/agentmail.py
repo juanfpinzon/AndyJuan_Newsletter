@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+import base64
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from agentmail import AgentMail
+from agentmail.attachments.types.send_attachment import SendAttachment
+from bs4 import BeautifulSoup
 
 from src.utils.log import get_logger
+
+_ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets"
+_LOGO_PATH = _ASSETS_DIR / "logo.png"
+_LOGO_CID = "portfolio-radar-logo"
 
 
 @dataclass(frozen=True)
@@ -37,14 +45,20 @@ def send_email(
         raise EmailSendError("AGENTMAIL_INBOX_ID is not set")
 
     recipients = [to] if isinstance(to, str) else list(to)
+    html_payload, attachments = _prepare_inline_attachments(html)
+    send_kwargs: dict[str, Any] = {
+        "to": recipients,
+        "subject": subject,
+        "html": html_payload,
+        "text": text,
+        "headers": {"From": from_addr},
+    }
+    if attachments:
+        send_kwargs["attachments"] = attachments
     try:
         response = (client or get_agentmail_client()).inboxes.messages.send(
             resolved_inbox_id,
-            to=recipients,
-            subject=subject,
-            html=html,
-            text=text,
-            headers={"From": from_addr},
+            **send_kwargs,
         )
     except Exception as exc:  # noqa: BLE001
         raise EmailSendError(str(exc)) from exc
@@ -65,3 +79,28 @@ def get_agentmail_client() -> AgentMail:
     if not api_key:
         raise EmailSendError("AGENTMAIL_API_KEY is not set")
     return AgentMail(api_key=api_key)
+
+
+def _prepare_inline_attachments(html: str) -> tuple[str, list[SendAttachment]]:
+    soup = BeautifulSoup(html, "html.parser")
+    logo = soup.select_one("img[alt='Portfolio Radar']")
+    if logo is None:
+        return html, []
+
+    src = str(logo.get("src", "")).strip()
+    if not src.startswith("data:image/png;base64,"):
+        return html, []
+
+    html_with_cid = html.replace(src, f"cid:{_LOGO_CID}", 1)
+    return html_with_cid, [_logo_attachment()]
+
+
+def _logo_attachment() -> SendAttachment:
+    encoded_logo = base64.b64encode(_LOGO_PATH.read_bytes()).decode("ascii")
+    return SendAttachment(
+        filename="logo.png",
+        content_type="image/png",
+        content_disposition="inline",
+        content_id=_LOGO_CID,
+        content=encoded_logo,
+    )
