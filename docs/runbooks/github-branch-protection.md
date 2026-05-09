@@ -24,19 +24,25 @@ Select these checks as required:
 
 - `CI / lint-and-test`
 - `CI / digest-check`
+- `CI / run-radar`
 
 `CI / digest-check` is the branch-gating digest validation. It runs fixture-backed
 pipeline and renderer tests plus a stubbed `python -m src.main --mode daily --dry-run`
 smoke test, so it is safe for pull requests and does not depend on live API
 secrets.
 
+`CI / run-radar` mirrors the operational `Daily Radar / run-radar` job shape but
+forces `mode=daily` and `dry_run=true` with stubbed environment values, so pull
+requests expose a distinct third check without making live provider calls.
+
 ## Verification
 
 After saving the rule:
 
 1. Open a pull request against `main`
-2. Confirm GitHub shows both required checks:
+2. Confirm GitHub shows all required checks:
    - `CI / lint-and-test`
    - `CI / digest-check`
+   - `CI / run-radar`
 3. Confirm direct pushes to `main` are blocked
 4. Confirm `.github/workflows/daily-radar.yml` does not run for the PR
