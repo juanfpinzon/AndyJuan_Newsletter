@@ -1,20 +1,24 @@
 {% macro ai_disclaimer_chip() -%}
-<span style="display:inline-block;padding:6px 10px;border:1px solid #3a455f;border-radius:999px;background:#151c2c;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">🤖 AI-generated · not investment advice</span>
+<span style="display:inline-block;padding:5px 10px;border:1px solid rgba(243,186,47,0.35);border-radius:999px;background:rgba(243,186,47,0.08);color:#f3ba2f;font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;">🤖 AI-generated · not investment advice</span>
 {%- endmacro %}
-{% macro section_header(label, accent='#8b9bb8') -%}
-<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-bottom:16px;">
+{% macro section_header(label, accent='#f3ba2f') -%}
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-bottom:18px;">
   <tr>
-    <td style="white-space:nowrap;padding-right:12px;color:{{ accent }};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;">{{ label }}</td>
-    <td style="width:100%;border-top:1px solid #1d2740;height:1px;"></td>
+    <td style="white-space:nowrap;padding-right:14px;color:{{ accent }};font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;">{{ label }}</td>
+    <td style="width:100%;height:1px;background:linear-gradient(90deg, rgba(243,186,47,0.30) 0%, rgba(29,39,64,0.85) 35%, rgba(29,39,64,0.85) 100%);line-height:1px;font-size:0;">&nbsp;</td>
   </tr>
 </table>
 {%- endmacro %}
+{% macro signed_arrow(value) -%}
+{% if value.startswith('-') or value.startswith('€-') %}▼{% elif value.startswith('+') or value.startswith('€+') %}▲{% else %}·{% endif %}
+{%- endmacro %}
 {% macro metric_tile(label, value, sub=None, sign='neutral') -%}
 {% set color = '#0ecb81' if sign == 'pos' else ('#f6465d' if sign == 'neg' else '#ffffff') %}
-<div class="metric" style="padding:20px 22px;">
+{% set arrow = '▲' if sign == 'pos' else ('▼' if sign == 'neg' else '') %}
+<div class="metric" style="padding:18px 20px;">
   <div class="eyebrow">{{ label }}</div>
-  <p class="metric-value num" style="color:{{ color }};">{{ value }}</p>
-  {% if sub %}<div class="muted num" style="margin-top:6px;">{{ sub }}</div>{% endif %}
+  <p class="metric-value num" style="color:{{ color }};">{% if arrow %}<span style="font-size:14px;vertical-align:2px;margin-right:4px;">{{ arrow }}</span>{% endif %}{{ value }}</p>
+  {% if sub %}<div class="muted num" style="margin-top:4px;font-size:12px;">{{ sub }}</div>{% endif %}
 </div>
 {%- endmacro %}
 <!DOCTYPE html>
@@ -44,8 +48,9 @@
       .shell {
         width: 100%;
         background:
-          radial-gradient(circle at top right, rgba(243, 186, 47, 0.16), transparent 28%),
-          linear-gradient(180deg, #111827 0%, #0b0f19 100%);
+          radial-gradient(circle at 92% 6%, rgba(243, 186, 47, 0.10), transparent 32%),
+          radial-gradient(circle at 5% 85%, rgba(14, 203, 129, 0.05), transparent 38%),
+          linear-gradient(180deg, #0d1320 0%, #0b0f19 100%);
       }
       .container {
         width: 100%;
@@ -55,27 +60,28 @@
       }
       .panel {
         background: #131a2a;
-        border: 1px solid #222c42;
-        border-radius: 20px;
-        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+        border: 1px solid #1f2944;
+        border-radius: 18px;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
       }
       .section {
-        margin-top: 18px;
-        padding: 22px;
+        margin-top: 20px;
+        padding: 24px;
       }
       .eyebrow {
         color: #8b9bb8;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
       .title {
-        margin: 10px 0 8px;
+        margin: 0 0 8px;
         color: #ffffff;
-        font-size: 32px;
-        line-height: 1.1;
-        font-weight: 700;
+        font-size: 34px;
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: -0.018em;
       }
       .subtitle {
         margin: 0;
@@ -91,15 +97,16 @@
       }
       .metric,
       .mini-card {
-        background: #0f1524;
-        border: 1px solid #202b40;
-        border-radius: 16px;
+        background: linear-gradient(180deg, #131c30 0%, #0f1524 100%);
+        border: 1px solid #1f2944;
+        border-radius: 14px;
       }
       .metric-value {
-        margin: 8px 0 0;
+        margin: 6px 0 0;
         color: #ffffff;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 700;
+        letter-spacing: -0.01em;
       }
       .muted {
         color: #91a0bb;
@@ -110,48 +117,63 @@
       }
       .table th,
       .table td {
-        padding: 12px 10px;
-        border-bottom: 1px solid #202b40;
+        padding: 13px 10px;
+        border-bottom: 1px solid #1d2740;
         text-align: left;
         font-size: 13px;
-        vertical-align: top;
+        vertical-align: middle;
       }
       .table th {
         color: #8b9bb8;
-        font-size: 11px;
-        letter-spacing: 0.08em;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
+        border-bottom: 1px solid #222c42;
+        background: rgba(243, 186, 47, 0.025);
       }
       .table tr:last-child td {
         border-bottom: 0;
+      }
+      .ticker-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: rgba(243, 186, 47, 0.08);
+        border: 1px solid rgba(243, 186, 47, 0.25);
+        color: #f3ba2f;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        font-variant-numeric: tabular-nums;
       }
       .cell-mono {
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
       }
       .row-zebra:nth-child(even) td {
-        background: rgba(255, 255, 255, 0.015);
+        background: rgba(255, 255, 255, 0.012);
       }
       .theme-wrap {
         margin-top: 18px;
-        padding: 20px;
-        background: linear-gradient(180deg, #101726 0%, #0d1320 100%);
+        padding: 22px;
+        background: linear-gradient(180deg, #111827 0%, #0d1320 100%);
         border: 1px solid #1d2740;
-        border-radius: 18px;
-      }
-      .article-card {
-        margin-top: 12px;
-        padding: 16px;
-        background: #121a2a;
-        border: 1px solid #202b40;
         border-radius: 16px;
       }
+      .article-card {
+        margin-top: 10px;
+        padding: 14px 16px;
+        background: #0f1524;
+        border: 1px solid #1d2740;
+        border-radius: 12px;
+      }
       .flash-block {
-        margin-top: 14px;
-        padding: 16px;
-        border-left: 3px solid #f3ba2f;
+        margin-top: 16px;
+        padding: 16px 18px;
+        border: 1px solid rgba(243, 186, 47, 0.25);
         border-radius: 14px;
-        background: rgba(243, 186, 47, 0.08);
+        background: linear-gradient(135deg, rgba(243, 186, 47, 0.10) 0%, rgba(243, 186, 47, 0.03) 100%);
       }
       .copy p {
         margin: 0 0 14px;
@@ -174,6 +196,27 @@
         font-size: 12px;
         line-height: 1.6;
       }
+      .hero-body {
+        position: relative;
+        padding: 36px 32px 32px;
+        background:
+          radial-gradient(circle at 95% 20%, rgba(243, 186, 47, 0.13), transparent 42%),
+          linear-gradient(180deg, #131a2a 0%, #101626 100%);
+      }
+      .brand-mark {
+        background: #11141e;
+        border: 1px solid #1f2944;
+        border-radius: 12px;
+        padding: 10px 14px;
+        line-height: 0;
+      }
+      .panel-divider {
+        height: 1px;
+        line-height: 1px;
+        font-size: 0;
+        margin: 22px 0 -2px;
+        background: linear-gradient(90deg, rgba(243, 186, 47, 0) 0%, rgba(243, 186, 47, 0.35) 50%, rgba(243, 186, 47, 0) 100%);
+      }
       @media only screen and (max-width: 640px) {
         .container {
           padding: 16px 10px 28px;
@@ -181,16 +224,19 @@
         .section {
           padding: 18px 16px;
         }
+        .hero-body {
+          padding: 26px 18px 24px !important;
+        }
         .title {
-          font-size: 26px;
+          font-size: 26px !important;
         }
         .metric-value {
-          font-size: 24px;
+          font-size: 22px !important;
         }
         .table th,
         .table td {
-          padding-left: 0;
-          padding-right: 0;
+          padding-left: 6px;
+          padding-right: 6px;
         }
         .card-grid td,
         .macro-grid td,
@@ -210,7 +256,7 @@
           display: none !important;
         }
         .hero-mast-logo {
-          padding: 16px 18px !important;
+          padding: 14px 16px !important;
         }
         .hero-mast-logo img {
           width: 112px !important;
@@ -228,22 +274,32 @@
         <section class="panel" data-section="hero" style="padding:0;overflow:hidden;">
           <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background:#0b0f19;border-collapse:collapse;">
             <tr>
-              <td class="hero-mast-logo" align="left" valign="middle" style="padding:18px 24px;vertical-align:middle;">
-                <img src="{{ logo_data_uri }}" alt="Portfolio Radar" width="140" style="display:block;width:140px;max-width:140px;height:auto;border:0;" />
+              <td class="hero-mast-logo" align="left" valign="middle" style="padding:16px 22px;vertical-align:middle;">
+                <span class="brand-mark" style="display:inline-block;background:#11141e;border:1px solid #1f2944;border-radius:12px;padding:8px 12px;line-height:0;">
+                  <img src="{{ logo_data_uri }}" alt="Portfolio Radar" width="140" style="display:block;width:140px;max-width:140px;height:auto;border:0;" />
+                </span>
               </td>
-              <td class="hero-mast-date" align="right" valign="middle" style="padding:18px 24px;text-align:right;vertical-align:middle;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-                Portfolio Radar · {{ generated_for_date }}
+              <td class="hero-mast-date" align="right" valign="middle" style="padding:16px 22px;text-align:right;vertical-align:middle;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f3ba2f;margin-right:8px;vertical-align:1px;"></span>{{ generated_for_date }}
               </td>
             </tr>
           </table>
           <div style="height:1px;line-height:1px;font-size:0;background:linear-gradient(90deg, rgba(243,186,47,0) 0%, rgba(243,186,47,0.55) 50%, rgba(243,186,47,0) 100%);">&nbsp;</div>
-          <div style="padding:32px 28px 30px;">
-            <h1 class="title" style="margin:0 0 8px;letter-spacing:-0.01em;">{{ title }}</h1>
-            <p class="subtitle">{{ subtitle }}</p>
+          <div class="hero-body">
+            <div class="eyebrow" style="margin-bottom:14px;color:#f3ba2f;">Portfolio Radar · {{ mode_label }} edition</div>
+            <h1 class="title">{{ title }}</h1>
+            <p class="subtitle" style="margin-top:10px;">{{ subtitle }}</p>
             {% block hero_chip %}
-            <div style="margin-top:18px;display:inline-block;padding:6px 14px;background:rgba(243,186,47,0.12);border:1px solid rgba(243,186,47,0.35);border-radius:999px;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-              {{ mode_label }}
-            </div>
+            <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:22px;">
+              <tr>
+                <td style="padding-right:8px;">
+                  <span style="display:inline-block;padding:6px 14px;background:rgba(243,186,47,0.12);border:1px solid rgba(243,186,47,0.35);border-radius:999px;color:#f3ba2f;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;">{{ mode_label }}</span>
+                </td>
+                <td style="padding-right:8px;">
+                  <span style="display:inline-block;padding:6px 14px;background:#0f1524;border:1px solid #1f2944;border-radius:999px;color:#b7c2d9;font-size:11px;font-weight:600;letter-spacing:0.06em;">Tracking {{ position_rows|length }} positions</span>
+                </td>
+              </tr>
+            </table>
             {% endblock %}
           </div>
         </section>
@@ -254,43 +310,45 @@
           {{ section_header("PnL Scoreboard") }}
           {% set total_pnl_sign = 'neg' if total_pnl.total_pnl_eur.startswith('-') or total_pnl.total_pnl_eur.startswith('€-') else ('pos' if total_pnl.total_pnl_eur.startswith('+') or total_pnl.total_pnl_eur.startswith('€+') else 'neutral') %}
           {% set daily_pnl_sign = 'neg' if total_pnl.daily_pnl_eur.startswith('-') or total_pnl.daily_pnl_eur.startswith('€-') else ('pos' if total_pnl.daily_pnl_eur.startswith('+') or total_pnl.daily_pnl_eur.startswith('€+') else 'neutral') %}
-          <table class="score-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:separate;border-spacing:12px;margin:0 -12px;">
+
+          <div style="padding:22px 24px;background:linear-gradient(135deg, rgba(243,186,47,0.08) 0%, rgba(15,21,36,0.0) 60%), linear-gradient(180deg,#131c30 0%,#0f1524 100%);border:1px solid #1f2944;border-radius:16px;">
+            <div class="eyebrow" style="color:#f3ba2f;">Current portfolio value</div>
+            <p class="num" style="margin:8px 0 0;color:#ffffff;font-size:38px;font-weight:800;letter-spacing:-0.02em;line-height:1.05;">{{ total_pnl.current_value_total_eur }}</p>
+            <div class="muted" style="margin-top:6px;font-size:12px;">As of {{ generated_for_date }} · {{ position_rows|length }} tracked tickers</div>
+          </div>
+
+          <table class="score-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:separate;border-spacing:10px;margin:6px -10px 0;">
             <tr>
-              <td style="width:50%;">
-                {{ metric_tile('Current Value', total_pnl.current_value_total_eur) }}
-              </td>
-              <td style="width:50%;">
+              <td style="width:33.33%;">
                 {{ metric_tile('Total PnL', total_pnl.total_pnl_eur, sub=total_pnl.total_pnl_pct, sign=total_pnl_sign) }}
               </td>
-            </tr>
-            <tr>
-              <td style="width:50%;">
+              <td style="width:33.33%;">
                 {{ metric_tile('Daily PnL', total_pnl.daily_pnl_eur, sign=daily_pnl_sign) }}
               </td>
-              <td style="width:50%;">
+              <td style="width:33.33%;">
                 {{ metric_tile('Tracked Positions', position_rows|length|string) }}
               </td>
             </tr>
           </table>
 
-          <table class="table" cellspacing="0" cellpadding="0" style="margin-top:18px;">
+          <table class="table" cellspacing="0" cellpadding="0" style="margin-top:20px;">
             <thead>
               <tr>
                 <th>Ticker</th>
                 <th>Theme</th>
-                <th>Value</th>
-                <th>Total PnL</th>
-                <th>Daily</th>
+                <th style="text-align:right;">Value</th>
+                <th style="text-align:right;">Total PnL</th>
+                <th style="text-align:right;">Daily</th>
               </tr>
             </thead>
             <tbody>
               {% for row in position_rows %}
               <tr class="row-zebra">
-                <td style="color:#ffffff;font-weight:700;">{{ row.ticker }}</td>
-                <td class="muted">{{ row.theme }}</td>
-                <td class="cell-mono num">{{ row.current_value_eur }}</td>
-                <td class="cell-mono num" style="color:{% if row.total_pnl_pct.startswith('-') %}#f6465d{% elif row.total_pnl_pct.startswith('+') and row.total_pnl_pct != '+0.0%' %}#0ecb81{% else %}#8b9bb8{% endif %};">{{ row.total_pnl_pct }}</td>
-                <td class="cell-mono num" style="color:{% if row.daily_change_pct.startswith('-') %}#f6465d{% elif row.daily_change_pct.startswith('+') and row.daily_change_pct != '+0.0%' %}#0ecb81{% else %}#8b9bb8{% endif %};">{{ row.daily_change_pct }}</td>
+                <td><span class="ticker-pill">{{ row.ticker }}</span></td>
+                <td class="muted" style="font-size:12px;">{{ row.theme }}</td>
+                <td class="cell-mono num" style="text-align:right;color:#ffffff;font-weight:600;">{{ row.current_value_eur }}</td>
+                <td class="cell-mono num" style="text-align:right;font-weight:600;color:{% if row.total_pnl_pct.startswith('-') %}#f6465d{% elif row.total_pnl_pct.startswith('+') and row.total_pnl_pct != '+0.0%' %}#0ecb81{% else %}#8b9bb8{% endif %};">{{ row.total_pnl_pct }}</td>
+                <td class="cell-mono num" style="text-align:right;font-weight:600;color:{% if row.daily_change_pct.startswith('-') %}#f6465d{% elif row.daily_change_pct.startswith('+') and row.daily_change_pct != '+0.0%' %}#0ecb81{% else %}#8b9bb8{% endif %};">{{ row.daily_change_pct }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -305,17 +363,17 @@
             {% set pct = raw|float %}
             {% set bar_width = ([pct, 30.0]|min / 30.0 * 100)|round(1) %}
             <tr>
-              <td style="padding:14px 0;border-bottom:1px solid #202b40;">
+              <td style="padding:14px 0;{% if not loop.last %}border-bottom:1px solid #1d2740;{% endif %}">
                 <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                   <tr>
-                    <td style="width:80px;color:#ffffff;font-weight:700;font-size:14px;">{{ row.entity }}</td>
+                    <td style="width:96px;color:#f3ba2f;font-weight:800;font-size:14px;letter-spacing:0.02em;font-variant-numeric:tabular-nums;">{{ row.entity }}</td>
                     <td style="padding:0 14px;">
-                      <div style="height:8px;background:#0f1524;border:1px solid #202b40;border-radius:999px;overflow:hidden;">
-                        <div style="width:{{ bar_width }}%;height:8px;background:linear-gradient(90deg, #f3ba2f 0%, #f6c04a 100%);border-radius:999px;"></div>
+                      <div style="height:10px;background:#0b0f19;border:1px solid #1d2740;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);">
+                        <div style="width:{{ bar_width }}%;height:10px;background:linear-gradient(90deg, #f3ba2f 0%, #f6c85a 60%, #fde08c 100%);border-radius:999px;"></div>
                       </div>
                     </td>
-                    <td class="num" style="width:80px;text-align:right;color:#ffffff;font-weight:700;font-size:14px;">{{ row.composite_weight_percent }}</td>
-                    <td class="muted num conc-paths" style="width:80px;text-align:right;font-size:12px;">{{ row.path_count }} path{% if row.path_count != 1 %}s{% endif %}</td>
+                    <td class="num" style="width:88px;text-align:right;color:#ffffff;font-weight:700;font-size:15px;letter-spacing:-0.01em;">{{ row.composite_weight_percent }}</td>
+                    <td class="muted num conc-paths" style="width:80px;text-align:right;font-size:11px;letter-spacing:0.04em;">{{ row.path_count }} path{% if row.path_count != 1 %}s{% endif %}</td>
                   </tr>
                 </table>
               </td>
@@ -328,27 +386,32 @@
           {{ section_header("Theme Groups") }}
           {% for group in theme_groups %}
           <div class="theme-wrap">
-            <div style="border-left:3px solid #f3ba2f;padding-left:14px;margin-bottom:6px;">
-              <h2 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.01em;">{{ group.name }}</h2>
-              <p style="margin:6px 0 0;color:#aebbd2;font-size:13px;line-height:1.55;">{{ group.description }}</p>
-            </div>
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+              <tr>
+                <td style="width:3px;background:#f3ba2f;border-radius:2px;">&nbsp;</td>
+                <td style="padding-left:14px;">
+                  <h2 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.012em;">{{ group.name }}</h2>
+                  <p style="margin:6px 0 0;color:#aebbd2;font-size:13px;line-height:1.55;">{{ group.description }}</p>
+                </td>
+              </tr>
+            </table>
 
-            <table class="card-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:16px;border-collapse:separate;border-spacing:10px;margin-left:-10px;margin-right:-10px;">
+            <table class="card-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:16px;border-collapse:separate;border-spacing:8px;margin-left:-8px;margin-right:-8px;">
               {% set card_rows = group.cards|batch(3) %}
               {% for chunk in card_rows %}
               <tr>
                 {% for card in chunk %}
                 <td style="width:33.33%;vertical-align:top;">
-                  <div class="mini-card" style="padding:16px 18px;">
-                    <div class="eyebrow" style="color:#f3ba2f;">{{ card.ticker }}</div>
-                    <div class="num" style="margin-top:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.01em;">{{ card.current_value_eur }}</div>
+                  <div class="mini-card" style="padding:14px 16px;">
+                    <div style="display:inline-block;padding:3px 8px;background:rgba(243,186,47,0.08);border:1px solid rgba(243,186,47,0.25);border-radius:6px;color:#f3ba2f;font-weight:700;font-size:11px;letter-spacing:0.06em;font-variant-numeric:tabular-nums;">{{ card.ticker }}</div>
+                    <div class="num" style="margin-top:10px;color:#ffffff;font-size:19px;font-weight:700;letter-spacing:-0.01em;">{{ card.current_value_eur }}</div>
                     <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:10px;">
                       <tr>
-                        <td class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;">Total</td>
+                        <td class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Total</td>
                         <td class="num" style="text-align:right;font-size:13px;font-weight:600;color:{% if card.total_pnl_pct.startswith('-') %}#f6465d{% elif card.total_pnl_pct == '+0.0%' %}#8b9bb8{% else %}#0ecb81{% endif %};">{{ card.total_pnl_pct }}</td>
                       </tr>
                       <tr>
-                        <td class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding-top:4px;">Daily</td>
+                        <td class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding-top:4px;">Daily</td>
                         <td class="num" style="text-align:right;font-size:13px;font-weight:600;padding-top:4px;color:{% if card.daily_change_pct.startswith('-') %}#f6465d{% elif card.daily_change_pct == '+0.0%' %}#8b9bb8{% else %}#0ecb81{% endif %};">{{ card.daily_change_pct }}</td>
                       </tr>
                     </table>
@@ -370,21 +433,32 @@
             {% endif %}
 
             {% for article in group.articles %}
-            <div class="article-card news-item" style="padding:14px 18px;">
-              <div class="eyebrow">{{ article.source }} · {{ article.published_at_label }}</div>
-              <h3 style="margin:6px 0 10px;font-size:16px;line-height:1.45;font-weight:600;">
-                <a href="{{ article.href }}" style="color:#ffffff;text-decoration:none;border-bottom:1px solid transparent;">{{ article.title }}</a>
-              </h3>
-              <div style="font-size:12px;line-height:1.5;color:#8b9bb8;">
-                <span style="display:inline-block;padding:3px 8px;background:rgba(243,186,47,0.10);border:1px solid rgba(243,186,47,0.35);border-radius:6px;color:#f3ba2f;font-weight:700;font-size:11px;letter-spacing:0.04em;margin-right:8px;">{{ article.primary_entity }}</span>
-                <span class="num" style="color:#d5deed;">{{ article.composite_weight_percent }}</span>
-                <span style="color:#52617f;"> · </span>
-                {% if article.affects_themes %}
-                  {% for theme in article.affects_themes %}
-                  <span style="color:#aebbd2;">{{ theme }}{% if not loop.last %}, {% endif %}</span>
-                  {% endfor %}
-                {% endif %}
-              </div>
+            <div class="article-card news-item">
+              <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                <tr>
+                  <td>
+                    <span style="display:inline-block;padding:3px 8px;background:#1a2335;border:1px solid #2a3856;border-radius:6px;color:#b7c2d9;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">{{ article.source }}</span>
+                    <span class="muted" style="margin-left:8px;font-size:11px;letter-spacing:0.04em;">{{ article.published_at_label }}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;">
+                    <a href="{{ article.href }}" style="color:#ffffff;text-decoration:none;font-size:15px;line-height:1.45;font-weight:600;letter-spacing:-0.005em;">{{ article.title }}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;">
+                    <span style="display:inline-block;padding:3px 8px;background:rgba(243,186,47,0.08);border:1px solid rgba(243,186,47,0.25);border-radius:6px;color:#f3ba2f;font-weight:700;font-size:10px;letter-spacing:0.06em;font-variant-numeric:tabular-nums;">{{ article.primary_entity }}</span>
+                    <span class="num muted" style="margin-left:8px;font-size:11px;">{{ article.composite_weight_percent }}</span>
+                    {% if article.affects_themes %}
+                    <span style="margin-left:8px;color:#52617f;">·</span>
+                    {% for theme in article.affects_themes %}
+                    <span class="muted" style="margin-left:6px;font-size:11px;">{{ theme }}{% if not loop.last %},{% endif %}</span>
+                    {% endfor %}
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
             </div>
             {% endfor %}
           </div>
@@ -407,18 +481,21 @@
         {% endif %}
         {% block week_ahead %}{% endblock %}
 
-        <section class="panel section" data-section="macro-footer" style="padding:24px 22px 18px;">
-          {{ section_header("Macro & Markets", accent='#f3ba2f') }}
+        <section class="panel section" data-section="macro-footer" style="padding:24px;">
+          {{ section_header("Macro & Markets") }}
           {% if macro_items %}
-          <table class="macro-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:separate;border-spacing:10px;margin:0 -10px;">
+          <table class="macro-grid" role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:separate;border-spacing:8px;margin:0 -8px;">
             {% set macro_rows = macro_items|batch(2) %}
             {% for chunk in macro_rows %}
             <tr>
               {% for item in chunk %}
               <td style="width:50%;vertical-align:top;">
-                <div style="padding:16px 18px;background:#0f1524;border:1px solid #202b40;border-radius:14px;">
-                  <div class="eyebrow" style="font-size:10px;color:#8b9bb8;">{{ item.source }} · {{ item.published_at_label }}</div>
-                  <a href="{{ item.href }}" style="display:block;margin-top:8px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;line-height:1.45;">{{ item.title }}</a>
+                <div style="padding:14px 16px;background:linear-gradient(180deg,#131c30 0%,#0f1524 100%);border:1px solid #1f2944;border-radius:12px;">
+                  <div>
+                    <span style="display:inline-block;padding:3px 8px;background:#1a2335;border:1px solid #2a3856;border-radius:6px;color:#b7c2d9;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">{{ item.source }}</span>
+                    <span class="muted" style="margin-left:8px;font-size:11px;letter-spacing:0.04em;">{{ item.published_at_label }}</span>
+                  </div>
+                  <a href="{{ item.href }}" style="display:block;margin-top:10px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;line-height:1.45;letter-spacing:-0.005em;">{{ item.title }}</a>
                 </div>
               </td>
               {% endfor %}
@@ -431,10 +508,13 @@
           {% else %}
           <p class="footer-note" style="margin:12px 0 0;">No fresh macro items cleared the last 24h window.</p>
           {% endif %}
-          <p class="footer-note" style="margin:18px 0 0;padding-top:14px;border-top:1px solid #1d2740;">
-            Generated for {{ generated_for_date }}. Review source links before acting on any market-moving information.
-          </p>
         </section>
+
+        <div class="panel-divider">&nbsp;</div>
+        <p class="footer-note" style="margin:18px 4px 0;text-align:center;">
+          Andy &amp; Juan Radar · Generated for {{ generated_for_date }}<br/>
+          Review source links before acting on any market-moving information.
+        </p>
       </div>
     </div>
   </body>
