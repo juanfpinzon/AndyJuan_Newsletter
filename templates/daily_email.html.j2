@@ -10,7 +10,7 @@
 </table>
 {%- endmacro %}
 {% macro signed_arrow(value) -%}
-{% if value.startswith('-') or value.startswith('€-') %}▼{% elif value.startswith('+') or value.startswith('€+') %}▲{% else %}·{% endif %}
+{% if (value|string).startswith('-') or (value|string).startswith('€-') %}▼{% elif (value|string).startswith('+') or (value|string).startswith('€+') %}▲{% else %}·{% endif %}
 {%- endmacro %}
 {% macro metric_tile(label, value, sub=None, sign='neutral') -%}
 {% set color = '#0ecb81' if sign == 'pos' else ('#f6465d' if sign == 'neg' else '#ffffff') %}
@@ -47,6 +47,7 @@
       }
       .shell {
         width: 100%;
+        background-color: #0d1320;
         background:
           radial-gradient(circle at 92% 6%, rgba(243, 186, 47, 0.10), transparent 32%),
           radial-gradient(circle at 5% 85%, rgba(14, 203, 129, 0.05), transparent 38%),
@@ -151,9 +152,6 @@
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum" 1;
       }
-      .row-zebra:nth-child(even) td {
-        background: rgba(255, 255, 255, 0.012);
-      }
       .theme-wrap {
         margin-top: 18px;
         padding: 22px;
@@ -199,6 +197,7 @@
       .hero-body {
         position: relative;
         padding: 36px 32px 32px;
+        background-color: #131a2a;
         background:
           radial-gradient(circle at 95% 20%, rgba(243, 186, 47, 0.13), transparent 42%),
           linear-gradient(180deg, #131a2a 0%, #101626 100%);
@@ -343,7 +342,7 @@
             </thead>
             <tbody>
               {% for row in position_rows %}
-              <tr class="row-zebra">
+              <tr{% if loop.index is even %} style="background:rgba(255,255,255,0.012);"{% endif %}>
                 <td><span class="ticker-pill">{{ row.ticker }}</span></td>
                 <td class="muted" style="font-size:12px;">{{ row.theme }}</td>
                 <td class="cell-mono num" style="text-align:right;color:#ffffff;font-weight:600;">{{ row.current_value_eur }}</td>
@@ -369,7 +368,7 @@
                     <td style="width:96px;color:#f3ba2f;font-weight:800;font-size:14px;letter-spacing:0.02em;font-variant-numeric:tabular-nums;">{{ row.entity }}</td>
                     <td style="padding:0 14px;">
                       <div style="height:10px;background:#0b0f19;border:1px solid #1d2740;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);">
-                        <div style="width:{{ bar_width }}%;height:10px;background:linear-gradient(90deg, #f3ba2f 0%, #f6c85a 60%, #fde08c 100%);border-radius:999px;"></div>
+                        <div bgcolor="#f3ba2f" style="width:{{ bar_width }}%;height:10px;background:linear-gradient(90deg, #f3ba2f 0%, #f6c85a 60%, #fde08c 100%);border-radius:999px;"></div>
                       </div>
                     </td>
                     <td class="num" style="width:88px;text-align:right;color:#ffffff;font-weight:700;font-size:15px;letter-spacing:-0.01em;">{{ row.composite_weight_percent }}</td>

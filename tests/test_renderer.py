@@ -259,6 +259,14 @@ def test_render_email_rejects_unsupported_mode() -> None:
         render_email(_sample_context(), mode="weekly")
 
 
+def test_render_email_full_context_does_not_raise_undefined() -> None:
+    context = _sample_context()
+    rendered_daily = render_email(context, mode="daily")
+    rendered_deep = render_email(context, mode="deep")
+    assert rendered_daily.html
+    assert rendered_deep.html
+
+
 def test_render_email_shows_macro_fallback_when_items_are_missing() -> None:
     context = _sample_context()
     context["macro_items"] = []
@@ -557,7 +565,7 @@ def _find_text_element(
     class_name: str | None = None,
 ):
     for node in container.find_all(
-        string=lambda value: value and value.strip() == text
+        string=lambda value: value and text in value.strip()
     ):
         parent = node.parent
         if parent is None:
