@@ -27,7 +27,7 @@ pytest tests/ -v
 
 ## Branch Protection
 
-Protect `main` in GitHub and require the fixture-backed CI checks before merge:
+Protect `main` in GitHub and require the CI checks before merge:
 
 - `CI / lint-and-test`
 - `CI / digest-check`
@@ -35,14 +35,14 @@ Protect `main` in GitHub and require the fixture-backed CI checks before merge:
 
 The exact branch-rule settings are documented in
 [docs/runbooks/github-branch-protection.md](docs/runbooks/github-branch-protection.md).
-`daily-radar.yml` is intentionally not part of PR validation because its
-dry-run mode still performs live news fetches and LLM calls.
-Instead, `CI / digest-check` runs a stubbed `python -m src.main --mode daily --dry-run`
-smoke test so the production CLI path is exercised on pull requests without
-external API calls or secrets. `CI / run-radar` is a fixture-backed daily dry-run
-validation that exercises the daily CLI path with mocked provider clients, so it
-remains distinct from `CI / digest-check` without relying on fake secrets or
-live network calls.
+`daily-radar.yml` is intentionally not wired directly into PR validation.
+Instead, `CI / digest-check` remains the fixture-backed gate for pipeline and
+renderer coverage plus a stubbed `python -m src.main --mode daily --dry-run`
+smoke test. `CI / run-radar` now runs the same daily CLI pipeline path as the
+operational workflow with `mode=daily` and `dry_run=true`, so pull requests
+exercise live news fetches and LLM calls while still skipping email delivery.
+That means `OPENROUTER_API_KEY` and `NEWSDATA_API_KEY` are required for the
+third CI check, just as they are for a manual daily dry run.
 
 ## Operations
 

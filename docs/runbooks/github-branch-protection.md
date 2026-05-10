@@ -5,7 +5,7 @@ This repository uses two different GitHub Actions paths:
 - `.github/workflows/ci.yml` is the pull-request validation path.
 - `.github/workflows/daily-radar.yml` is the operational send path and must stay off PRs because even `dry_run=true` still performs live news and LLM calls.
 
-Apply branch protection to `main` in the GitHub repository settings so merges are gated by fixture-backed CI checks instead of the operational workflow.
+Apply branch protection to `main` in the GitHub repository settings so merges are gated by CI checks instead of the operational workflow itself.
 
 ## Required Settings
 
@@ -31,9 +31,12 @@ pipeline and renderer tests plus a stubbed `python -m src.main --mode daily --dr
 smoke test, so it is safe for pull requests and does not depend on live API
 secrets.
 
-`CI / run-radar` is a fixture-backed daily dry-run validation. It exercises the
-daily CLI path with mocked provider clients, so pull requests expose a distinct
-third check without fake secrets or live provider calls.
+`CI / run-radar` uses the same daily CLI pipeline path as
+`.github/workflows/daily-radar.yml`, but forces `mode=daily` and
+`dry_run=true`. It still performs live news fetches and LLM calls, so
+`OPENROUTER_API_KEY` and `NEWSDATA_API_KEY` must be available to the workflow.
+The only behavior difference from the operational daily run is that email
+delivery stays disabled.
 
 ## Verification
 
