@@ -27,7 +27,8 @@ pytest tests/ -v
 
 ## Branch Protection
 
-Protect `main` in GitHub and require the CI checks before merge:
+Pull requests into `main` and `dev` should run the CI workflow. Protect `main`
+and require the CI checks before merge:
 
 - `CI / lint-and-test`
 - `CI / digest-check`

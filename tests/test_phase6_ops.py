@@ -88,7 +88,7 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     )
     on = workflow["on"]
 
-    assert on["pull_request"]["branches"] == ["main"]
+    assert on["pull_request"]["branches"] == ["main", "dev"]
     assert set(on["pull_request"]["types"]) == {"opened", "reopened", "synchronize"}
 
     jobs = workflow["jobs"]
@@ -193,6 +193,7 @@ def test_branch_protection_runbook_documents_required_checks() -> None:
     runbook = BRANCH_PROTECTION_DOC_PATH.read_text(encoding="utf-8")
 
     assert "main" in runbook
+    assert "dev" in runbook
     assert "Require a pull request before merging" in runbook
     assert "Require status checks to pass before merging" in runbook
     assert "CI / digest-check" in runbook
@@ -210,6 +211,7 @@ def test_readme_documents_operations_setup() -> None:
     assert "## Branch Protection" in readme
     assert "Mon-Fri 06:30 UTC" in readme
     assert "Sat 07:00 UTC" in readme
+    assert "`main` and `dev`" in readme
     assert "repository_dispatch" in readme
     assert "run-daily-radar" in readme
     assert "client_payload" in readme

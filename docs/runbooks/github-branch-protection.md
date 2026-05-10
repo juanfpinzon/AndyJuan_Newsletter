@@ -5,7 +5,11 @@ This repository uses two different GitHub Actions paths:
 - `.github/workflows/ci.yml` is the pull-request validation path.
 - `.github/workflows/daily-radar.yml` is the operational send path and must stay off PRs because even `dry_run=true` still performs live news and LLM calls.
 
-Apply branch protection to `main` in the GitHub repository settings so merges are gated by CI checks instead of the operational workflow itself.
+`.github/workflows/ci.yml` listens to pull requests targeting both `main` and
+`dev`, so feature branches opened against either integration branch get the same
+three CI checks. Apply branch protection to `main` in the GitHub repository
+settings so merges are gated by CI checks instead of the operational workflow
+itself.
 
 ## Required Settings
 
