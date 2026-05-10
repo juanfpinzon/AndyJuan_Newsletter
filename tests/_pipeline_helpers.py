@@ -14,6 +14,23 @@ from src.portfolio.models import Position
 from src.pricing import PriceSnapshot
 from src.storage.db import record_llm_call
 
+CI_TEST_TICKER = "NVDA"
+
+
+@dataclass(frozen=True)
+class StubLlmUsage:
+    model: str
+    tokens_in: int
+    tokens_out: int
+    cost_usd: float
+
+
+CI_TEST_LLM_USAGES = (
+    StubLlmUsage(model="ranker", tokens_in=10, tokens_out=5, cost_usd=0.01),
+    StubLlmUsage(model="theme-flash", tokens_in=10, tokens_out=5, cost_usd=0.02),
+    StubLlmUsage(model="synthesis", tokens_in=10, tokens_out=5, cost_usd=0.03),
+)
+
 
 @dataclass
 class StubNewsDataClient:
@@ -66,12 +83,12 @@ class StubMacroRSSReader:
 
 class StubMatcher:
     def match(self, article: Article) -> list[SimpleNamespace]:
-        return [SimpleNamespace(entity="NVDA", score=100.0, method="ticker")]
+        return [SimpleNamespace(entity=CI_TEST_TICKER, score=100.0, method="ticker")]
 
 
 def make_position() -> Position:
     return Position(
-        ticker="NVDA",
+        ticker=CI_TEST_TICKER,
         isin="US67066G1040",
         asset_type="stock",
         issuer="NVIDIA",
@@ -83,7 +100,7 @@ def make_position() -> Position:
 
 def make_price_snapshot() -> PriceSnapshot:
     return PriceSnapshot(
-        ticker="NVDA",
+        ticker=CI_TEST_TICKER,
         last=Decimal("125"),
         previous_close=Decimal("120"),
         currency_native="USD",
@@ -97,10 +114,10 @@ def make_news_article() -> Article:
     return Article(
         title="Nvidia suppliers signal firm AI demand",
         body="Suppliers still report broad AI server demand.",
-        url="https://example.com/nvda-demand",
+        url=f"https://example.com/{CI_TEST_TICKER.lower()}-demand",
         source="Reuters",
         published_at="2026-04-26T07:30:00+00:00",
-        raw_tags=("NVDA", "AI"),
+        raw_tags=(CI_TEST_TICKER, "AI"),
     )
 
 
@@ -120,20 +137,21 @@ def fake_rank_news(db_path: Path):
         settings=None,
     ) -> list[RankedArticle]:
         del exposure_map, llm_caller, settings
+        usage = CI_TEST_LLM_USAGES[0]
         record_llm_call(
             db_path,
-            model="ranker",
+            model=usage.model,
             prompt="prompt",
-            tokens_in=10,
-            tokens_out=5,
-            cost_usd=0.01,
+            tokens_in=usage.tokens_in,
+            tokens_out=usage.tokens_out,
+            cost_usd=usage.cost_usd,
             success=True,
         )
         return [
             RankedArticle(
                 article=articles[0].article,
-                primary_entity="NVDA",
-                matched_entities=("NVDA",),
+                primary_entity=CI_TEST_TICKER,
+                matched_entities=(CI_TEST_TICKER,),
                 composite_weight=Decimal("1"),
                 llm_score=95,
                 included_by="rank",
@@ -147,13 +165,14 @@ def fake_rank_news(db_path: Path):
 def fake_generate_theme_flash(db_path: Path):
     def runner(theme: str, articles, *, llm_caller=None, settings=None) -> ThemeFlash:
         del theme, articles, llm_caller, settings
+        usage = CI_TEST_LLM_USAGES[1]
         record_llm_call(
             db_path,
-            model="theme-flash",
+            model=usage.model,
             prompt="prompt",
-            tokens_in=10,
-            tokens_out=5,
-            cost_usd=0.02,
+            tokens_in=usage.tokens_in,
+            tokens_out=usage.tokens_out,
+            cost_usd=usage.cost_usd,
             success=True,
         )
         return ThemeFlash(
@@ -184,13 +203,14 @@ def fake_generate_synthesis(db_path: Path):
             llm_caller,
             settings,
         )
+        usage = CI_TEST_LLM_USAGES[2]
         record_llm_call(
             db_path,
-            model="synthesis",
+            model=usage.model,
             prompt="prompt",
-            tokens_in=10,
-            tokens_out=5,
-            cost_usd=0.03,
+            tokens_in=usage.tokens_in,
+            tokens_out=usage.tokens_out,
+            cost_usd=usage.cost_usd,
             success=True,
         )
         if mode == "deep":

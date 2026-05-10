@@ -88,12 +88,13 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     )
     on = workflow["on"]
 
-    assert on["pull_request"]["branches"] == ["main"]
+    assert on["pull_request"]["branches"] == ["main", "dev"]
     assert set(on["pull_request"]["types"]) == {"opened", "reopened", "synchronize"}
 
     jobs = workflow["jobs"]
     assert "lint-and-test" in jobs
     assert "digest-check" in jobs
+    assert "run-radar" in jobs
 
     lint_script = "\n".join(
         step.get("run", "")
@@ -130,16 +131,77 @@ def test_ci_workflow_exposes_fixture_backed_digest_check() -> None:
     )
     assert "python -m src.main --mode daily --dry-run" in digest_script
 
+    run_radar_job = jobs["run-radar"]
+    config_step = next(
+        step
+        for step in run_radar_job["steps"]
+        if isinstance(step, dict)
+        and step.get("name") == "Resolve run configuration"
+    )
+    run_radar_script = "\n".join(
+        step.get("run", "")
+        for step in run_radar_job["steps"]
+        if isinstance(step, dict)
+    )
+    run_radar_step_names = [
+        step.get("name")
+        for step in run_radar_job["steps"]
+        if isinstance(step, dict)
+    ]
+
+    assert run_radar_job["needs"] == "lint-and-test"
+    assert run_radar_job["permissions"]["contents"] == "read"
+    assert (
+        run_radar_job["env"]["OPENROUTER_API_KEY"]
+        == "${{ secrets.OPENROUTER_API_KEY }}"
+    )
+    assert (
+        run_radar_job["env"]["AGENTMAIL_API_KEY"]
+        == "${{ secrets.AGENTMAIL_API_KEY }}"
+    )
+    assert (
+        run_radar_job["env"]["AGENTMAIL_INBOX_ID"]
+        == "${{ secrets.AGENTMAIL_INBOX_ID }}"
+    )
+    assert run_radar_job["env"]["EMAIL_FROM"] == "${{ secrets.EMAIL_FROM }}"
+    assert run_radar_job["env"]["NEWSDATA_API_KEY"] == "${{ secrets.NEWSDATA_API_KEY }}"
+    assert config_step["env"]["WORKFLOW_MODE"] == "daily"
+    assert config_step["env"]["WORKFLOW_JUAN_ONLY"] == "false"
+    assert config_step["env"]["WORKFLOW_DRY_RUN"] == "true"
+    assert "Show resolved configuration" in run_radar_step_names
+    assert "Validate required secrets" in run_radar_step_names
+    assert "Install dependencies" in run_radar_step_names
+    assert "Run radar pipeline" in run_radar_step_names
+    assert "Show pipeline log tail" in run_radar_step_names
+    assert "tests/test_ci_run_radar.py" not in run_radar_script
+    assert "::error::OPENROUTER_API_KEY is not set" in run_radar_script
+    assert "::error::NEWSDATA_API_KEY is not set" in run_radar_script
+    assert 'if [ -z "$DRY_RUN_FLAG" ]; then' in run_radar_script
+    assert 'run_args=(--mode "$MODE")' in run_radar_script
+    assert 'if [ -n "$DRY_RUN_FLAG" ]; then' in run_radar_script
+    assert 'run_args+=("$DRY_RUN_FLAG")' in run_radar_script
+    assert 'python -m src.main "${run_args[@]}"' in run_radar_script
+    assert "ANDYJUAN_PIPELINE_STUB_CAPTURE" not in run_radar_script
+    assert "actions/upload-artifact@v4" in [
+        step.get("uses", "")
+        for step in run_radar_job["steps"]
+        if isinstance(step, dict)
+    ]
+
 
 def test_branch_protection_runbook_documents_required_checks() -> None:
     runbook = BRANCH_PROTECTION_DOC_PATH.read_text(encoding="utf-8")
 
     assert "main" in runbook
+    assert "dev" in runbook
     assert "Require a pull request before merging" in runbook
     assert "Require status checks to pass before merging" in runbook
     assert "CI / digest-check" in runbook
     assert "CI / lint-and-test" in runbook
-    assert "stubbed `python -m src.main --mode daily --dry-run`" in runbook
+    assert "CI / run-radar" in runbook
+    assert "fixture-backed" in runbook
+    assert "same daily CLI pipeline path" in runbook
+    assert "live news fetches and LLM calls" in runbook
 
 
 def test_readme_documents_operations_setup() -> None:
@@ -149,12 +211,16 @@ def test_readme_documents_operations_setup() -> None:
     assert "## Branch Protection" in readme
     assert "Mon-Fri 06:30 UTC" in readme
     assert "Sat 07:00 UTC" in readme
+    assert "`main` and `dev`" in readme
     assert "repository_dispatch" in readme
     assert "run-daily-radar" in readme
     assert "client_payload" in readme
     assert "/dispatches" in readme
     assert "Dry-run still performs live news fetches and LLM calls" in readme
     assert "CI / digest-check" in readme
-    assert "stubbed `python -m src.main --mode daily --dry-run`" in readme
+    assert "CI / run-radar" in readme
+    assert "same daily CLI pipeline path" in readme
+    assert "mode=daily" in readme
+    assert "dry_run=true" in readme
     assert "fine-grained personal access token" in readme
     assert "Contents: write" in readme
