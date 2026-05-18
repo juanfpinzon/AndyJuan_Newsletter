@@ -1,7 +1,7 @@
 # AndyJuan Personal Portfolio Radar Agent Context
 
 This file is the working agent brief for the repo. `CLAUDE.md`, `AGENTS.md`,
-and `herme.md` must remain byte-for-byte identical so every agent entrypoint
+and `.hermes.md` must remain byte-for-byte identical so every agent entrypoint
 operates with the same project context.
 
 ## Canonical Docs
@@ -109,7 +109,7 @@ the user changes them:
 
 - Keep changes narrow, spec-aligned, and phase-aware.
 - Prefer extending the planned scaffold over inventing alternate patterns.
-- Preserve `CLAUDE.md`, `AGENTS.md`, and `herme.md` as exact copies when
+- Preserve `CLAUDE.md`, `AGENTS.md`, and `.hermes.md` as exact copies when
   editing any of them.
 - Favor deterministic tests with fixtures, `respx`, and mocked LLM/provider
   clients.
