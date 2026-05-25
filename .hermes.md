@@ -105,6 +105,20 @@ the user changes them:
 - Exposure weighting drives relevance; generic market chatter should not crowd
   out portfolio-linked items.
 
+## Linear Conventions
+
+When creating Linear issues, every agent tags its identity in the title:
+
+| Agent | Prefix |
+|-------|--------|
+| Hermes | 🤖 Hermes — |
+| Claude Code | 🟣 Claude — |
+| Codex | ⚡ Codex — |
+
+- Use an em-dash (`—`) between the prefix and description.
+- **Never** include the Linear ID (e.g. HER-123) in the title — it's already visible in the UI.
+- Descriptions should be concise and human-scannable.
+
 ## Working Norms For Agents
 
 - Keep changes narrow, spec-aligned, and phase-aware.
