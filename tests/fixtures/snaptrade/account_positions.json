@@ -1,0 +1,74 @@
+{
+  "results": [
+    {
+      "instrument": {
+        "kind": "stock",
+        "symbol": "NVDA",
+        "raw_symbol": "NVDA",
+        "description": "NVIDIA Corporation",
+        "currency": "USD"
+      },
+      "units": "2.5",
+      "price": "125.00",
+      "cost_basis": "120.00",
+      "currency": "USD",
+      "cash_equivalent": false
+    },
+    {
+      "instrument": {
+        "kind": "etf",
+        "symbol": "QDVE",
+        "raw_symbol": "QDVE",
+        "description": "iShares S&P 500 Information Technology Sector UCITS ETF",
+        "currency": "EUR"
+      },
+      "units": "1.25",
+      "price": "40.00",
+      "cost_basis": "28.00",
+      "currency": "EUR",
+      "cash_equivalent": false
+    },
+    {
+      "instrument": {
+        "kind": "crypto",
+        "symbol": "BTC",
+        "raw_symbol": "BTC",
+        "description": "Bitcoin",
+        "currency": "USD"
+      },
+      "units": "0.1",
+      "price": "60000.00",
+      "cost_basis": "50000.00",
+      "currency": "USD",
+      "cash_equivalent": false
+    },
+    {
+      "instrument": {
+        "kind": "future",
+        "symbol": "ESM6",
+        "raw_symbol": "ESM6",
+        "description": "S&P 500 Future",
+        "currency": "USD"
+      },
+      "units": "1",
+      "price": "10.00",
+      "cost_basis": "10.00",
+      "currency": "USD",
+      "cash_equivalent": false
+    },
+    {
+      "instrument": {
+        "kind": "etf",
+        "symbol": "CASH",
+        "raw_symbol": "CASH",
+        "description": "Cash Sweep",
+        "currency": "USD"
+      },
+      "units": "50",
+      "price": "1.00",
+      "cost_basis": "50.00",
+      "currency": "USD",
+      "cash_equivalent": true
+    }
+  ]
+}

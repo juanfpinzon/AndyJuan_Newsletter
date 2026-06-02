@@ -24,6 +24,7 @@ dependencies = [
   "python-dotenv",
   "pyyaml",
   "rapidfuzz",
+  "snaptrade-python-sdk",
   "sqlite-utils",
   "structlog",
   "yfinance",

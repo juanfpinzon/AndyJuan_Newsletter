@@ -10,6 +10,7 @@ import pytest
 from src.analyzer.ranker import RankedArticle
 from src.exposure.models import ExposureEntry
 from src.fetcher.models import Article
+from src.pnl import DailyDelta, PnLSnapshot
 from src.portfolio.models import Position
 from src.sender.agentmail import SendResult
 from src.storage.db import init_db
@@ -114,6 +115,134 @@ def test_run_daily_orchestrates_and_persists_run_metadata(
     assert runs[0]["tokens_in"] == 30
     assert runs[0]["tokens_out"] == 15
     assert runs[0]["cost_usd"] == 0.06
+
+
+def test_run_daily_uses_snaptrade_live_pnl_for_live_positions(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    import src.pipeline.daily as daily
+
+    db_path = tmp_path / "andyjuan.db"
+    settings_path = tmp_path / "settings.yaml"
+    init_db(db_path)
+    settings_path.write_text(
+        "\n".join(
+            [
+                "llm_scoring_model: primary-model",
+                "llm_synthesis_model: synthesis-model",
+                "llm_fact_check_model: fact-check-model",
+                "llm_fallback_model: fallback-model",
+                f"database_path: {db_path}",
+                "log_file: data/logs/test.jsonl",
+                "news_item_limit: 15",
+                "exposure_threshold_percent: 5.0",
+                "entity_match_threshold: 85.0",
+                "theme_item_cap: 5",
+                "snaptrade:",
+                "  enabled: true",
+                "  client_id: client",
+                "  consumer_key: consumer",
+                "  user_id: user",
+                "  user_secret: secret",
+                "  account_id: account",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    class FakeSnapTradeClient:
+        def __init__(self) -> None:
+            self.daily_pnl_calls = 0
+
+        def get_daily_pnl(self, price_snapshots=None) -> dict[str, PnLSnapshot]:
+            del price_snapshots
+            self.daily_pnl_calls += 1
+            return {
+                "NVDA": PnLSnapshot(
+                    ticker="NVDA",
+                    shares=Decimal("2"),
+                    cost_basis_total_eur=Decimal("200"),
+                    current_value_eur=Decimal("250"),
+                    total_pnl_eur=Decimal("50"),
+                    total_pnl_pct=Decimal("25"),
+                    daily_delta=DailyDelta(
+                        amount_eur=Decimal("10"),
+                        change_pct=Decimal("4.1667"),
+                    ),
+                )
+            }
+
+    fake_client = FakeSnapTradeClient()
+    monkeypatch.setattr(
+        daily,
+        "load_portfolio_snapshot_bundle",
+        lambda **kwargs: SimpleNamespace(
+            positions=[
+                Position(
+                    ticker="NVDA",
+                    isin="US67066G1040",
+                    asset_type="stock",
+                    issuer="NVIDIA",
+                    shares=Decimal("2"),
+                    cost_basis_eur=Decimal("100"),
+                    currency="USD",
+                    source="snaptrade",
+                )
+            ],
+            snaptrade_client=fake_client,
+        ),
+    )
+    monkeypatch.setattr(daily, "resolve_lookthrough", async_return({}))
+    monkeypatch.setattr(
+        daily,
+        "fetch_prices",
+        lambda tickers, base_currency="EUR", market_symbols=None: {
+            "NVDA": make_price_snapshot()
+        },
+    )
+    monkeypatch.setattr(
+        daily,
+        "SnapTradeClient",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("daily pipeline should reuse the loaded SnapTrade client")
+        ),
+    )
+    monkeypatch.setattr(
+        daily,
+        "NewsDataClient",
+        lambda **kwargs: StubNewsDataClient(make_news_article(), []),
+    )
+    monkeypatch.setattr(daily, "MacroRSSReader", lambda **kwargs: StubMacroRSSReader())
+    monkeypatch.setattr(
+        daily,
+        "EntityMatcher",
+        SimpleNamespace(from_themes_file=lambda **kwargs: StubMatcher()),
+    )
+    monkeypatch.setattr(daily, "rank_news", fake_rank_news(db_path))
+    monkeypatch.setattr(
+        daily,
+        "generate_theme_flash",
+        fake_generate_theme_flash(db_path),
+    )
+    monkeypatch.setattr(daily, "generate_synthesis", fake_generate_synthesis(db_path))
+    monkeypatch.setattr(
+        daily,
+        "filter_ai_take",
+        lambda rendered_content, ai_take_text, **kwargs: ai_take_text,
+    )
+
+    result = daily.run_daily(
+        send=False,
+        database_path=db_path,
+        settings_path=settings_path,
+        now=datetime(2026, 4, 26, 8, 0, tzinfo=timezone.utc),
+    )
+
+    assert "€250.00" in result.rendered_email.html
+    assert "€10.00" in result.rendered_email.html
+    assert fake_client.daily_pnl_calls == 1
 
 
 def test_run_daily_omits_ai_take_when_fact_check_blocks_it(

@@ -12,8 +12,6 @@ from dotenv import load_dotenv
 
 from src.pipeline import run_daily, run_deep
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -71,4 +69,5 @@ def _json_default(value):
 
 
 if __name__ == "__main__":
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
     raise SystemExit(main())
