@@ -44,7 +44,13 @@ class HistoricalPnL:
 
 
 class SnapTradeClient:
-    """Thin wrapper around the SnapTrade SDK with app-specific normalization."""
+    """Thin wrapper around the SnapTrade SDK with app-specific normalization.
+
+    Note: This client is designed for single-run pipeline usage and is NOT
+    thread-safe. Mutable instance caches (``_fx_rates_to_eur``,
+    ``_last_positions``, etc.) are written without locking, so concurrent
+    access from multiple threads may produce inconsistent results.
+    """
 
     def __init__(
         self,
@@ -104,7 +110,7 @@ class SnapTradeClient:
             )
 
         snapshots: dict[str, PnLSnapshot] = {}
-        for position, payload in zip(positions, raw_positions, strict=False):
+        for position, payload in zip(positions, raw_positions, strict=True):
             current_price_native = _to_decimal(
                 payload.get("price"),
                 label=f"{position.ticker} price",
@@ -342,6 +348,9 @@ def _to_date(value: object, *, label: str) -> date:
 
 
 def _load_canonical_market_symbols(path: Path | None = None) -> dict[str, str]:
+    # Intentionally hardcodes the canonical portfolio.yaml path for market
+    # symbol resolution rather than accepting a dynamic config path. This is
+    # a deliberate simplification for the current single-pipeline architecture.
     portfolio_path = path or DEFAULT_PORTFOLIO_PATH
     try:
         raw_data = yaml.safe_load(portfolio_path.read_text(encoding="utf-8")) or {}

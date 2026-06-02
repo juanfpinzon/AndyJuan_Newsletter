@@ -177,7 +177,15 @@ def merge_positions(
     logger: Any | None = None,
     include_missing_canonical: bool = True,
 ) -> list[Position]:
-    """Overlay live numeric data onto canonical YAML-enriched positions."""
+    """Overlay live numeric data onto canonical YAML-enriched positions.
+
+    When ``include_missing_canonical=False`` (the default on the live SnapTrade
+    success path), any position that exists only in the YAML file and is not
+    reported by IBKR/SnapTrade is intentionally dropped from the output. This
+    means operators should be aware that holdings absent from the live broker
+    feed will not appear in the pipeline result — by design, the live snapshot
+    is treated as the authoritative source for current holdings.
+    """
 
     canonical_by_ticker = {
         position.ticker: position for position in canonical_positions
