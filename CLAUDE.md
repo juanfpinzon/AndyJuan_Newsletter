@@ -1,64 +1,156 @@
 # AndyJuan Personal Portfolio Radar Agent Context
 
-## Product
+This file is the working agent brief for the repo. `CLAUDE.md`, `AGENTS.md`,
+and `.hermes.md` must remain byte-for-byte identical so every agent entrypoint
+operates with the same project context.
+
+## Canonical Docs
+
+- `docs/spec.md` is the source of truth for product behavior and done criteria.
+- `docs/plan.md` is the source of truth for implementation order and major
+  technical decisions.
+- `docs/tasks.md` is the execution checklist for session-sized work.
+- If these docs conflict with ad hoc assumptions, follow the docs.
+
+## Product Summary
 
 Build a Python newsletter pipeline that:
 
-- Computes direct and ETF look-through exposure
-- Fetches portfolio-relevant news and macro items
-- Produces a daily HTML email and a Saturday deep brief
-- Labels AI-generated commentary clearly and keeps it grounded in input data
+- computes direct holdings and ETF look-through exposure
+- fetches portfolio-relevant company news plus macro items
+- produces a daily morning HTML email and a Saturday deep brief
+- labels AI commentary clearly and keeps it grounded in input data
 
-## Phase 0
+Primary readers are Juan and Andrea. Content is identical for both.
 
-Current work is limited to the repository foundation:
+## v0.1 Success Criteria
 
-- package scaffolding
-- logging and HTTP utilities
-- LLM wrapper
-- config loading
-- SQLite scaffolding
-- CI and workflow setup
+The intended v0.1 outcome is:
 
-## Constraints
+- Mon-Fri daily email at 07:30 CET
+- Saturday deep brief at 08:00 CET
+- the documented email section flow rendered in order:
+  - P&L Scoreboard
+  - Concentrated Exposures
+  - Theme Groups
+  - AI Synthesis + Suggestions
+  - Macro Footer
+- every news item includes a clickable source URL
+- AI blocks render with clear labeling:
+  - `🤖 AI-generated · not investment advice`
+- total rendered word count stays at or under 1,000 words
+- per-run cost is stored and queryable
 
-- Python 3.11+
-- Tests must pass locally with `pytest tests/ -v`
-- CI should run `ruff check` and `pytest`
-- Keep changes narrow and spec-aligned
+## Scope Guardrails
 
-## Available Skills
+Stay inside v0.1 unless the user explicitly asks otherwise.
 
-Claude should use these agent skills when needed to improve workflow and code quality:
+In scope:
 
-### Planning & Design
-- `agent-skills:spec-driven-development` — Create specs before coding for new features or significant changes
-- `agent-skills:planning-and-task-breakdown` — Break work into ordered, verifiable tasks
-- `agent-skills:idea-refine` — Refine ideas through structured thinking
+- `portfolio.yaml` as canonical internal holdings format
+- Snowball CSV import and merge flow
+- hybrid ETF look-through via scrapers plus YAML fallback
+- NewsData.io for company news
+- RSS feeds for macro
+- OpenRouter-backed LLM calls for ranking, flashes, synthesis, and fact-checking
+- AgentMail sending
+- SQLite-backed local state and cost tracking
+- GitHub Actions scheduling path
 
-### Implementation
-- `agent-skills:incremental-implementation` — Build thin vertical slices, test each before expanding
-- `agent-skills:context-engineering` — Load right context at the right time
-- `agent-skills:source-driven-development` — Verify against official docs before implementing
-- `agent-skills:frontend-ui-engineering` — Build production-quality UIs (if UI work arises)
-- `agent-skills:api-and-interface-design` — Design stable interfaces with clear contracts
+Out of scope for v0.1 unless explicitly requested:
 
-### Verification & Testing
-- `agent-skills:test-driven-development` — Failing test first, then make it pass
-- `agent-skills:debugging-and-error-recovery` — Reproduce → localize → fix → guard
-- `agent-skills:browser-testing-with-devtools` — Runtime verification with Chrome DevTools
+- SnapTrade live integration
+- Binance live integration
+- production observability beyond current plan
+- speculative new data providers or major architecture rewrites
 
-### Quality & Review
-- `agent-skills:code-review-and-quality` — Five-axis review before merging
-- `agent-skills:security-and-hardening` — OWASP prevention, input validation
-- `agent-skills:performance-optimization` — Measure first, optimize only what matters
-- `andrej-karpathy-skills:karpathy-guidelines` — Reduce common LLM coding mistakes
+## Implementation Shape
 
-### Shipping & Deployment
-- `agent-skills:git-workflow-and-versioning` — Atomic commits, clean history
-- `agent-skills:ci-cd-and-automation` — Automated quality gates on every change
-- `agent-skills:documentation-and-adrs` — Document the why, not just the what
-- `agent-skills:shipping-and-launch` — Pre-launch checklist, monitoring, rollback plan
+Important repo areas:
 
-### Testing & QA Tools
-- `gstack` — Fast headless browser for QA testing, site verification, dogfooding workflows
+- `config/` for portfolio, ETF fallback holdings, recipients, themes, macro
+  feeds, and settings
+- `scripts/` for operator workflows such as manual runs, Snowball import,
+  ETF refresh, and debug helpers
+- `src/portfolio/`, `src/lookthrough/`, `src/exposure/`, `src/pricing/`,
+  `src/pnl/`, `src/fetcher/`, `src/entity_match/`, `src/analyzer/`,
+  `src/renderer/`, `src/sender/`, `src/pipeline/`, `src/storage/`, `src/utils/`
+- `templates/` for email HTML
+- `tests/fixtures/` for canned API, scraper, and LLM inputs/outputs
+
+When adding code, keep module boundaries aligned with the plan instead of
+smearing logic across unrelated packages.
+
+## Key Plan Decisions
+
+These decisions come from `docs/plan.md` and should be treated as active unless
+the user changes them:
+
+- Use `yfinance` for v0.1 pricing.
+- EUR is the reporting base currency.
+- LLM/API cost tracking is stored in USD and only converted for display if
+  needed.
+- Multi-theme article rendering uses a primary theme tiebreaker; articles do
+  not duplicate across theme sections.
+- CI should rely on fixtures and mocks, not live API calls.
+- LLM tests should use captured fixture responses after a one-time spike.
+
+## AI and Content Guardrails
+
+- AI commentary must be explicitly labeled.
+- AI output should add synthesis, not invent new facts.
+- Fact-check flow is fail-closed for novel claims: if the checker rejects an AI
+  block, omit that AI section and keep the rest of the email sendable.
+- Keep the email concise enough for the 90-second read target.
+- Exposure weighting drives relevance; generic market chatter should not crowd
+  out portfolio-linked items.
+
+## Working Norms For Agents
+
+- Keep changes narrow, spec-aligned, and phase-aware.
+- Prefer extending the planned scaffold over inventing alternate patterns.
+- Preserve `CLAUDE.md`, `AGENTS.md`, and `.hermes.md` as exact copies when
+  editing any of them.
+- Favor deterministic tests with fixtures, `respx`, and mocked LLM/provider
+  clients.
+- Do not wire CI or tests to live network dependencies.
+- If changing email presentation, preserve Gmail-safe constraints:
+  inline-friendly CSS, table-based layout where needed, and compatibility with
+  `premailer`.
+- If adding config or schema fields, update the relevant docs and fixtures in
+  the same change when practical.
+
+## Verification Expectations
+
+Minimum common checks:
+
+```bash
+ruff check .
+pytest tests/ -v
+```
+
+Useful project commands:
+
+```bash
+pip install -e ".[dev]"
+python scripts/run_manual.py --dry-run
+python scripts/run_manual.py --preview
+python scripts/import_snowball.py tests/fixtures/snowball-export.csv --dry-run
+python scripts/debug_exposure.py
+python scripts/refresh_etf_holdings.py
+python -m src.main --mode=daily
+python -m src.main --mode=deep
+```
+
+For targeted work, run the smallest relevant test subset first, then broaden if
+the change touches shared infrastructure.
+
+## Default Change Heuristics
+
+- If a request touches behavior, check `docs/spec.md` first.
+- If a request touches architecture, sequencing, or tradeoffs, check
+  `docs/plan.md`.
+- If a request looks like a concrete implementation task, check `docs/tasks.md`
+  for the nearest matching unit of work.
+- If you notice drift between code and docs, prefer documenting or flagging it
+  rather than silently choosing a new direction.

@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, cast
 
 import yaml
 
+from src.config import Settings
+from src.lookthrough.issuers import normalize_issuer
+from src.storage.db import cache_position_snapshot, load_latest_position_snapshot
+from src.utils.log import get_logger
+
 from .models import AssetType, Position
+from .snaptrade_client import SnapTradeClient, SnapTradeError
 
 DEFAULT_PORTFOLIO_PATH = (
     Path(__file__).resolve().parents[2] / "config" / "portfolio.yaml"
@@ -27,6 +34,12 @@ REQUIRED_FIELDS = (
 
 class PortfolioLoadError(RuntimeError):
     """Raised when portfolio data cannot be loaded safely."""
+
+
+@dataclass(frozen=True)
+class PortfolioSnapshotBundle:
+    positions: list[Position]
+    snaptrade_client: SnapTradeClient | None = None
 
 
 def load_portfolio(path: str | Path | None = None) -> list[Position]:
@@ -94,6 +107,135 @@ def load_portfolio(path: str | Path | None = None) -> list[Position]:
         )
 
     return positions
+
+
+def load_portfolio_snapshot(
+    *,
+    settings: Settings,
+    db_path: str | Path,
+    path: str | Path | None = None,
+) -> list[Position]:
+    """Load the canonical portfolio with live-source overlay and safe fallback."""
+
+    return load_portfolio_snapshot_bundle(
+        settings=settings,
+        db_path=db_path,
+        path=path,
+    ).positions
+
+
+def load_portfolio_snapshot_bundle(
+    *,
+    settings: Settings,
+    db_path: str | Path,
+    path: str | Path | None = None,
+) -> PortfolioSnapshotBundle:
+    """Load positions plus the live SnapTrade client when the fetch succeeded."""
+
+    yaml_positions = load_portfolio(path)
+    if not settings.snaptrade.enabled:
+        return PortfolioSnapshotBundle(positions=yaml_positions)
+
+    logger = get_logger("portfolio.loader")
+    try:
+        snaptrade_client = SnapTradeClient(
+            settings.snaptrade,
+            logger=logger,
+        )
+        live_positions = snaptrade_client.get_positions()
+    except SnapTradeError as exc:
+        cached_positions = load_latest_position_snapshot(db_path, source="snaptrade")
+        logger.warning(
+            "snaptrade_fallback_used",
+            reason=str(exc),
+            fallback_source="position_cache" if cached_positions else "yaml",
+        )
+        return PortfolioSnapshotBundle(
+            positions=merge_positions(
+                yaml_positions,
+                cached_positions,
+                logger=logger,
+            )
+        )
+
+    cache_position_snapshot(db_path, source="snaptrade", positions=live_positions)
+    return PortfolioSnapshotBundle(
+        positions=merge_positions(
+            yaml_positions,
+            live_positions,
+            logger=logger,
+            include_missing_canonical=False,
+        ),
+        snaptrade_client=snaptrade_client,
+    )
+
+
+def merge_positions(
+    canonical_positions: list[Position],
+    live_positions: list[Position],
+    *,
+    logger: Any | None = None,
+    include_missing_canonical: bool = True,
+) -> list[Position]:
+    """Overlay live numeric data onto canonical YAML-enriched positions.
+
+    When ``include_missing_canonical=False`` (the default on the live SnapTrade
+    success path), any position that exists only in the YAML file and is not
+    reported by IBKR/SnapTrade is intentionally dropped from the output. This
+    means operators should be aware that holdings absent from the live broker
+    feed will not appear in the pipeline result — by design, the live snapshot
+    is treated as the authoritative source for current holdings.
+    """
+
+    canonical_by_ticker = {
+        position.ticker: position for position in canonical_positions
+    }
+    merged: list[Position] = []
+    seen_tickers: set[str] = set()
+
+    for live_position in live_positions:
+        canonical_position = canonical_by_ticker.get(live_position.ticker)
+        if canonical_position is None:
+            if (
+                live_position.asset_type == "etf"
+                and normalize_issuer(live_position.issuer) is None
+            ):
+                if logger is not None:
+                    logger.warning(
+                        "snaptrade_etf_skipped",
+                        ticker=live_position.ticker,
+                        reason="missing_canonical_metadata",
+                    )
+                continue
+            merged.append(live_position)
+            seen_tickers.add(live_position.ticker)
+            continue
+
+        merged.append(
+            Position(
+                ticker=canonical_position.ticker,
+                isin=canonical_position.isin,
+                asset_type=canonical_position.asset_type,
+                issuer=canonical_position.issuer,
+                shares=live_position.shares,
+                cost_basis_eur=live_position.cost_basis_eur,
+                currency=live_position.currency,
+                market_symbol=(
+                    canonical_position.market_symbol or live_position.market_symbol
+                ),
+                source=live_position.source,
+                last_updated=live_position.last_updated,
+            )
+        )
+        seen_tickers.add(live_position.ticker)
+
+    if include_missing_canonical:
+        for canonical_position in canonical_positions:
+            if canonical_position.ticker not in seen_tickers:
+                merged.append(canonical_position)
+
+    merged.sort(key=lambda position: position.ticker)
+    return merged
 
 
 def _coerce_required_string(value: Any, *, field_name: str, index: int) -> str:

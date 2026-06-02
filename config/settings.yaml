@@ -12,3 +12,10 @@ daily_send_time_cet: "07:30"
 deep_brief_send_time_cet: "08:00"
 deep_brief_day: saturday
 ai_commentary_enabled: true
+snaptrade:
+  enabled: false
+  client_id:
+  consumer_key:
+  user_id:
+  user_secret:
+  account_id:
