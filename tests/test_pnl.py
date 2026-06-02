@@ -100,6 +100,49 @@ def test_compute_pnl_returns_position_snapshots() -> None:
     }
 
 
+def test_compute_pnl_prefers_live_snapshots_when_available() -> None:
+    positions = [
+        Position(
+            ticker="BNKE",
+            isin="LU1829219390",
+            asset_type="etf",
+            issuer="Amundi ETF",
+            shares=Decimal("2"),
+            cost_basis_eur=Decimal("10"),
+            currency="EUR",
+        )
+    ]
+    prices = {
+        "BNKE": PriceSnapshot(
+            ticker="BNKE",
+            last=Decimal("12"),
+            previous_close=Decimal("11"),
+            currency_native="EUR",
+            last_eur=Decimal("12"),
+            change_pct=Decimal("9.090909090909090909090909091"),
+            fx_rate_to_eur=Decimal("1"),
+        )
+    }
+    live_snapshot = PnLSnapshot(
+        ticker="BNKE",
+        shares=Decimal("2"),
+        cost_basis_total_eur=Decimal("20"),
+        current_value_eur=Decimal("30"),
+        total_pnl_eur=Decimal("10"),
+        total_pnl_pct=Decimal("50"),
+        daily_delta=DailyDelta(
+            amount_eur=Decimal("3"),
+            change_pct=Decimal("11.11111111111111111111111111"),
+        ),
+    )
+
+    assert compute_pnl(
+        positions,
+        prices,
+        live_snapshots={"BNKE": live_snapshot},
+    ) == {"BNKE": live_snapshot}
+
+
 def test_compute_pnl_raises_when_price_is_missing() -> None:
     positions = [
         Position(
@@ -168,14 +211,10 @@ def test_portfolio_fixture_matches_seeded_screenshot_totals(
     assert snapshots["BNKE"].current_value_eur.quantize(Decimal("0.01")) == Decimal(
         "350.22"
     )
-    assert snapshots["NVDA"].total_pnl_eur.quantize(Decimal("0.01")) == Decimal(
-        "53.22"
-    )
+    assert snapshots["NVDA"].total_pnl_eur.quantize(Decimal("0.01")) == Decimal("53.22")
     assert snapshots["QDVE"].daily_delta.amount_eur.quantize(
         Decimal("0.01")
-    ) == Decimal(
-        "-4.23"
-    )
+    ) == Decimal("-4.23")
 
     assert total.cost_basis_total_eur.quantize(Decimal("0.01")) == Decimal("2693.16")
     assert total.current_value_total_eur.quantize(Decimal("0.01")) == Decimal("2760.68")

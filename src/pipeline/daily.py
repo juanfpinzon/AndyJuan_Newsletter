@@ -30,8 +30,12 @@ from src.fetcher.models import Article, filter_supported_articles
 from src.fetcher.newsdata import NewsDataClient
 from src.lookthrough.resolver import resolve_lookthrough
 from src.pnl import compute_pnl, compute_total
-from src.portfolio.loader import load_portfolio
+from src.portfolio.loader import (
+    load_portfolio,
+    load_portfolio_snapshot_bundle,
+)
 from src.portfolio.models import Position
+from src.portfolio.snaptrade_client import SnapTradeClient, SnapTradeError
 from src.pricing import fetch_prices
 from src.renderer import build_concentrated_exposures, build_theme_groups, render_email
 from src.renderer.render import RenderedEmail
@@ -162,7 +166,17 @@ async def _run_pipeline_async(
     now: datetime,
     run_id: int,
 ) -> _PipelineState:
-    positions = load_portfolio()
+    logger = get_logger("pipeline.daily")
+    snaptrade_client: SnapTradeClient | None = None
+    if settings.snaptrade.enabled:
+        portfolio_snapshot = load_portfolio_snapshot_bundle(
+            settings=settings,
+            db_path=db_path,
+        )
+        positions = portfolio_snapshot.positions
+        snaptrade_client = portfolio_snapshot.snaptrade_client
+    else:
+        positions = load_portfolio()
     lookthrough = await resolve_lookthrough(positions)
     exposure_map = compute_exposure(positions, lookthrough)
     prices = fetch_prices(
@@ -170,7 +184,16 @@ async def _run_pipeline_async(
         base_currency="EUR",
         market_symbols=_build_market_symbols(positions),
     )
-    position_snapshots = compute_pnl(positions, prices)
+    position_snapshots = compute_pnl(
+        positions,
+        prices,
+        live_snapshots=_load_snaptrade_daily_pnl(
+            snaptrade_client=snaptrade_client,
+            positions=positions,
+            prices=prices,
+            logger=logger,
+        ),
+    )
     total_pnl = compute_total(position_snapshots)
 
     news_client = NewsDataClient(
@@ -280,6 +303,35 @@ async def _run_pipeline_async(
         send_result=send_result,
         recipients=recipients,
     )
+
+
+def _load_snaptrade_daily_pnl(
+    *,
+    snaptrade_client: SnapTradeClient | None,
+    positions: Sequence[Position],
+    prices: Mapping[str, Any],
+    logger: Any,
+) -> dict[str, Any]:
+    if snaptrade_client is None:
+        return {}
+
+    live_tickers = {
+        position.ticker for position in positions if position.source == "snaptrade"
+    }
+    if not live_tickers:
+        return {}
+
+    try:
+        snapshots = snaptrade_client.get_daily_pnl(price_snapshots=prices)
+    except SnapTradeError as exc:
+        logger.warning("snaptrade_pnl_fallback_used", reason=str(exc))
+        return {}
+
+    return {
+        ticker: snapshot
+        for ticker, snapshot in snapshots.items()
+        if ticker in live_tickers
+    }
 
 
 def _build_article_candidates(
@@ -599,9 +651,7 @@ def _is_placeholder_recipient(email: str) -> bool:
 
 def _build_subject(mode: str, now: datetime) -> str:
     prefix = (
-        "Saturday Deep Portfolio Brief"
-        if mode == "deep"
-        else "Daily Portfolio Radar"
+        "Saturday Deep Portfolio Brief" if mode == "deep" else "Daily Portfolio Radar"
     )
     return f"{prefix} - {now.date().isoformat()}"
 

@@ -14,11 +14,17 @@ from .models import DailyDelta, PnLSnapshot, TotalPnL
 def compute_pnl(
     positions: Iterable[Position],
     prices: Mapping[str, PriceSnapshot],
+    *,
+    live_snapshots: Mapping[str, PnLSnapshot] | None = None,
 ) -> dict[str, PnLSnapshot]:
     """Calculate per-position daily and total P&L in EUR."""
 
     snapshots: dict[str, PnLSnapshot] = {}
     for position in positions:
+        if live_snapshots and position.ticker in live_snapshots:
+            snapshots[position.ticker] = live_snapshots[position.ticker]
+            continue
+
         if position.ticker not in prices:
             raise KeyError(f"Missing price for ticker: {position.ticker}")
 

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 
 from sqlite_utils import Database
+
+from src.portfolio.models import Position
 
 from .schemas import TABLE_SCHEMAS
 
@@ -77,6 +80,57 @@ def cache_etf_holdings(
     )
 
 
+def cache_position_snapshot(
+    db_path: str | Path,
+    *,
+    source: str,
+    positions: Sequence[Position],
+) -> None:
+    """Persist a portfolio snapshot for live-source fallback."""
+
+    database = init_db(db_path)
+    captured_at = datetime.now(timezone.utc).isoformat()
+    database["position_snapshots"].insert(
+        {
+            "source": source,
+            "positions_json": json.dumps(
+                [_serialize_position(position) for position in positions]
+            ),
+            "captured_at": captured_at,
+        }
+    )
+
+
+def load_latest_position_snapshot(
+    db_path: str | Path,
+    *,
+    source: str,
+) -> list[Position]:
+    """Return the newest cached position snapshot for a given live source."""
+
+    database = init_db(db_path)
+    row = database.conn.execute(
+        """
+        select positions_json, captured_at
+        from position_snapshots
+        where source = ?
+        order by captured_at desc
+        limit 1
+        """,
+        (source,),
+    ).fetchone()
+    if row is None:
+        return []
+
+    payload = json.loads(row[0] or "[]")
+    if not isinstance(payload, list):
+        return []
+
+    return [
+        _deserialize_position(item, fallback_captured_at=row[1]) for item in payload
+    ]
+
+
 def summarize_llm_costs(
     db_path: str | Path,
     *,
@@ -123,3 +177,55 @@ def _ensure_columns(
         if column_name in existing:
             continue
         database[table_name].add_column(column_name, column_type)
+
+
+def _serialize_position(position: Position) -> dict[str, str | None]:
+    return {
+        "ticker": position.ticker,
+        "isin": position.isin,
+        "asset_type": position.asset_type,
+        "issuer": position.issuer,
+        "shares": str(position.shares),
+        "cost_basis_eur": str(position.cost_basis_eur),
+        "currency": position.currency,
+        "market_symbol": position.market_symbol,
+        "source": position.source,
+        "last_updated": (
+            position.last_updated.astimezone(timezone.utc).isoformat()
+            if position.last_updated is not None
+            else None
+        ),
+    }
+
+
+def _deserialize_position(
+    payload: object,
+    *,
+    fallback_captured_at: str | None,
+) -> Position:
+    if not isinstance(payload, dict):
+        raise ValueError(f"Invalid cached position payload: {payload!r}")
+
+    last_updated_raw = payload.get("last_updated") or fallback_captured_at
+    last_updated = (
+        datetime.fromisoformat(last_updated_raw) if last_updated_raw else None
+    )
+    return Position(
+        ticker=str(payload["ticker"]),
+        isin=_optional_string(payload.get("isin")),
+        asset_type=str(payload["asset_type"]),
+        issuer=_optional_string(payload.get("issuer")),
+        shares=Decimal(str(payload["shares"])),
+        cost_basis_eur=Decimal(str(payload["cost_basis_eur"])),
+        currency=str(payload["currency"]),
+        market_symbol=_optional_string(payload.get("market_symbol")),
+        source=str(payload.get("source") or "snaptrade"),
+        last_updated=last_updated,
+    )
+
+
+def _optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None

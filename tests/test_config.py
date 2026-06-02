@@ -85,3 +85,38 @@ def test_load_settings_defaults_to_repository_config() -> None:
     assert settings.database_path == "data/andyjuan.db"
     assert settings.entity_match_threshold == 85.0
     assert settings.theme_item_cap == 5
+    assert settings.snaptrade.enabled is False
+
+
+def test_load_settings_reads_nested_snaptrade_with_env_overrides(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings_path = tmp_path / "settings.yaml"
+    write_settings(settings_path)
+    settings_path.write_text(
+        settings_path.read_text(encoding="utf-8")
+        + "\n".join(
+            [
+                "snaptrade:",
+                "  enabled: true",
+                "  client_id: yaml-client",
+                "  consumer_key: yaml-key",
+                "  user_id: ibkr-user",
+                "  user_secret: yaml-secret",
+                "  account_id: account-123",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SNAPTRADE_CLIENT_ID", "env-client")
+    monkeypatch.setenv("SNAPTRADE_CONSUMER_KEY", "env-key")
+
+    settings = load_settings(settings_path)
+
+    assert settings.snaptrade.enabled is True
+    assert settings.snaptrade.client_id == "env-client"
+    assert settings.snaptrade.consumer_key == "env-key"
+    assert settings.snaptrade.user_id == "ibkr-user"
+    assert settings.snaptrade.user_secret == "yaml-secret"
+    assert settings.snaptrade.account_id == "account-123"

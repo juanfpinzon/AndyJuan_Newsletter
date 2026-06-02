@@ -64,6 +64,15 @@ TABLE_SCHEMAS: dict[str, TableSchema] = {
         },
         pk="id",
     ),
+    "position_snapshots": TableSchema(
+        columns={
+            "id": int,
+            "source": str,
+            "positions_json": str,
+            "captured_at": str,
+        },
+        pk="id",
+    ),
     "llm_calls": TableSchema(
         columns={
             "id": int,
