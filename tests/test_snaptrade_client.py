@@ -278,3 +278,11 @@ def test_get_weekly_and_monthly_pnl_use_balance_history(
         pnl_pct=Decimal("15.00"),
         currency="USD",
     )
+
+
+def test_load_canonical_market_symbols_returns_empty_on_oserror(
+    tmp_path: Path,
+) -> None:
+    missing_path = tmp_path / "does_not_exist.yaml"
+
+    assert snaptrade_client._load_canonical_market_symbols(missing_path) == {}

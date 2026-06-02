@@ -80,13 +80,23 @@ def cache_etf_holdings(
     )
 
 
+POSITION_SNAPSHOT_RETENTION = 30
+
+
 def cache_position_snapshot(
     db_path: str | Path,
     *,
     source: str,
     positions: Sequence[Position],
+    retain: int = POSITION_SNAPSHOT_RETENTION,
 ) -> None:
-    """Persist a portfolio snapshot for live-source fallback."""
+    """Persist a portfolio snapshot for live-source fallback.
+
+    Only the most recent ``retain`` snapshots per source are kept; older rows
+    are pruned so the append-only table cannot grow without bound. Keeping the
+    newest N (rather than a time window) guarantees the latest snapshot always
+    survives for fallback even after a long live-source outage.
+    """
 
     database = init_db(db_path)
     captured_at = datetime.now(timezone.utc).isoformat()
@@ -99,6 +109,30 @@ def cache_position_snapshot(
             "captured_at": captured_at,
         }
     )
+    _prune_position_snapshots(database, source=source, retain=retain)
+
+
+def _prune_position_snapshots(
+    database: Database,
+    *,
+    source: str,
+    retain: int,
+) -> None:
+    database.conn.execute(
+        """
+        delete from position_snapshots
+        where source = ?
+          and id not in (
+            select id
+            from position_snapshots
+            where source = ?
+            order by captured_at desc, id desc
+            limit ?
+          )
+        """,
+        (source, source, max(retain, 1)),
+    )
+    database.conn.commit()
 
 
 def load_latest_position_snapshot(

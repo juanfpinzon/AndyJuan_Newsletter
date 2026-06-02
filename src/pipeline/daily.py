@@ -29,14 +29,14 @@ from src.fetcher.macro_rss import MacroRSSReader
 from src.fetcher.models import Article, filter_supported_articles
 from src.fetcher.newsdata import NewsDataClient
 from src.lookthrough.resolver import resolve_lookthrough
-from src.pnl import compute_pnl, compute_total
+from src.pnl import PnLSnapshot, compute_pnl, compute_total
 from src.portfolio.loader import (
     load_portfolio,
     load_portfolio_snapshot_bundle,
 )
 from src.portfolio.models import Position
 from src.portfolio.snaptrade_client import SnapTradeClient, SnapTradeError
-from src.pricing import fetch_prices
+from src.pricing import PriceSnapshot, fetch_prices
 from src.renderer import build_concentrated_exposures, build_theme_groups, render_email
 from src.renderer.render import RenderedEmail
 from src.sender import SendResult, send_email
@@ -309,9 +309,9 @@ def _load_snaptrade_daily_pnl(
     *,
     snaptrade_client: SnapTradeClient | None,
     positions: Sequence[Position],
-    prices: Mapping[str, Any],
+    prices: Mapping[str, PriceSnapshot],
     logger: Any,
-) -> dict[str, Any]:
+) -> dict[str, PnLSnapshot]:
     if snaptrade_client is None:
         return {}
 
