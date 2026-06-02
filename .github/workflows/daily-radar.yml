@@ -36,6 +36,16 @@ jobs:
       AGENTMAIL_INBOX_ID: ${{ secrets.AGENTMAIL_INBOX_ID }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       NEWSDATA_API_KEY: ${{ secrets.NEWSDATA_API_KEY }}
+      # SnapTrade live IBKR positions + daily P&L. If these secrets are absent
+      # or the API is down, the pipeline falls back to config/portfolio.yaml and
+      # logs `snaptrade_fallback_used` (see src/portfolio/loader.py), so the
+      # radar still runs — it just uses stale holdings.
+      SNAPTRADE_ENABLED: "true"
+      SNAPTRADE_CLIENT_ID: ${{ secrets.SNAPTRADE_CLIENT_ID }}
+      SNAPTRADE_CONSUMER_KEY: ${{ secrets.SNAPTRADE_CONSUMER_KEY }}
+      SNAPTRADE_USER_ID: ${{ secrets.SNAPTRADE_USER_ID }}
+      SNAPTRADE_USER_SECRET: ${{ secrets.SNAPTRADE_USER_SECRET }}
+      SNAPTRADE_ACCOUNT_ID: ${{ secrets.SNAPTRADE_ACCOUNT_ID }}
       PYTHONUNBUFFERED: "1"
     steps:
       - name: Check out repository
