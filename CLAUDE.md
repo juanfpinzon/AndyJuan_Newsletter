@@ -167,4 +167,4 @@ orientation. Project-specific context (above) is separate from vault context.
 Agent-learned facts propagated from the shared vault by vaultwatch appear below.
 Do not edit this section manually — it is managed by the vaultwatch cron.
 
-*(No learnings synced yet.)*
+-(2026-06-04) [hermes] closed-loop-agent-context-sync — see vault `vault-protocol`
