@@ -170,3 +170,7 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 -(2026-06-04) [hermes] closed-loop-agent-context-sync — see vault `vault-protocol`
 - (2026-06-05) [hermes] agent-context-canonical-convention — see vault `AGENTS.md`
 - (2026-06-07) [claude-code] claude-code-notion-mcp-setup — see vault `claude-code-notion-mcp`
+- (2026-06-11) [claude-code] snowball-replica-phase-b-shipped — see vault `snowball-replica`
+- (2026-06-11) [claude-code] snowball-replica-phase-c-shipped — see vault `snowball-replica`
+- (2026-06-12) [claude-code] snowball-replica-phase-d-implemented — see vault `snowball-replica`
+- (2026-06-12) [claude-code] incremental-implementation-preference — see vault `juan`
