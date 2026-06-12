@@ -174,3 +174,5 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-06-11) [claude-code] snowball-replica-phase-c-shipped — see vault `snowball-replica`
 - (2026-06-12) [claude-code] snowball-replica-phase-d-implemented — see vault `snowball-replica`
 - (2026-06-12) [claude-code] incremental-implementation-preference — see vault `juan`
+- (2026-06-12) [claude-code] snowball-replica-checkpoint-4-complete — see vault `snowball-replica`
+- (2026-06-12) [claude-code] snowball-replica-phase-e-shipped — see vault `snowball-replica`
