@@ -178,3 +178,4 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-06-12) [claude-code] snowball-replica-phase-e-shipped — see vault `snowball-replica`
 - (2026-06-12) [claude-code] snowball-replica-phase-f-shipped — see vault `snowball-replica`
 - (2026-06-12) [claude-code] gh-watchdog-direct-push-to-pr-branch — see vault `gh-watchdog`
+- (2026-06-17) [claude-code] hermes-vm-laptop-launcher — see vault `hermes-desktop-remote-mode`
