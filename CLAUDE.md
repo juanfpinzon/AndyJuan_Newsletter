@@ -154,3 +154,23 @@ the change touches shared infrastructure.
   for the nearest matching unit of work.
 - If you notice drift between code and docs, prefer documenting or flagging it
   rather than silently choosing a new direction.
+
+## Cross-Project Context
+
+For durable cross-project learnings, conventions, and decisions, see the
+shared memory vault at `/home/hermes/wiki/`. Read `index.md` and `log.md` for
+orientation. Project-specific context (above) is separate from vault context.
+
+## Agent Learnings
+
+Agent-learned facts propagated from the shared vault by vaultwatch appear below.
+Do not edit this section manually — it is managed by the vaultwatch cron.
+
+- (2026-06-04) [hermes] closed-loop-agent-context-sync — see vault `vault-protocol`
+- (2026-06-05) [hermes] agent-context-canonical-convention — see vault `AGENTS.md`
+- (2026-06-07) [claude-code] claude-code-notion-mcp-setup — see vault `claude-code-notion-mcp`
+- (2026-06-12) [claude-code] incremental-implementation-preference — see vault `juan`
+- (2026-06-12) [claude-code] gh-watchdog-direct-push-to-pr-branch — see vault `gh-watchdog`
+- (2026-06-17) [claude-code] hermes-vm-laptop-launcher — see vault `hermes-desktop-remote-mode`
+- (2026-06-22) [claude-code] architect-loop-skill-overlay-and-diagram-gotcha — see vault `architect-loop-fork`
+- (2026-06-22) [hermes] kb-drift-review-workflow — see vault `marca-ia-seo-aeo-geo-kb`
