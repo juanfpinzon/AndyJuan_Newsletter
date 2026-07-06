@@ -1,8 +1,8 @@
 # AndyJuan Personal Portfolio Radar Agent Context
 
-This file is the working agent brief for the repo. `CLAUDE.md`, `AGENTS.md`,
-and `.hermes.md` must remain byte-for-byte identical so every agent entrypoint
-operates with the same project context.
+This file is the canonical working agent brief for the repo. `AGENTS.md` and
+`.hermes.md` are symlinks that point to `CLAUDE.md`, so contributors should
+edit `CLAUDE.md` and preserve the symlink setup for every agent entrypoint.
 
 ## Canonical Docs
 
@@ -109,8 +109,8 @@ the user changes them:
 
 - Keep changes narrow, spec-aligned, and phase-aware.
 - Prefer extending the planned scaffold over inventing alternate patterns.
-- Preserve `CLAUDE.md`, `AGENTS.md`, and `.hermes.md` as exact copies when
-  editing any of them.
+- Preserve the `AGENTS.md` and `.hermes.md` symlinks to `CLAUDE.md`, and edit
+  `CLAUDE.md` as the canonical file.
 - Favor deterministic tests with fixtures, `respx`, and mocked LLM/provider
   clients.
 - Do not wire CI or tests to live network dependencies.
@@ -158,7 +158,7 @@ the change touches shared infrastructure.
 ## Cross-Project Context
 
 For durable cross-project learnings, conventions, and decisions, see the
-shared memory vault at `/home/hermes/wiki/`. Read `index.md` and `log.md` for
+shared memory vault at `$VAULT_ROOT`. Read `index.md` and `log.md` for
 orientation. Project-specific context (above) is separate from vault context.
 
 ## Agent Learnings
