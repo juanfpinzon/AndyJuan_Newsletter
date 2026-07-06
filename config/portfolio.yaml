@@ -61,6 +61,8 @@ positions:
     cost_basis_eur: "63.795798"
     currency: EUR
     market_symbol: ISLN.L
+    aliases:
+      - SSLN
   - ticker: QDVE
     isin: IE00B3WJKG14
     asset_type: etf
