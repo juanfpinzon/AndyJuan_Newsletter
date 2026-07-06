@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from src.lookthrough.adapters.base import BaseAdapter
-from src.lookthrough.models import Holding, LookthroughExhausted, LookthroughFailure
+from src.lookthrough.models import Holding, LookthroughFailure
 from src.lookthrough.resolver import resolve_lookthrough
 from src.portfolio.models import Position
 
@@ -119,17 +119,28 @@ QDVE:
 
 
 @pytest.mark.asyncio
-async def test_resolve_lookthrough_raises_when_scrape_and_yaml_are_unavailable(
+async def test_resolve_lookthrough_skips_unresolvable_etf_and_logs_event(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    log_path = tmp_path / "lookthrough.jsonl"
+    monkeypatch.setenv("LOG_FILE", str(log_path))
+    monkeypatch.setenv("APP_ENV", "prod")
+
     fallback_path = tmp_path / "etf_holdings.yaml"
     fallback_path.write_text("{}", encoding="utf-8")
 
-    with pytest.raises(LookthroughExhausted) as excinfo:
-        await resolve_lookthrough(
-            [make_position("QDVE", issuer="iShares")],
-            adapters={"ishares": FailingAdapter()},
-            fallback_path=fallback_path,
-        )
+    resolved = await resolve_lookthrough(
+        [make_position("QDVE", issuer="iShares")],
+        adapters={"ishares": FailingAdapter()},
+        fallback_path=fallback_path,
+    )
 
-    assert excinfo.value.ticker == "QDVE"
+    # The unresolvable ETF is skipped, not raised — fail-soft keeps the
+    # rest of the pipeline sendable.
+    assert resolved == {}
+
+    log_lines = log_path.read_text(encoding="utf-8").splitlines()
+    payload = json.loads(log_lines[-1])
+    assert payload["event"] == "lookthrough_exhausted"
+    assert payload["ticker"] == "QDVE"

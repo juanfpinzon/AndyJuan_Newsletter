@@ -87,7 +87,16 @@ async def resolve_lookthrough(
             resolved[position.ticker] = fallback_holdings
             continue
 
-        raise LookthroughExhausted(position.ticker, position.issuer)
+        # No adapter and no fallback holdings — skip this ETF and keep the
+        # rest of the pipeline running. A single unresolvable holding must
+        # not crash the whole daily run (fail-soft, per spec guardrails).
+        exhausted = LookthroughExhausted(position.ticker, position.issuer)
+        get_logger("lookthrough").warning(
+            "lookthrough_exhausted",
+            ticker=position.ticker,
+            issuer=position.issuer,
+            error=str(exhausted),
+        )
 
     return resolved
 
