@@ -1,9 +1,11 @@
+import json
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from src.exposure.models import ExposureEntry
-from src.exposure.resolver import ExposureComputationError, compute_exposure
+from src.exposure.resolver import compute_exposure
 from src.lookthrough.models import Holding
 from src.portfolio.models import Position
 
@@ -128,12 +130,34 @@ def test_compute_exposure_is_reproducible() -> None:
     assert first == second
 
 
-def test_compute_exposure_requires_lookthrough_for_etfs() -> None:
+def test_compute_exposure_skips_unresolvable_etf_and_logs_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: a single unresolvable ETF must not crash exposure.
+
+    The ETF is excluded from both numerator and denominator, so the
+    remaining exposure percentages are computed over the resolvable
+    portfolio. This is the fail-soft end-to-end contract the watchdog
+    required (resolver + exposure, not resolver in isolation).
+    """
+    log_path = tmp_path / "exposure.jsonl"
+    monkeypatch.setenv("LOG_FILE", str(log_path))
+    monkeypatch.setenv("APP_ENV", "prod")
+
     positions = [
-        make_position("QDVE", asset_type="etf", cost_basis_eur="100", issuer="iShares"),
+        make_position("QDVE", asset_type="etf", cost_basis_eur="40", issuer="iShares"),
+        make_position("NVDA", asset_type="stock", cost_basis_eur="60"),
     ]
 
-    with pytest.raises(ExposureComputationError) as excinfo:
-        compute_exposure(positions, {})
+    # QDVE has no look-through entry — must be skipped, not raised
+    exposure = compute_exposure(positions, {})
 
-    assert "QDVE" in str(excinfo.value)
+    # NVDA is the only resolvable position → 100% weight
+    assert exposure["NVDA"].composite_weight == Decimal("1")
+    assert "QDVE" not in exposure
+
+    log_lines = log_path.read_text(encoding="utf-8").splitlines()
+    payload = json.loads(log_lines[-1])
+    assert payload["event"] == "lookthrough_exhausted"
+    assert payload["ticker"] == "QDVE"
