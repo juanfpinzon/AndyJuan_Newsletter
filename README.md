@@ -77,6 +77,18 @@ X-GitHub-Api-Version: 2022-11-28
 Content-Type: application/json
 ```
 
+`<GITHUB_PAT>` must be a **classic** personal access token with the **`repo`**
+scope; GitHub does not publish fine-grained permissions for this endpoint. Two
+things return an identical `401 Unauthorized` from cron-job.org's test run:
+
+- an expired or revoked token, and
+- a missing `Bearer ` prefix (the header value must be `Bearer ghp_...`, not the
+  bare token).
+
+An expired PAT is what silently stopped all dispatches on 2026-07-27 and kept
+the radar down for five weeks — nothing in this repo can detect a trigger that
+never fires, so set a calendar reminder for the token's expiry date.
+
 Daily `repository_dispatch` body:
 
 ```json

@@ -603,6 +603,80 @@ Sequential. All Phase 4 outputs must be stable.
 
 ---
 
+## Post-v0.1 Priorities
+
+Open work carried forward after the 2026-07-22 radar outage was resolved
+(see `RADAR_OUTAGE_FIX_PLAN.md` §0). Ordered by priority.
+
+### P0 — Fact-checker rejects every AI block
+
+**Status:** open, top priority (raised 2026-09-02)
+
+Every AI section is being blocked in production, so emails ship with **no AI
+synthesis at all** — the `AI Synthesis + Suggestions` section documented in
+`docs/spec.md` is silently absent. Confirmed across consecutive live runs
+(33618962789, 33622683857).
+
+Three `ai_take_blocked` events per run. Two carry
+`"flagged_claims": ["Invalid fact-checker response"]`, which is the checker LLM
+returning **unparseable output** rather than finding a real factual problem. The
+third flagged genuine unsupported claims (entities absent from rendered content),
+which is the fact-checker working as intended.
+
+This is not a regression from the outage fix — the fail-closed path in
+`src/analyzer/` behaves exactly as `docs/spec.md` specifies. The problem is that
+a checker malfunction is indistinguishable from a factual rejection, so a broken
+checker silently disables a headline feature with no alert.
+
+- [ ] **P0.1** Reproduce with `--debug-ai-take` and capture the raw checker
+      response for the "Invalid fact-checker response" cases.
+      **Acceptance:** the malformed payload is captured in a fixture.
+- [ ] **P0.2** Separate *checker failure* from *claim rejection* in the log and
+      in the block decision. A parse failure is an infrastructure fault, not a
+      factual verdict, and should be logged as a distinct event.
+      **Acceptance:** a new event (e.g. `ai_fact_check_unavailable`) is emitted
+      and is queryable separately from `ai_take_blocked`.
+- [ ] **P0.3** Decide the policy for checker-unavailable: retry once, fall back
+      to `llm_fallback_model`, or keep failing closed. Spec's fail-closed rule
+      covers *rejected* claims; it does not describe an unusable checker.
+      **Acceptance:** decision recorded in `docs/spec.md`; behavior tested.
+- [ ] **P0.4** Regression test with a fixture of the malformed response.
+      **Acceptance:** `pytest tests/ -v` green; the fixture reproduces the
+      production failure.
+
+**Verification:** `python scripts/run_manual.py --preview` renders a non-empty
+AI Synthesis section.
+
+### P1 — Ops hardening (outage was silent for five weeks)
+
+**Status:** open. Was Phase 5 of `RADAR_OUTAGE_FIX_PLAN.md`.
+
+The repo cannot see its own scheduler dying: no dispatch means no run means
+nothing to alert on. The Hermes morning brief reported "CI Daily Radar FAILED"
+daily for five weeks with no escalation rule.
+
+- [ ] **P1.1** Escalate persistent CI failure (same failure >= 3 consecutive
+      days) to a direct Telegram alert, not just a journal line.
+- [ ] **P1.2** Silent-trigger detector: alert if no `repository_dispatch` run
+      appears within 24h of an expected window.
+- [ ] **P1.3** Calendar reminder for the cron-job.org GitHub PAT expiry. The
+      expired PAT is what stopped dispatches on 2026-07-27.
+
+### P2 — Dependency drift guard
+
+**Status:** open
+
+`snaptrade-python-sdk` is now pinned to `==13.0.13`, but nothing prevents the
+next unpinned dependency from repeating the failure. Every CI run does a fresh
+`pip install`.
+
+- [ ] **P2.1** Audit `pyproject.toml` for remaining unpinned runtime deps
+      (`yfinance` is the highest-risk — already flagged in the Risks table).
+- [ ] **P2.2** Decide on a lockfile or a scheduled dependency-bump PR so
+      upgrades land deliberately rather than overnight.
+
+---
+
 ## Risks (recap from plan, Phase-3 perspective)
 
 | Risk | Tasks affected | Mitigation |
