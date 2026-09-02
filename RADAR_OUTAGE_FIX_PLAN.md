@@ -77,7 +77,7 @@ Every `account_information` call in this client passes `user_id`/`user_secret`, 
 
 First green scheduled runs since 2026-07-21. `ruff` clean, 172 tests pass.
 
-**Layer 3 (§2.4) confirmed:** the cron-job.org GitHub PAT had expired. Both jobs re-credentialed with a classic PAT carrying the `repo` scope. Note §3 Phase 3.4 suggests "Contents: read" for a fine-grained token — GitHub does not publish fine-grained permissions for this endpoint; the documented requirement is the classic `repo` scope. A missing `Bearer ` prefix produces the same 401 as an expired token.
+**Layer 3 (§2.4) confirmed:** the cron-job.org GitHub PAT had expired. Both jobs were restored with a classic PAT carrying the `repo` scope. GitHub's documented options for `repository_dispatch` are a fine-grained PAT scoped to the repository with `Contents: write` or a classic PAT with `repo` scope. A missing `Bearer ` prefix produces the same 401 as an expired token.
 
 ### Not done
 
@@ -220,7 +220,7 @@ Not part of restoring the radar, but discovered while tracing — listed so they
 1. Log in to cron-job.org → find the two jobs (Mon–Fri 07:30 + Sat 08:00, timezone Europe/Madrid).
 2. Check each job's **execution history**: last success/failure dates, enabled/paused status, and the auth header's PAT.
 3. Most likely causes, in order: (a) stored GitHub PAT expired (matches the Jul 27 hard stop), (b) job paused or purged by the free plan, (c) account/plan lapse.
-4. Fix per cause: regenerate a PAT with `repo` scope (classic) or a fine-grained PAT with **Contents: read** permission on `juanfpinzon/AndyJuan_Newsletter` (repository_dispatch requires contents read; verify exact scope against GitHub docs at fix time), paste into the job's headers, re-enable, and hit "run now".
+4. Fix per cause: regenerate a PAT with `repo` scope (classic) or a fine-grained PAT with **Contents: write** permission on `juanfpinzon/AndyJuan_Newsletter`, paste into the job's headers, re-enable, and hit "run now".
 5. **Verify:** the test dispatch appears in `gh run list` and completes green.
 
 **Decision point — if you prefer, skip cron-job.org entirely and move the scheduler to the VM (Phase 3-alt). Recommended if the PAT is expired anyway** — one less external account, VM-side logs, and built-in alerting:

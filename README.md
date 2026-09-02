@@ -77,9 +77,10 @@ X-GitHub-Api-Version: 2022-11-28
 Content-Type: application/json
 ```
 
-`<GITHUB_PAT>` must be a **classic** personal access token with the **`repo`**
-scope; GitHub does not publish fine-grained permissions for this endpoint. Two
-things return an identical `401 Unauthorized` from cron-job.org's test run:
+`<GITHUB_PAT>` should preferably be a fine-grained personal access token scoped
+to the target repository with **`Contents: write`**; a **classic** personal
+access token with the **`repo`** scope is a working fallback. Two things return
+an identical `401 Unauthorized` from cron-job.org's test run:
 
 - an expired or revoked token, and
 - a missing `Bearer ` prefix (the header value must be `Bearer ghp_...`, not the
