@@ -231,10 +231,11 @@ class SnapTradeClient:
         if bool(payload.get("cash_equivalent")):
             return None
 
-        ticker = _non_empty_string(
+        raw_ticker = _non_empty_string(
             instrument.get("raw_symbol") or instrument.get("symbol"),
             label="instrument symbol",
         )
+        ticker = self._resolve_canonical_ticker(raw_ticker) or raw_ticker
         units = _to_decimal(payload.get("units"), label=f"{ticker} units")
         if units <= 0:
             return None
@@ -266,6 +267,18 @@ class SnapTradeClient:
             source="snaptrade",
             last_updated=fetched_at,
         )
+
+    def _resolve_canonical_ticker(self, raw_ticker: str) -> str | None:
+        """Resolve a SnapTrade raw symbol to a canonical portfolio ticker.
+
+        IBKR often reports positions under a different symbol than the
+        canonical ``portfolio.yaml`` ticker (e.g. SSLN vs PPFD for the same
+        iShares Physical Silver ETC, ISIN IE00B4NCWG09). Matching by market
+        symbol or ISIN lets ``merge_positions`` fold the live position onto
+        the canonical record so look-through fallbacks resolve correctly.
+        """
+        aliases = _load_canonical_ticker_aliases()
+        return aliases.get(raw_ticker.upper())
 
     def _fx_rate_to_eur(self, currency: str) -> Decimal:
         normalized = currency.upper()
@@ -372,6 +385,46 @@ def _load_canonical_market_symbols(path: Path | None = None) -> dict[str, str]:
         if ticker and market_symbol:
             market_symbols[ticker] = market_symbol
     return market_symbols
+
+
+def _load_canonical_ticker_aliases(path: Path | None = None) -> dict[str, str]:
+    """Map SnapTrade raw symbols to canonical portfolio tickers.
+
+    Keys are uppercased alternate symbols (the IBKR ``raw_symbol`` and the
+    canonical ``market_symbol``, plus the ISIN when available). Values are
+    the canonical ``portfolio.yaml`` ticker. This lets the SnapTrade client
+    fold IBKR-reported positions onto canonical records before merge.
+    """
+    portfolio_path = path or DEFAULT_PORTFOLIO_PATH
+    try:
+        raw_data = yaml.safe_load(portfolio_path.read_text(encoding="utf-8")) or {}
+    except OSError:
+        return {}
+    if not isinstance(raw_data, dict):
+        return {}
+
+    raw_positions = raw_data.get("positions")
+    if not isinstance(raw_positions, list):
+        return {}
+
+    aliases: dict[str, str] = {}
+    for raw_position in raw_positions:
+        if not isinstance(raw_position, dict):
+            continue
+        ticker = _optional_string(raw_position.get("ticker"))
+        if not ticker:
+            continue
+        for alt_key in ("market_symbol", "isin"):
+            alt_value = _optional_string(raw_position.get(alt_key))
+            if alt_value:
+                aliases[alt_value.upper()] = ticker
+        explicit_aliases = raw_position.get("aliases")
+        if isinstance(explicit_aliases, list):
+            for alias in explicit_aliases:
+                alias_value = _optional_string(alias)
+                if alias_value:
+                    aliases[alias_value.upper()] = ticker
+    return aliases
 
 
 def _pct(numerator: Decimal, denominator: Decimal) -> Decimal:

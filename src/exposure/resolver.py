@@ -7,6 +7,7 @@ from decimal import Decimal
 from src.exposure.models import ExposureEntry
 from src.lookthrough.models import Holding
 from src.portfolio.models import Position
+from src.utils.log import get_logger
 
 
 class ExposureComputationError(RuntimeError):
@@ -17,23 +18,49 @@ def compute_exposure(
     positions: list[Position],
     lookthrough_data: dict[str, list[Holding]],
 ) -> dict[str, ExposureEntry]:
-    """Compute composite exposure weights on invested cost basis."""
+    """Compute composite exposure weights on invested cost basis.
 
-    total_cost = sum(
-        (position.shares * position.cost_basis_eur for position in positions),
+    Unresolvable ETFs (no look-through entry) are skipped from both the
+    numerator and denominator so the remaining exposure percentages stay
+    interpretable over the resolvable portfolio. A ``lookthrough_exhausted``
+    warning is logged for each skipped ETF. This keeps the pipeline
+    fail-soft end-to-end: a single unresolvable ETF no longer crashes the
+    daily run.
+    """
+
+    skipped_etfs: list[str] = []
+    for position in positions:
+        if (
+            position.asset_type == "etf"
+            and lookthrough_data.get(position.ticker) is None
+        ):
+            skipped_etfs.append(position.ticker)
+
+    resolvable_cost = sum(
+        (
+            position.shares * position.cost_basis_eur
+            for position in positions
+            if position.ticker not in skipped_etfs
+        ),
         start=Decimal("0"),
     )
+
     exposures: dict[str, dict[str, object]] = {}
 
     for position in positions:
+        if position.ticker in skipped_etfs:
+            get_logger("exposure").warning(
+                "lookthrough_exhausted",
+                ticker=position.ticker,
+                issuer=position.issuer,
+                error=f"Missing look-through data for ETF {position.ticker}",
+            )
+            continue
+
         position_cost = position.shares * position.cost_basis_eur
-        position_weight = position_cost / total_cost
+        position_weight = position_cost / resolvable_cost
         if position.asset_type == "etf":
-            holdings = lookthrough_data.get(position.ticker)
-            if holdings is None:
-                raise ExposureComputationError(
-                    f"Missing look-through data for ETF {position.ticker}"
-                )
+            holdings = lookthrough_data[position.ticker]
 
             for holding in _coalesce_holdings(holdings):
                 contribution = position_weight * holding.weight / Decimal("100")

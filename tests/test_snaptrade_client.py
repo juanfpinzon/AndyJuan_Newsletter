@@ -286,3 +286,42 @@ def test_load_canonical_market_symbols_returns_empty_on_oserror(
     missing_path = tmp_path / "does_not_exist.yaml"
 
     assert snaptrade_client._load_canonical_market_symbols(missing_path) == {}
+
+
+def test_load_canonical_ticker_aliases_maps_market_symbol_isin_and_explicit(
+    tmp_path: Path,
+) -> None:
+    portfolio_path = tmp_path / "portfolio.yaml"
+    portfolio_path.write_text(
+        "\n".join(
+            [
+                "positions:",
+                "  - ticker: PPFD",
+                "    isin: IE00B4NCWG09",
+                "    market_symbol: ISLN.L",
+                "    aliases:",
+                "      - SSLN",
+                "  - ticker: QDVE",
+                "    isin: IE00B3WJKG14",
+                "    market_symbol: IITU.L",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    aliases = snaptrade_client._load_canonical_ticker_aliases(portfolio_path)
+
+    assert aliases["SSLN"] == "PPFD"
+    assert aliases["ISLN.L"] == "PPFD"
+    assert aliases["IE00B4NCWG09"] == "PPFD"
+    assert aliases["IITU.L"] == "QDVE"
+    assert aliases["IE00B3WJKG14"] == "QDVE"
+
+
+def test_load_canonical_ticker_aliases_returns_empty_on_oserror(
+    tmp_path: Path,
+) -> None:
+    missing_path = tmp_path / "does_not_exist.yaml"
+
+    assert snaptrade_client._load_canonical_ticker_aliases(missing_path) == {}
