@@ -38,29 +38,12 @@ class _FakeAccountInformation:
         return _Response(self._history)
 
 
-class _FakeReferenceData:
-    def __init__(self, fx_rates: dict[str, Decimal]) -> None:
-        self._fx_rates = fx_rates
-        self.requested_pairs: list[str] = []
-
-    def get_currency_exchange_rate_pair(self, *, currency_pair: str) -> _Response:
-        self.requested_pairs.append(currency_pair)
-        return _Response({"exchange_rate": str(self._fx_rates[currency_pair])})
-
-
 class _FakeSdk:
-    def __init__(
-        self,
-        *,
-        positions: dict,
-        history: dict,
-        fx_rates: dict[str, Decimal],
-    ) -> None:
+    def __init__(self, *, positions: dict, history: dict) -> None:
         self.account_information = _FakeAccountInformation(
             positions=positions,
             history=history,
         )
-        self.reference_data = _FakeReferenceData(fx_rates)
 
 
 def _build_client(
@@ -69,17 +52,31 @@ def _build_client(
     positions: dict | None = None,
     history: dict | None = None,
     fx_rates: dict[str, Decimal] | None = None,
+    logger: object | None = None,
 ) -> SnapTradeClient:
     fake_sdk = _FakeSdk(
         positions=positions or _load_fixture("account_positions.json"),
         history=history or _load_fixture("balance_history.json"),
-        fx_rates=fx_rates or {"EUR-USD": Decimal("1.25")},
     )
     monkeypatch.setattr(
         SnapTradeClient,
         "_build_sdk",
         staticmethod(lambda settings: fake_sdk),
     )
+    # FX now comes from yfinance (SnapTrade retired its currency-rates
+    # endpoint). Stub it so tests never touch the network.
+    rates = fx_rates or {"USD": Decimal("1.25")}
+
+    def _fake_fx(currency: str) -> Decimal:
+        normalized = currency.upper()
+        if normalized == "EUR":
+            return Decimal("1")
+        try:
+            return rates[normalized]
+        except KeyError as exc:
+            raise ValueError(f"no stub FX rate for {normalized}") from exc
+
+    monkeypatch.setattr(snaptrade_client, "fetch_fx_rate_to_eur", _fake_fx)
     return SnapTradeClient(
         SnapTradeSettings(
             enabled=True,
@@ -88,7 +85,8 @@ def _build_client(
             user_id="user",
             user_secret="secret",
             account_id="account",
-        )
+        ),
+        logger=logger,
     )
 
 
@@ -136,7 +134,7 @@ def test_get_positions_maps_supported_snaptrade_positions(
     ]
 
     assert all(position.last_updated is not None for position in positions)
-    assert client._sdk.reference_data.requested_pairs == ["EUR-USD"]
+    assert client._fx_rates_to_eur["USD"] == Decimal("1.25")
 
 
 def test_get_daily_pnl_uses_snaptrade_current_prices(
@@ -325,3 +323,180 @@ def test_load_canonical_ticker_aliases_returns_empty_on_oserror(
     missing_path = tmp_path / "does_not_exist.yaml"
 
     assert snaptrade_client._load_canonical_ticker_aliases(missing_path) == {}
+
+
+def test_build_sdk_uses_commercial_auth_mode_on_sdk_12_plus(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """SDK >= 12 needs `auth=`, and it must be the commercial (partner) mode.
+
+    Only `commercialApiKey` signs requests with `userId`/`userSecret`, which
+    every account_information call in this client passes. `personal_api_key`
+    signs with PersonalClientId alone and would 401 on those endpoints.
+    """
+
+    import sys
+    import types
+
+    captured: dict[str, object] = {}
+
+    def _commercial_api_key(*, consumer_key: str, client_id: str) -> str:
+        captured["mode"] = "commercialApiKey"
+        captured["consumer_key"] = consumer_key
+        captured["client_id"] = client_id
+        return "auth-object"
+
+    def _personal_api_key(**kwargs: object) -> str:  # pragma: no cover
+        raise AssertionError("personal_api_key would 401 on account endpoints")
+
+    fake_module = types.ModuleType("snaptrade_client")
+    fake_module.SnapTradeAuth = types.SimpleNamespace(
+        commercial_api_key=_commercial_api_key,
+        personal_api_key=_personal_api_key,
+    )
+
+    def _fake_snaptrade(**kwargs: object) -> str:
+        captured["kwargs"] = kwargs
+        return "sdk"
+
+    fake_module.SnapTrade = _fake_snaptrade
+    monkeypatch.setitem(sys.modules, "snaptrade_client", fake_module)
+
+    sdk = SnapTradeClient._build_sdk(
+        SnapTradeSettings(
+            enabled=True,
+            client_id="client",
+            consumer_key="consumer",
+            user_id="user",
+            user_secret="secret",
+            account_id="account",
+        )
+    )
+
+    assert sdk == "sdk"
+    assert captured["mode"] == "commercialApiKey"
+    assert captured["kwargs"] == {"auth": "auth-object"}
+
+
+def test_build_sdk_wraps_constructor_failure_as_snaptrade_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Signature B of the outage: a bare TypeError must not escape."""
+
+    import sys
+    import types
+
+    fake_module = types.ModuleType("snaptrade_client")
+
+    def _exploding(**kwargs: object) -> None:
+        raise TypeError(
+            "SnapTrade.__init__() missing 1 required keyword-only argument: 'auth'"
+        )
+
+    fake_module.SnapTrade = _exploding
+    # No SnapTradeAuth attribute -> exercises the legacy (<= 11.x) path.
+    monkeypatch.setitem(sys.modules, "snaptrade_client", fake_module)
+
+    with pytest.raises(snaptrade_client.SnapTradeError, match="client construction"):
+        SnapTradeClient._build_sdk(
+            SnapTradeSettings(
+                enabled=True,
+                client_id="client",
+                consumer_key="consumer",
+                user_id="user",
+                user_secret="secret",
+                account_id="account",
+            )
+        )
+
+
+def test_fetch_account_positions_wraps_raw_sdk_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Signature A of the outage: a raw ApiException must become SnapTradeError."""
+
+    client = _build_client(monkeypatch)
+
+    class _ApiException(Exception):
+        pass
+
+    def _explode(**kwargs: object) -> None:
+        raise _ApiException("(401) Authentication credentials were not provided.")
+
+    monkeypatch.setattr(
+        client._sdk.account_information,
+        "get_all_account_positions",
+        _explode,
+    )
+
+    with pytest.raises(snaptrade_client.SnapTradeError, match="account positions"):
+        client.get_positions()
+
+
+def test_get_positions_skips_position_when_fx_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A single unconvertible currency must not lose the whole snapshot."""
+
+    warnings: list[dict[str, object]] = []
+
+    class StubLogger:
+        def warning(self, event: str, **kwargs: object) -> None:
+            warnings.append({"event": event, **kwargs})
+
+    client = _build_client(monkeypatch, logger=StubLogger())
+
+    def _fx_only_eur(currency: str) -> Decimal:
+        if currency.upper() == "EUR":
+            return Decimal("1")
+        raise ValueError(f"yfinance had no rate for {currency}")
+
+    monkeypatch.setattr(snaptrade_client, "fetch_fx_rate_to_eur", _fx_only_eur)
+
+    positions = client.get_positions()
+
+    assert positions, "EUR-denominated positions must survive"
+    assert all(position.currency == "EUR" for position in positions)
+    assert any(item["event"] == "snaptrade_position_skipped_fx" for item in warnings)
+
+
+def test_get_positions_raises_when_every_position_skipped_for_fx(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An all-skipped snapshot must fail, not return an empty 'success'.
+
+    merge_positions(include_missing_canonical=False) treats the live snapshot
+    as authoritative, so returning [] here would silently wipe the portfolio.
+    """
+
+    usd_only = {
+        "results": [
+            item
+            for item in _load_fixture("account_positions.json")["results"]
+            if item.get("currency") == "USD"
+        ]
+    }
+    client = _build_client(monkeypatch, positions=usd_only)
+
+    def _fx_never(currency: str) -> Decimal:
+        raise ValueError(f"yfinance had no rate for {currency}")
+
+    monkeypatch.setattr(snaptrade_client, "fetch_fx_rate_to_eur", _fx_never)
+
+    with pytest.raises(snaptrade_client.SnapTradeError, match="no convertible"):
+        client.get_positions()
+
+
+def test_get_daily_pnl_missing_prior_close_raises_snaptrade_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing prior close must be a SnapTradeError, not a bare KeyError.
+
+    `_load_snaptrade_daily_pnl` guards with `except SnapTradeError`; a KeyError
+    would escape it and kill the run.
+    """
+
+    client = _build_client(monkeypatch)
+
+    with pytest.raises(snaptrade_client.SnapTradeError, match="prior-close"):
+        client.get_daily_pnl(price_snapshots={})

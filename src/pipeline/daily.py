@@ -326,6 +326,15 @@ def _load_snaptrade_daily_pnl(
     except SnapTradeError as exc:
         logger.warning("snaptrade_pnl_fallback_used", reason=str(exc))
         return {}
+    except Exception as exc:  # noqa: BLE001 - optional enrichment must not crash
+        # Live daily P&L is an overlay on top of local P&L. Nothing here is
+        # worth failing the whole radar for, so degrade rather than raise.
+        logger.warning(
+            "snaptrade_pnl_fallback_used",
+            reason=f"{type(exc).__name__}: {exc}",
+            unexpected=True,
+        )
+        return {}
 
     return {
         ticker: snapshot

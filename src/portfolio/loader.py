@@ -15,7 +15,7 @@ from src.storage.db import cache_position_snapshot, load_latest_position_snapsho
 from src.utils.log import get_logger
 
 from .models import AssetType, Position
-from .snaptrade_client import SnapTradeClient, SnapTradeError
+from .snaptrade_client import SnapTradeClient
 
 DEFAULT_PORTFOLIO_PATH = (
     Path(__file__).resolve().parents[2] / "config" / "portfolio.yaml"
@@ -143,11 +143,16 @@ def load_portfolio_snapshot_bundle(
             logger=logger,
         )
         live_positions = snaptrade_client.get_positions()
-    except SnapTradeError as exc:
+    except Exception as exc:  # noqa: BLE001 - live data must never kill the run
+        # SnapTradeClient wraps every SDK entry point so failures arrive as
+        # SnapTradeError, but this is the exact catch that let the 2026-07-22
+        # outage through for five weeks. Catching broadly here makes the
+        # documented "falls back to portfolio.yaml" promise unconditional.
         cached_positions = load_latest_position_snapshot(db_path, source="snaptrade")
         logger.warning(
             "snaptrade_fallback_used",
             reason=str(exc),
+            error_type=type(exc).__name__,
             fallback_source="position_cache" if cached_positions else "yaml",
         )
         return PortfolioSnapshotBundle(
