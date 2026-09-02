@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -14,7 +15,7 @@ import yaml
 from src.config import SnapTradeSettings
 from src.pnl import DailyDelta, PnLSnapshot
 from src.portfolio.models import AssetType, Position
-from src.pricing import PriceSnapshot, fetch_prices
+from src.pricing import PriceSnapshot, fetch_fx_rate_to_eur, fetch_prices
 
 DEFAULT_PORTFOLIO_PATH = (
     Path(__file__).resolve().parents[2] / "config" / "portfolio.yaml"
@@ -29,6 +30,39 @@ SUPPORTED_ASSET_TYPES: dict[str, AssetType] = {
 
 class SnapTradeError(RuntimeError):
     """Raised when SnapTrade data cannot be loaded safely."""
+
+
+class _FxUnavailableError(SnapTradeError):
+    """Raised when a single position's currency cannot be converted to EUR."""
+
+    def __init__(self, currency: str, message: str) -> None:
+        super().__init__(message)
+        self.currency = currency
+
+
+@contextmanager
+def _sdk_boundary(operation: str) -> Iterator[None]:
+    """Convert any SDK-layer failure into :class:`SnapTradeError`.
+
+    The SDK raises its own exception types (``snaptrade_client.exceptions.
+    ApiException``) and, on a breaking release, plain ``TypeError`` from the
+    constructor. Neither is a ``SnapTradeError``, so callers that guard with
+    ``except SnapTradeError`` — ``src.portfolio.loader`` and
+    ``src.pipeline.daily`` — let them through and crash the whole run. That is
+    exactly how the 2026-07-22 outage escaped the documented fail-soft
+    fallback. Wrapping every SDK entry point here makes the guarantee
+    class-level rather than per-call-site: any SnapTrade failure degrades the
+    radar to cached/YAML positions instead of killing it.
+    """
+
+    try:
+        yield
+    except SnapTradeError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - deliberate boundary catch-all
+        raise SnapTradeError(
+            f"snaptrade {operation} failed: {type(exc).__name__}: {exc}"
+        ) from exc
 
 
 @dataclass(frozen=True)
@@ -73,11 +107,35 @@ class SnapTradeClient:
         fetched_at = datetime.now(UTC)
         positions: list[Position] = []
         mapped_payloads: list[dict[str, Any]] = []
+        skipped_for_fx = 0
         for payload in raw_positions:
-            position = self._map_position(payload, fetched_at=fetched_at)
+            try:
+                position = self._map_position(payload, fetched_at=fetched_at)
+            except _FxUnavailableError as exc:
+                # Fail soft on a single unconvertible currency rather than
+                # losing the whole live snapshot (same philosophy as the
+                # look-through resolver). The all-skipped case is caught below.
+                skipped_for_fx += 1
+                if self._logger is not None:
+                    self._logger.warning(
+                        "snaptrade_position_skipped_fx",
+                        currency=exc.currency,
+                        reason=str(exc.__cause__ or exc),
+                    )
+                continue
             if position is not None:
                 positions.append(position)
                 mapped_payloads.append(dict(payload))
+
+        if skipped_for_fx and not positions:
+            # Every position was dropped for FX reasons, so the "live" snapshot
+            # is empty. Returning it would let merge_positions wipe the
+            # portfolio (include_missing_canonical=False). Fail instead so the
+            # loader falls back to cached/YAML holdings.
+            raise SnapTradeError(
+                "SnapTrade returned no convertible positions: "
+                f"{skipped_for_fx} skipped for missing FX rates"
+            )
 
         self._last_mapped_account_positions = mapped_payloads
         self._last_positions = positions
@@ -97,16 +155,23 @@ class SnapTradeClient:
         )
         if price_snapshots is None:
             canonical_market_symbols = _load_canonical_market_symbols()
-            price_snapshots = fetch_prices(
-                [position.ticker for position in positions],
-                base_currency="EUR",
-                market_symbols={
-                    position.ticker: canonical_market_symbols.get(position.ticker)
-                    or position.market_symbol
-                    for position in positions
-                    if canonical_market_symbols.get(position.ticker)
-                    or position.market_symbol
-                },
+            with _sdk_boundary("daily P&L price fetch"):
+                price_snapshots = fetch_prices(
+                    [position.ticker for position in positions],
+                    base_currency="EUR",
+                    market_symbols={
+                        position.ticker: canonical_market_symbols.get(position.ticker)
+                        or position.market_symbol
+                        for position in positions
+                        if canonical_market_symbols.get(position.ticker)
+                        or position.market_symbol
+                    },
+                )
+
+        if len(positions) != len(raw_positions):
+            raise SnapTradeError(
+                "SnapTrade position/payload counts diverged: "
+                f"{len(positions)} positions vs {len(raw_positions)} payloads"
             )
 
         snapshots: dict[str, PnLSnapshot] = {}
@@ -123,7 +188,10 @@ class SnapTradeClient:
             try:
                 previous_close_eur = price_snapshots[position.ticker].previous_close_eur
             except KeyError as exc:
-                raise KeyError(
+                # Must be a SnapTradeError: _load_snaptrade_daily_pnl guards
+                # with `except SnapTradeError`, so a bare KeyError here would
+                # escape the fallback and kill the run.
+                raise SnapTradeError(
                     "Missing prior-close snapshot for SnapTrade ticker: "
                     f"{position.ticker}"
                 ) from exc
@@ -156,11 +224,12 @@ class SnapTradeClient:
         return self._historical_pnl(days=30, timeframe="monthly")
 
     def _historical_pnl(self, *, days: int, timeframe: str) -> HistoricalPnL:
-        response = self._sdk.account_information.get_account_balance_history(
-            user_id=self._settings.user_id,
-            user_secret=self._settings.user_secret,
-            account_id=self._settings.account_id,
-        )
+        with _sdk_boundary("balance history fetch"):
+            response = self._sdk.account_information.get_account_balance_history(
+                user_id=self._settings.user_id,
+                user_secret=self._settings.user_secret,
+                account_id=self._settings.account_id,
+            )
         body = _require_mapping(response.body, label="account balance history")
         raw_history = body.get("history")
         if not isinstance(raw_history, list) or not raw_history:
@@ -200,11 +269,12 @@ class SnapTradeClient:
         )
 
     def _fetch_account_positions(self) -> list[dict[str, Any]]:
-        response = self._sdk.account_information.get_all_account_positions(
-            user_id=self._settings.user_id,
-            user_secret=self._settings.user_secret,
-            account_id=self._settings.account_id,
-        )
+        with _sdk_boundary("account positions fetch"):
+            response = self._sdk.account_information.get_all_account_positions(
+                user_id=self._settings.user_id,
+                user_secret=self._settings.user_secret,
+                account_id=self._settings.account_id,
+            )
         body = _require_mapping(response.body, label="account positions")
         results = body.get("results")
         if not isinstance(results, list):
@@ -248,7 +318,14 @@ class SnapTradeClient:
             payload.get("currency") or instrument.get("currency") or "EUR",
             label=f"{ticker} currency",
         ).upper()
-        fx_rate = self._fx_rate_to_eur(currency)
+        try:
+            fx_rate = self._fx_rate_to_eur(currency)
+        except _FxUnavailableError:
+            raise
+        except SnapTradeError as exc:
+            raise _FxUnavailableError(
+                currency, f"FX rate unavailable for {currency}"
+            ) from exc
         cost_basis_eur = native_cost_basis / fx_rate
         market_symbol = _optional_string(instrument.get("symbol"))
         description = _optional_string(instrument.get("description"))
@@ -281,18 +358,27 @@ class SnapTradeClient:
         return aliases.get(raw_ticker.upper())
 
     def _fx_rate_to_eur(self, currency: str) -> Decimal:
+        """Return the EUR conversion rate, sourced from yfinance.
+
+        SnapTrade retired ``GET /currencies/rates/{pair}`` around 2026-07-21:
+        it started returning 401 (the direct cause of the Jul 22-27 outage)
+        and was removed from the SDK entirely in 13.x. yfinance already
+        supplies FX pairs for the rest of the pipeline, so it is the natural
+        replacement and keeps the same "units of `currency` per EUR" meaning.
+        """
+
         normalized = currency.upper()
         if normalized in self._fx_rates_to_eur:
             return self._fx_rates_to_eur[normalized]
 
-        response = self._sdk.reference_data.get_currency_exchange_rate_pair(
-            currency_pair=f"EUR-{normalized}"
-        )
-        body = _require_mapping(response.body, label="currency exchange rate")
-        rate = _to_decimal(
-            body.get("exchange_rate"),
-            label=f"EUR-{normalized} exchange_rate",
-        )
+        with _sdk_boundary(f"FX lookup for EUR-{normalized}"):
+            rate = fetch_fx_rate_to_eur(normalized)
+
+        if rate <= 0:
+            raise SnapTradeError(
+                f"SnapTrade FX rate for EUR-{normalized} was not positive: {rate}"
+            )
+
         self._fx_rates_to_eur[normalized] = rate
         return rate
 
@@ -311,10 +397,27 @@ class SnapTradeClient:
                 "snaptrade-python-sdk is not installed; add project dependencies first"
             ) from exc
 
-        return SnapTrade(
-            client_id=settings.client_id,
-            consumer_key=settings.consumer_key,
-        )
+        with _sdk_boundary("client construction"):
+            try:
+                from snaptrade_client import SnapTradeAuth
+            except ImportError:
+                # SDK <= 11.x: credentials are passed directly to the client.
+                return SnapTrade(
+                    client_id=settings.client_id,
+                    consumer_key=settings.consumer_key,
+                )
+
+            # SDK >= 12 requires an explicit auth mode. Use the commercial
+            # (partner) mode: it is the one whose request signing includes
+            # `userId`/`userSecret`, which every account_information call in
+            # this client passes. `personal_api_key` signs with
+            # PersonalClientId only and would 401 on those endpoints.
+            return SnapTrade(
+                auth=SnapTradeAuth.commercial_api_key(
+                    consumer_key=settings.consumer_key,
+                    client_id=settings.client_id,
+                )
+            )
 
 
 def _require_setting(value: str | None, *, name: str) -> None:

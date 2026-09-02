@@ -423,3 +423,78 @@ def test_load_portfolio_snapshot_bundle_returns_live_client_on_success(
 
     assert bundle.snaptrade_client is fake_client
     assert [position.ticker for position in bundle.positions] == ["NVDA"]
+
+
+def _snaptrade_settings(tmp_path: Path) -> Settings:
+    return Settings(
+        llm_scoring_model="ranker",
+        llm_synthesis_model="synth",
+        llm_fact_check_model="fact-check",
+        llm_fallback_model="fallback",
+        database_path=str(tmp_path / "andyjuan.db"),
+        log_file=str(tmp_path / "andyjuan.jsonl"),
+        news_item_limit=10,
+        exposure_threshold_percent=5.0,
+        entity_match_threshold=85.0,
+        snaptrade=SnapTradeSettings(
+            enabled=True,
+            client_id="client",
+            consumer_key="consumer",
+            user_id="user",
+            user_secret="secret",
+            account_id="account",
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("failure", "label"),
+    [
+        # Signature A: the raw SDK exception type that caused the Jul 22-27
+        # production outage. It is NOT a SnapTradeError, so the old
+        # `except SnapTradeError` guard let it kill the whole pipeline.
+        (lambda: RuntimeError("(401) Authentication credentials were not provided."),
+         "raw_api_exception"),
+        # Signature B: SDK >= 12 constructor break (missing `auth` kwarg).
+        (lambda: TypeError(
+            "SnapTrade.__init__() missing 1 required keyword-only argument: 'auth'"
+        ), "constructor_type_error"),
+    ],
+)
+def test_load_portfolio_snapshot_falls_back_on_non_snaptrade_exceptions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure,
+    label: str,
+) -> None:
+    """Any live-fetch failure must degrade to YAML, not crash the radar."""
+
+    import src.portfolio.loader as loader
+
+    settings = _snaptrade_settings(tmp_path)
+
+    class ExplodingSnapTradeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+            if label == "constructor_type_error":
+                raise failure()
+
+        def get_positions(self) -> list[Position]:
+            raise failure()
+
+    warnings: list[dict[str, object]] = []
+
+    class StubLogger:
+        def warning(self, event: str, **kwargs: object) -> None:
+            warnings.append({"event": event, **kwargs})
+
+    monkeypatch.setattr(loader, "SnapTradeClient", ExplodingSnapTradeClient)
+    monkeypatch.setattr(loader, "get_logger", lambda name=None: StubLogger())
+
+    positions = load_portfolio_snapshot(
+        settings=settings,
+        db_path=tmp_path / "andyjuan.db",
+    )
+
+    assert any(item["event"] == "snaptrade_fallback_used" for item in warnings)
+    assert positions, "fallback must still yield the canonical YAML portfolio"

@@ -24,7 +24,11 @@ dependencies = [
   "python-dotenv",
   "pyyaml",
   "rapidfuzz",
-  "snaptrade-python-sdk",
+  # Pinned: the 11.0.213 -> 12.0.0 auth rewrite (Jul 2026) silently broke
+  # CI overnight because this was unpinned. 13.x also removed the currency
+  # rates endpoint (see src/portfolio/snaptrade_client._fx_rate_to_eur).
+  # Bump deliberately and re-run the SnapTrade tests; the 13.x line moves fast.
+  "snaptrade-python-sdk==13.0.13",
   "sqlite-utils",
   "structlog",
   "yfinance",
