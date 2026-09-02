@@ -180,3 +180,33 @@ def _normalize_quote_amount(
 
 def _to_decimal(value: object) -> Decimal:
     return Decimal(str(value))
+
+
+def fetch_fx_rate_to_eur(currency: str) -> Decimal:
+    """Return how many units of ``currency`` one EUR buys.
+
+    Replaces SnapTrade's ``reference_data.get_currency_exchange_rate_pair``,
+    which SnapTrade retired around 2026-07-21 (the endpoint began returning
+    401 and was dropped entirely from SDK 13.x). Semantics match the old
+    SnapTrade rate so callers keep dividing native amounts by it to reach EUR.
+    """
+
+    spec = _quote_currency_spec(currency)
+    if spec.currency == SUPPORTED_BASE_CURRENCY:
+        return Decimal("1")
+
+    symbol = _fx_symbol(spec.currency, SUPPORTED_BASE_CURRENCY)
+    history = yf.download(
+        symbol,
+        period=HISTORY_PERIOD,
+        interval="1d",
+        actions=False,
+        auto_adjust=False,
+        group_by="ticker",
+        progress=False,
+        threads=False,
+    )
+    rate = _last_close(_extract_close_series(history, symbol))
+    if rate <= 0:
+        raise ValueError(f"Non-positive FX rate for {symbol}: {rate}")
+    return rate
