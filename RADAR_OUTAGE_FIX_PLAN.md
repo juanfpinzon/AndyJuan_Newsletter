@@ -1,9 +1,89 @@
 # Daily Radar Outage — Diagnosis & Fix Plan
 
-**Status:** PLAN — awaiting approval before any changes
+**Status:** ✅ RESOLVED 2026-09-02 — see [§0 Resolution](#0-resolution-what-actually-happened) before reading further.
 **Date of diagnosis:** 2026-09-02
 **Scope:** Restore the AndyJuan Newsletter daily radar to full production operation.
-**No repo changes made yet** — this document is the complete, evidence-backed plan. The only side effect of diagnosis: one manual `workflow_dispatch` dry run (no email sent) to confirm the failure still reproduces today.
+
+> ⚠️ **The diagnosis below (§2) is partly incorrect and is retained for history.**
+> §1–§8 record the original plan as written. §0 records what the evidence
+> actually showed and what shipped. Where they disagree, §0 is authoritative.
+
+---
+
+## 0. Resolution — what actually happened
+
+Shipped in [#28](https://github.com/juanfpinzon/AndyJuan_Newsletter/pull/28) (→ `dev`) and [#29](https://github.com/juanfpinzon/AndyJuan_Newsletter/pull/29) (→ `main`), 2026-09-02.
+
+### Correction 1 — the 401 was not an auth failure at the positions call
+
+§2.2 and §7.B attribute the Jul 22–27 401 to `_fetch_account_positions` (line 203) and conclude that SnapTrade auth broke. The Jul 22 run log (29893964700) shows the failure one frame deeper:
+
+```
+snaptrade_client.py:77   get_positions        → _map_position(...)
+snaptrade_client.py:251  _map_position        → _fx_rate_to_eur(currency)
+snaptrade_client.py:288  _fx_rate_to_eur      → reference_data.get_currency_exchange_rate_pair(...)
+paths/currencies_rates_currency_pair/get.py:303 → ApiException (401)
+```
+
+**Positions fetched successfully and auth was working.** Only SnapTrade's currency-rates endpoint returned 401.
+
+### Correction 2 — pinning to 11.0.212 would have fixed nothing
+
+SnapTrade retired the currency-rates endpoint around 2026-07-21 and removed it from the SDK entirely in 13.x. Verified by package introspection:
+
+| | 11.0.195 | 13.0.13 |
+|---|---|---|
+| `paths/currencies_rates_currency_pair` | present | **removed** |
+| `reference_data` currency methods | `get_currency_exchange_rate_pair` | none (`get_stock_exchanges` only) |
+
+The endpoint is dead server-side regardless of client version, so §3 Phase 1's pin-first strategy could not have restored live positions. **Risk #1 in §6 is not a risk — it is what happened.** The yfinance FX swap that §3 Phase 4 defers as an optional follow-up is the actual fix.
+
+### Correction 3 — §4.1 names the wrong auth mode
+
+Phase 4.1 prescribes `SnapTradeAuth.personal_api_key(...)`. Per the SDK's per-endpoint security schemes:
+
+```
+commercialApiKey: [PartnerClientId, PartnerTimestamp, userId, userSecret]
+personalApiKey:   [PersonalClientId, PersonalTimestamp]
+```
+
+Every `account_information` call in this client passes `user_id`/`user_secret`, and the working pre-outage client signed with `PartnerClientId`. **`commercial_api_key` is correct**; `personal_api_key` would drop the user credentials and 401.
+
+### Gaps the plan did not cover
+
+- **`dev` was 8 commits *behind* `main`**, not ahead — hotfix PRs #25/#27 were based on `main` directly. §3 Phase 0 branches off `dev`, which would have tested code that was not production. `dev` was synced first.
+- **Actions always runs `main`.** `repository_dispatch` uses the default branch, so `dev` was never exercised in production.
+- **`get_daily_pnl` had two further escapes** past the `SnapTradeError` guard in `_load_snaptrade_daily_pnl`: a bare `KeyError` on a missing prior close, and a `ValueError` from the price fetch.
+- **An all-skipped FX result must raise, not return `[]`.** §3 Phase 1.3 asks for a fail-soft skip, but `merge_positions(include_missing_canonical=False)` treats the live snapshot as authoritative — an empty "success" would silently wipe the portfolio.
+- **The existing SnapTrade tests stubbed the retired endpoint.** Once it was removed the stub became dead code and the tests silently hit the live network, violating the repo's no-network-in-CI rule. They now stub yfinance.
+
+### What shipped
+
+- Pin `snaptrade-python-sdk==13.0.13` (the unpinned float is the original sin — §2.1 is correct on this).
+- `_build_sdk`: `SnapTradeAuth.commercial_api_key` on SDK ≥ 12, legacy kwargs fallback below.
+- `_fx_rate_to_eur`: yfinance `EUR{CCY}=X` via `src/pricing/fetch_fx_rate_to_eur`, same "units per EUR" semantics.
+- `_sdk_boundary`: every SDK entry point re-raises as `SnapTradeError`. **This is the real fix** — §2.3 correctly identifies it as the root cause.
+- Fail-soft on partial FX loss, raise on total loss.
+- Broadened the loader and daily-P&L guards to `except Exception`.
+
+### Verification
+
+| Path | Run | Result |
+|---|---|---|
+| `workflow_dispatch` on fix branch | 33618962789 | ✅ 1m55s, live positions, no fallback |
+| `workflow_dispatch` on `main` | 33622148117 | ✅ 1m34s, real `juan_only` send |
+| `repository_dispatch` on `main` | 33622683857 | ✅ 1m50s, live positions |
+| cron-job.org dispatch | 33623651098 | ✅ 1m38s |
+
+First green scheduled runs since 2026-07-21. `ruff` clean, 172 tests pass.
+
+**Layer 3 (§2.4) confirmed:** the cron-job.org GitHub PAT had expired. Both jobs re-credentialed with a classic PAT carrying the `repo` scope. Note §3 Phase 3.4 suggests "Contents: read" for a fine-grained token — GitHub does not publish fine-grained permissions for this endpoint; the documented requirement is the classic `repo` scope. A missing `Bearer ` prefix produces the same 401 as an expired token.
+
+### Not done
+
+- **Phase 4 (SDK 13.x migration)** — folded into this fix, since Phase 1 alone could not work.
+- **Phase 5 (ops hardening)** — still open. See `docs/tasks.md` § Post-v0.1 Priorities.
+- **Fact-checker rejecting every AI block** — discovered during verification, now the top open priority. See `docs/tasks.md`.
 
 ---
 
