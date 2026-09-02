@@ -175,3 +175,4 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-06-22) [claude-code] architect-loop-skill-overlay-and-diagram-gotcha — see vault `architect-loop-fork`
 - (2026-06-22) [hermes] kb-drift-review-workflow — see vault `marca-ia-seo-aeo-geo-kb`
 - (2026-07-06) [claude-code] claude-skills-c-level-advisor-bundle-install — see vault `claude-skills-repo-evaluation`
+- (2026-09-02) [claude-code] andyjuan-radar-outage-resolved — see vault `andyjuan-newsletter`
