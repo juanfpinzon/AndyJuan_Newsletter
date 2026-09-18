@@ -177,3 +177,4 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-07-06) [claude-code] claude-skills-c-level-advisor-bundle-install — see vault `claude-skills-repo-evaluation`
 - (2026-09-02) [claude-code] andyjuan-radar-outage-resolved — see vault `andyjuan-newsletter`
 - (2026-09-07) [claude-code] homelab-proxmox-constraints — see vault `homelab-proxmox`
+- (2026-09-18) [claude-code] homelab-fikwot-dataset-loss-and-bridge — see vault `homelab-proxmox`
