@@ -180,3 +180,4 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-09-18) [claude-code] homelab-fikwot-dataset-loss-and-bridge — see vault `homelab-proxmox`
 - (2026-09-26) [hermes] procurerag-north-star — see vault `procurerag`
 - (2026-10-18) [claude-code] vault-stale-clone-and-progress-note-ordering — see vault `procurerag`
+- (2026-10-24) [claude-code] claude-code-plugin-maintenance — see vault `claude-code-plugin-maintenance`
