@@ -181,3 +181,5 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-09-26) [hermes] procurerag-north-star — see vault `procurerag`
 - (2026-10-18) [claude-code] vault-stale-clone-and-progress-note-ordering — see vault `procurerag`
 - (2026-10-24) [claude-code] claude-code-plugin-maintenance — see vault `claude-code-plugin-maintenance`
+- (2026-10-26) [claude-code] hermes-vm-disk-leak-tmp-pack — see vault `hermes-vm`
+- (2026-10-26) [claude-code] homelab-vzdump-moved-to-wd — see vault `homelab-proxmox`
