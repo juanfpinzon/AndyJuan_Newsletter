@@ -186,3 +186,6 @@ Do not edit this section manually — it is managed by the vaultwatch cron.
 - (2026-10-26) [claude-code] cv-docx-generation — see vault `cv-docx-generation`
 - (2026-10-26) [claude-code] cv-tagged-pdf-build — see vault `cv-docx-generation`
 - (2026-10-26) [claude-code] job-search-2026-setup — see vault `job-search-2026`
+- (2026-10-27) [claude-code] job-search-2026-setup-phases-3-4 — see vault `job-search-2026`
+- (2026-10-27) [claude-code] ibp-claim-correction — see vault `cv-docx-generation`
+- (2026-10-27) [claude-code] ibp-claim-cv-fixed — see vault `cv-docx-generation`
